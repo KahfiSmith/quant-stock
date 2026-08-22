@@ -3,10 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-import { ROUTES } from "@/config/routes";
-import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import { authClient } from "@/lib/api/client";
+import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import type { LoginInput } from "@/lib/schemas/auth.schema";
+import { getSafeRedirect } from "@/lib/utils/safe-redirect";
 import { useAuthStore } from "@/store";
 import type { ApiResponse, BackendAuthPayload } from "@/types";
 import { mapAuthPayload } from "@/types";
@@ -21,13 +21,12 @@ export const useLogin = () => {
         API_ENDPOINTS.AUTH.LOGIN,
         credentials
       );
-      const envelope = response.data;
-      return mapAuthPayload(envelope.data);
+      return mapAuthPayload(response.data.data);
     },
     onSuccess: (session, variables) => {
       useAuthStore.getState().setSession(session);
       queryClient.clear();
-      router.replace(variables.redirectTo || ROUTES.PROFILE);
+      router.replace(getSafeRedirect(variables.redirectTo));
     },
   });
 
