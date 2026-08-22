@@ -1,10 +1,8 @@
-# Roadmap
+# Roadmap — QuantLens AI Development
 
-- Status: Working draft (planning artifact — not implemented behavior)
-- Date: 2026-08-17
-- Purpose: single place listing what exists and what is planned, so feature
-  work has a build order. Implemented features are documented in `docs/features/`;
-  this file tracks intent.
+- Status: Working draft (planning artifact based on [QuantLens PRD](docs/product/quantlens-spec.md))
+- Date: 2026-08-22
+- Purpose: Single source of truth for build order across all QuantLens development phases.
 
 ## Conventions
 
@@ -13,43 +11,70 @@
 - When a feature ships, mark it **done** and make sure it has a
   `docs/features/<feature>.md` (the `docs:check` gate requires it).
 
-## Done
+## Implemented (Boilerplate Baseline)
 
-- [x] Authentication & user session (login, register, logout, refresh,
-      session bootstrap, protected profile, delete account) — see
-      `docs/features/authentication.md`
-- [x] Google SSO (OIDC) — "Continue with Google" button on login; backend
-      handles the OAuth flow
+- [x] Authentication & user session (login, register, logout, refresh, session bootstrap, protected profile, delete account) — see `docs/features/authentication.md`
+- [x] Google SSO (OIDC) — frontend button and session wiring
 - [x] Landing page (`/`)
 - [x] Protected profile surface (`/profile`)
 
-## In progress
+## QuantLens Phased Roadmap
 
-(none)
+### Phase 0 — Project Initialization (Planned)
+- [ ] Setup monorepo structure (`apps/web`, `apps/quant-api`, `packages/database`, `packages/ui`, `packages/config`).
+- [ ] Connect Next.js frontend with FastAPI backend.
+- [ ] Configure Docker & Docker Compose with PostgreSQL + TimescaleDB.
+- [ ] Setup unified environment configuration.
 
-## Planned
+### Phase 1 — Authentication & User System (Planned / In Integration)
+- [ ] Integrate frontend auth forms with FastAPI JWT + HttpOnly refresh cookie endpoints.
+- [ ] Setup `users` and `sessions` database tables.
+- [ ] Settings and profile preferences.
 
-1. Forgot-password flow (UI) — endpoint exists on the backend
-   (`POST /api/v1/auth/forgot-password`); needs a page + wiring.
-2. Reset-password flow (UI) — endpoint exists; needs a page + wiring.
-3. Email verification flow (UI) — `verify-email` / `resend-verification`
-   endpoints exist; needs pages + wiring.
-4. `GET /me` usage — endpoint exists; currently the profile uses the session
-   bootstrap payload; wire a dedicated fetch + TanStack Query.
-5. Change password — no backend endpoint yet; requires backend work first.
+### Phase 2 — Market Data System (Planned)
+- [ ] Ingest stock metadata and historical OHLCV data.
+- [ ] Setup `stocks` table and `prices` TimescaleDB hypertable.
+- [ ] Build endpoints: `GET /api/v1/stocks`, `GET /api/v1/stocks/{symbol}/prices`.
+- [ ] Integrate TradingView Lightweight Charts in frontend.
 
-## Candidate (not committed)
+### Phase 3 — Technical Analysis Engine (Planned)
+- [ ] Implement `apps/quant-api/app/technical` calculation module using `pandas-ta`.
+- [ ] Support indicators: MA20/50/200, RSI, MACD, ATR, Bollinger Bands.
+- [ ] Build endpoint: `GET /api/v1/stocks/{symbol}/technical`.
 
-- Dashboard / analytics beyond the profile proof.
-- Additional route groups beyond `(auth)`, `(dashboard)`, `(public)`.
-- Theme persistence refinements.
+### Phase 4 — Fundamental Analysis Engine (Planned)
+- [ ] Implement `apps/quant-api/app/fundamental` evaluation module.
+- [ ] Process ratios: PER, PBV, ROE, ROA, DER, Revenue Growth, EPS Growth.
+- [ ] Build endpoint: `GET /api/v1/stocks/{symbol}/fundamental`.
 
-## Open questions
+### Phase 5 — Quant Scoring Engine (Planned)
+- [ ] Implement multi-factor scoring module in `apps/quant-api/app/quant/scoring.py`.
+- [ ] Apply formula: `30% Momentum + 25% Quality + 20% Value + 15% Risk + 10% Growth`.
+- [ ] Build endpoint: `GET /api/v1/stocks/{symbol}/score`.
 
-- Product vision is not finalized (see `docs/product/overview.md`).
-- Whether the landing page should evolve into a real marketing surface.
+### Phase 6 — Stock Screener (Planned)
+- [ ] Build interactive screener table on `/stocks`.
+- [ ] Multi-parameter filters: Sector, Market Cap, Quant Score, ROE, PER, PBV.
+- [ ] Dynamic ranking and pagination.
+
+### Phase 7 — Stock Detail Page (Planned)
+- [ ] Build comprehensive stock view on `/stocks/[symbol]`.
+- [ ] Sections: Overview, Candlestick Chart, Financial Ratios, Quant Score Breakdown.
+
+### Phase 8 — Portfolio System (Planned)
+- [ ] Setup `portfolios`, `transactions`, `holdings` database tables.
+- [ ] Portfolio tracking page `/portfolio` with PnL, asset allocation, and risk metrics.
+
+### Phase 9 — Backtesting Engine (Planned)
+- [ ] Implement backtest simulation in `apps/quant-api/app/quant/backtest.py`.
+- [ ] Strategy rules execution with CAGR, Sharpe Ratio, Max Drawdown metrics.
+- [ ] Equity curve visualization in frontend.
+
+### Phase 10 — AI Analyst (Future)
+- [ ] LLM-assisted synthesis for stock reports (Strengths, Risks, Conclusion).
+
+---
 
 ## Follow-ups
 
-- After each planned item ships: update this file's status, add the feature
-  doc from `docs/features/_TEMPLATE.md`, and run `pnpm verify:all`.
+- After each phase ships: update this file's status, add/update relevant documentation under `docs/`, and run `pnpm verify:all`.
