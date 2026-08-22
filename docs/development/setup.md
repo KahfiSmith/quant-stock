@@ -1,62 +1,33 @@
-# Developer Setup & Commands
+# Developer Setup and Commands
 
 ## Prerequisites
 
-- Node.js 20+
-- pnpm 10.x (`package.json` pins `packageManager: pnpm@10.33.0`)
+- Node.js 20+ and pnpm 10.x
+- Python 3.12 for host-mode FastAPI development, or Docker with Compose
 
-## Getting started
+## Local stack
 
 ```bash
-pnpm install
 cp .env.example .env.local
-pnpm dev
+docker compose up --build
 ```
 
-- `pnpm dev` runs Next.js with Turbopack.
+This starts the Next.js frontend at `http://localhost:3000`, FastAPI at `http://localhost:8000`, and PostgreSQL with TimescaleDB at `localhost:5432`. The API applies Alembic migrations before starting.
 
-## Environment
+For frontend-only development, run `pnpm dev` and ensure `NEXT_PUBLIC_BACKEND_API_URL=http://localhost:8000` is configured.
 
-The only required variable is `NEXT_PUBLIC_BACKEND_API_URL`
-(default `http://localhost:8080`). Point it at a running Go Fiber backend
-(`fiber-boilerplate`); otherwise the app loads but auth requests will fail.
+For API host-mode development:
 
-Backend run modes:
+```bash
+cd apps/quant-api
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/alembic upgrade head
+.venv/bin/uvicorn app.main:app --reload --port 8000
+```
 
-- **Host mode**: `http://localhost:8080` (backend `APP_PORT=8080`).
-- **docker-compose mode**: `http://localhost:3000` (backend compose overrides the port).
+## Verification
 
-Set `NEXT_PUBLIC_BACKEND_API_URL` to match the active mode. The backend
-`FRONTEND_ORIGIN` must allow `http://localhost:3000` (this frontend).
-
-## Verify it works
-
-1. Open `http://localhost:3000` - the public landing page renders.
-2. Visit `/register` and `/login` - forms render with Zod validation.
-3. Without a backend, `/login` and `/profile` show the "Checking session..."
-   state; with a backend, sign in redirects to `/profile`.
-
-## Scripts
-
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Start the Next.js dev server with Turbopack |
-| `pnpm build` | Production build |
-| `pnpm start` | Start the production server |
-| `pnpm lint` | ESLint over `src`, `*.ts`, `*.mjs` |
-| `pnpm lint:fix` | ESLint with `--fix` |
-| `pnpm type-check` | `tsc --noEmit` |
-| `pnpm docs:check` | Validate docs stay in sync with the repo (links, `src/` paths, endpoints) |
-| `pnpm verify:fast` | `lint` + `type-check` + `docs:check` |
-| `pnpm verify` | `verify:fast` + production build |
-| `pnpm verify:risk` | Classify change risk by path (low/medium/high) |
-| `pnpm verify:cross-repo` | Validate FE↔BE sync (endpoints, error codes, links) |
-| `pnpm verify:all` | `verify` + `verify:risk` + `verify:cross-repo` |
-
-## Notes
-
-- There is no `pnpm test` script yet (see
-  [Testing Conventions](../conventions/testing.md)).
-- `pnpm build` verifies the app compiles for production.
-- A pre-commit hook runs `pnpm verify:fast` (lint + type-check + docs:check)
-  automatically (configured via `core.hooksPath` → `.githooks/pre-commit`).
+- Frontend: `pnpm lint`, `pnpm type-check`, `pnpm docs:check`
+- API: `.venv/bin/ruff check .`, `.venv/bin/pytest -q`
+- Service endpoints: `GET /health`, `GET /ready`

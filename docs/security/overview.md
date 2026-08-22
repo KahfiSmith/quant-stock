@@ -1,65 +1,33 @@
 # Security Overview
 
-Security design and trust boundaries for the Next.js frontend application.
-
 ## Trust boundary
 
 ```text
-browser (untrusted)
-  -> Next.js frontend (client components)
-     -> Axios clients (src/lib/api)
-        -> Go Fiber backend (NEXT_PUBLIC_BACKEND_API_URL)
+browser
+  -> Next.js frontend (in-memory access token)
+     -> FastAPI API at /api/v1
+        -> PostgreSQL/TimescaleDB (users, sessions, token history)
 ```
 
-The frontend is entirely client-side. It never holds the refresh token
-(backend-owned HttpOnly cookie) and stores the access token only in memory.
 
 ## Authentication
 
-### Current model
-
-- Access token stored in memory only (`useAuthStore`, non-persisted Zustand
-  store).
-- Refresh token in `HttpOnly` cookie, managed by the backend.
-- No `localStorage` or `sessionStorage` token persistence.
-- Session bootstrap runs in `SessionProvider` on app mount via
-  `POST /api/v1/auth/refresh`.
-- Concurrent refresh requests are merged into a single-flight promise
-  (`refreshAccessToken` in `src/lib/api/client.ts`).
-
-### Threat model
-
-| Threat | Mitigation |
-|---|---|
-| XSS token theft | Access token never touches `localStorage`/`sessionStorage`; kept in memory only |
-| CSRF on refresh/logout | Refresh token lives in an HttpOnly cookie; requests sent with credentials |
-| Token theft via logs | Lint rule `no-console` warns; secrets are never logged |
-| Long-lived token exposure | Access token is short-lived and rotated via refresh |
-
-The refresh endpoint (`POST /api/v1/auth/refresh`) is the only credential
-source; it is exercised by `SessionProvider` and the single-flight retry path.
+- Access tokens are JWTs, short-lived, and stored only in the non-persisted Zustand store.
+- Refresh tokens are opaque random values in an `HttpOnly` cookie; JavaScript cannot read them.
+- The API persists only HMAC-SHA256 token hashes and rotates refresh tokens on every use.
+- Reuse of an already-used refresh token revokes its session family.
+- Passwords are hashed with Argon2 through `pwdlib`.
+- Login, refresh, logout, registration, and account deletion validate browser origins. CORS uses an explicit frontend allowlist and credentials.
+- Development rate limiting is in-memory; production must replace it with a shared limiter such as Redis or an edge gateway.
 
 ## Authorization
 
-### Protected vs public routes
+The frontend client guard is UX only. FastAPI verifies Bearer tokens on protected endpoints and must enforce resource ownership for future portfolios and market-data features.
 
-| Route      | Access            | Enforced by                                                      |
-| ---------- | ----------------- | ---------------------------------------------------------------- |
-| `/`        | public            | none                                                             |
-| `/login`   | public            | redirects to `/profile` when already authenticated               |
-| `/register`| public            | none                                                             |
-| `/profile` | authenticated     | client-side guard redirects to `/login` when unauthenticated     |
+## Route protection
 
-### Where protection lives
+`/profile` remains client-guarded while session bootstrap completes. Future server-rendered protected routes require a documented server-side session strategy; they must not trust client-only state.
 
-- Route protection is enforced client-side in pages:
-  - `(dashboard)/profile/page.tsx` redirects unauthenticated users to `/login`.
-  - `(auth)/login/page.tsx` redirects authenticated users to `/profile`.
-- `middleware.ts` is currently a pass-through (`NextResponse.next()`) and does
-  not enforce access control.
-- Session bootstrap via `/api/v1/auth/refresh`.
+## Operational rules
 
-### Not implemented
-
-- Server-side route guards (no `src/app/api/**`, no server enforcement).
-- Role-based access control (RBAC).
+Set `COOKIE_SECURE=true` and use HTTPS in production. Set a specific `FRONTEND_ORIGIN`, replace development secrets, and never log passwords, access tokens, refresh tokens, or raw provider credentials.

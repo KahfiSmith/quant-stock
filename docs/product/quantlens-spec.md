@@ -368,6 +368,24 @@ Phase 0 must be delivered in small, reversible changes:
 
 Before implementing a collector, document the chosen provider's exchange/symbol coverage, cadence (EOD or intraday), timezone, latency, corporate-action policy, rate limit, retention, attribution, cost, and redistribution rights. Do not scrape or retain data when the provider license does not permit it.
 
+### Candidate providers for Indonesian and global coverage
+
+The following providers are candidates for Phase 2 evaluation; none is selected,
+integrated, or approved for redistribution yet. Coverage, commercial terms, API
+limits, data adjustments, and permitted use must be validated against the
+intended universe before implementation.
+
+| Provider | Intended evaluation scope | Decision required before use |
+| --- | --- | --- |
+| IDX data provider | Indonesian exchange instruments, official reference data, and exchange-specific corporate actions | Confirm the applicable IDX data product, licensing, access method, cadence, and redistribution rights. |
+| Yahoo Finance | Broad public-market historical price and reference data | Confirm Indonesian symbol coverage, terms of use, adjustment semantics, reliability, and whether automated collection is permitted. |
+| Alpha Vantage | API-delivered global market data and selected fundamentals | Confirm exchange coverage, plan limits, latency, historical depth, and commercial rights for the required universe. |
+| Polygon | Global-market API candidate, subject to product availability by exchange | Confirm the specific Polygon product's Indonesian and other exchange coverage, entitlements, latency, and redistribution rights. |
+| Financial Modeling Prep | Fundamental statements, ratios, and market reference data | Confirm Indonesian issuer coverage, filing provenance, update timing, plan limits, and use rights. |
+
+A provider may be used only after the product and technical owners record the
+selection and satisfy the source and licensing requirements below.
+
 ### Canonical identifiers and timestamps
 
 - `symbol` is the display ticker; `stock_id` is the stable internal identity.

@@ -59,8 +59,7 @@ The repo ships a tiered verification harness:
 - `pnpm verify:fast` - lint, type-check, docs:check.
 - `pnpm verify` - adds the production build.
 - `pnpm verify:risk` - classifies change risk by path (low/medium/high).
-- `pnpm verify:cross-repo` - validates FE↔BE sync (endpoints, error codes,
-  cross-repo doc links) against the sibling `fiber-boilerplate` repo.
+- `pnpm verify:cross-repo` - validates frontend endpoint constants against active FastAPI authentication routes.
 - `pnpm verify:all` - everything above.
 
 A pre-commit hook runs `pnpm verify:fast` automatically. CI runs lint,

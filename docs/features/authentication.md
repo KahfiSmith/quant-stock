@@ -1,54 +1,34 @@
-# Feature: Authentication & User Session
+# Feature: Authentication and User Session
 
 ## Overview
 
-User authentication including registration, login, session persistence via
-HttpOnly cookie refresh, and a protected profile route.
+QuantLens Phase 1 provides registration, login, session bootstrap, logout, account deletion, and a protected profile proof surface. The active backend is `apps/quant-api` (FastAPI).
 
-## Core flow
+## Flow
 
 ```text
-browser
-  -> /login -> LoginForm -> useLogin -> authClient POST /auth/login
-  -> access token stored in-memory (auth-store)
-  -> SessionProvider bootstraps via POST /auth/refresh on mount
-  -> /profile renders user info; unauthenticated users redirect to /login
+Login -> FastAPI /auth/login -> JWT access token in Zustand
+      -> opaque refresh token in HttpOnly cookie
+App mount -> /auth/refresh -> token rotation -> restored session
+Expired access token -> one shared refresh request -> retry
 ```
 
-## Flow states
+Users have numeric PostgreSQL IDs. Refresh tokens are HMAC-hashed in `sessions` and `refresh_tokens`; a reused rotated token revokes its session.
 
-1. App mount: `SessionProvider` calls `POST /api/v1/auth/refresh`.
-2. `useAuthStore` status: `idle → checking → authenticated | unauthenticated`.
-3. Authenticated: access token in memory; `apiClient` attaches Bearer.
-4. Logout: `useLogout` → `POST /auth/logout` → clears session → `/login`.
-5. Delete account: `useDeleteAccount` → `DELETE /auth/account` (password
-   confirmation) → clears session → `/login`.
-6. Google SSO: `LoginForm` → navigate to `GET /auth/google` (browser redirect);
-   backend sets the session and redirects back; `SessionProvider` bootstraps.
+## Frontend modules
 
-## Implementation map
+- Forms: `src/components/features/auth/`
+- Hooks: `src/hooks/auth/`
+- Session state: `src/store/auth-store.ts`
+- Bootstrap: `src/providers/session-provider.tsx`
+- API client and endpoints: `src/lib/api/`
+- Safe redirect validation: `src/lib/utils/safe-redirect.ts`
 
-| Concern | Files |
-|---|---|
-| Forms | `src/components/features/auth/` (`login-form`, `register-form`, `logout-button`, `delete-account-button`) |
-| Hooks | `src/hooks/auth/` (`use-login`, `use-logout`, `use-register`, `use-delete-account`) |
-| Validation | `src/lib/schemas/auth.schema.ts` |
-| HTTP | `src/lib/api/endpoints.ts`, `client.ts` |
-| Session state | `src/store/auth-store.ts` |
-| Session bootstrap | `src/providers/session-provider.tsx` |
-| Protected route | `src/app/(dashboard)/profile/page.tsx` |
+## Backend modules
 
-## Endpoints
+- Routes: `apps/quant-api/app/api/routes/auth.py`
+- Service rules: `apps/quant-api/app/services/auth.py`
+- Models/migration: `apps/quant-api/app/models/`, `apps/quant-api/alembic/`
+- Tests: `apps/quant-api/tests/test_authentication.py`
 
-`src/lib/api/endpoints.ts` defines 10 axios-called auth endpoints plus the
-Google OAuth browser-navigation paths (`GOOGLE`, `GOOGLE_CALLBACK`). Five are
-wired to UI (login, register, refresh, logout, delete-account); the rest are
-defined but not yet connected. See [Authentication API](../api/authentication.md).
-
-## Not yet implemented
-
-- No features beyond authentication exist. There is no dashboard, no product
-  workflows, and no additional business logic.
-
-Feature docs must describe only implemented behavior. When a feature ships,
-promote its durable decisions here.
+Google OAuth, password reset, and email verification are deferred and not presented in the active UI.

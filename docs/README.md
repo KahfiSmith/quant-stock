@@ -4,15 +4,14 @@ These documents distinguish implemented behavior from planned work. Accepted
 architecture and conventions live in the current sources of truth; planned
 capabilities are called out explicitly rather than described as if they exist.
 
-This is the frontend (`nextjs-boilerplate`) repository. The companion backend
-is `fiber-boilerplate` (Go Fiber); its contract is linked from the
-[API](api/overview.md) and [Architecture](architecture/overview.md) docs.
+This repository contains the QuantLens Next.js client and active FastAPI service
+(`apps/quant-api`). The architecture documentation describes the current runtime
+layout and the planned expansion separately.
 
 ## Current sources of truth
 
 - [Product PRD Specification](product/quantlens-spec.md) - QuantLens comprehensive PRD, architecture, and phase guide.
-- [Architecture](architecture/overview.md) - System design, folder structure, data flow, ADRs.
-- [Folder Structure & Dependency Rules](architecture/folder-structure.md) - Directory tree, ownership, dependency rules.
+- [Architecture](architecture/overview.md) - System design, folder structure, data flow, dependency rules, and ADRs.
 - [API](api/overview.md) - Backend contract, Axios clients, query config.
 - [Authentication API & Errors](api/authentication.md) - Endpoints, envelope, error codes.
 - [Security](security/overview.md) - Trust boundaries, authentication, authorization.
@@ -26,7 +25,7 @@ is `fiber-boilerplate` (Go Fiber); its contract is linked from the
 - [Debugging](development/debugging.md) - Common checks and failure modes.
 - [Features](features/authentication.md) - Implemented feature modules (authentication and user session).
 - [Product Overview](product/overview.md) - Product status, business rules, terminology.
-- [Roadmap](../../ROADMAP.md) - Planned work and build order.
+- [Roadmap](product/roadmap.md) - Planned work and build order.
 - [Database](database/schema.md) - Database notes (PostgreSQL + TimescaleDB).
 - [Infrastructure](infrastructure/deployment.md) - Environments, deployment, CI/CD.
 - [Observability](infrastructure/observability.md) - Current signals and planned tooling.
@@ -36,11 +35,11 @@ is `fiber-boilerplate` (Go Fiber); its contract is linked from the
 
 The following are intentionally not described as implemented:
 
-- Server-side auth or API routes (`src/app/api/**`) - none exist; route protection is client-side.
-- Middleware-enforced access control - `middleware.ts` is a pass-through.
-- Test suite - no test script is configured yet.
+- Next.js server-side API routes (`src/app/api/**`) - none exist; FastAPI owns the active API boundary.
+- Middleware-enforced page access control - `middleware.ts` is a pass-through; API authorization is enforced by FastAPI.
+- Frontend test suite - no frontend test script is configured yet; focused FastAPI auth tests exist under `apps/quant-api/tests`.
 - Observability tooling - not configured.
-- Database layer - managed by the Go Fiber backend, not this frontend repo.
+- Market-data database layer - deferred beyond the implemented FastAPI authentication tables.
 
 When a planned capability is shipped, promote only its durable decisions into
 the current sources of truth.

@@ -5,7 +5,7 @@
 This repository forms the frontend layer of **QuantLens**, a quantitative finance stock analysis platform.
 QuantLens provides objective market insights through automated data ingestion, multi-factor quant scoring, interactive technical and fundamental analysis, strategy backtesting, and AI-driven analyst summaries.
 
-For the full product specification and architecture phases, see the [QuantLens PRD Specification](./quantlens-spec.md) and the [Roadmap](../../ROADMAP.md).
+For the full product specification and architecture phases, see the [QuantLens PRD Specification](./quantlens-spec.md) and the [Roadmap](./roadmap.md).
 
 ## Product status
 

@@ -12,8 +12,8 @@ options have distinct trade-offs:
 - Backend-issued HttpOnly cookie — the token never reaches JavaScript, but
   requires the backend to manage session state and rotation.
 
-The app is a frontend-only Next.js client backed by a Go Fiber API
-(`fiber-boilerplate`) that already owns session management.
+The Next.js client is backed by the active FastAPI service (`apps/quant-api`),
+which owns session management.
 
 ## Decision
 
