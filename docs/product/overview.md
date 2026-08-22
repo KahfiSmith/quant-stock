@@ -2,19 +2,14 @@
 
 ## Product vision
 
-This repository is the **frontend foundation** for a web application that
-requires authentication and per-user data. The final product positioning,
-personas, and business workflows are **not finalized yet** and must not be
-invented by the frontend. The current surface proves the auth/session
-foundation so that a real product can be built on top of it.
+This repository forms the frontend layer of **QuantLens**, a quantitative finance stock analysis platform.
+QuantLens provides objective market insights through automated data ingestion, multi-factor quant scoring, interactive technical and fundamental analysis, strategy backtesting, and AI-driven analyst summaries.
 
-For what is planned next, see the [Roadmap](../../ROADMAP.md).
+For the full product specification and architecture phases, see the [QuantLens PRD Specification](./quantlens-spec.md) and the [Roadmap](../../ROADMAP.md).
 
 ## Product status
 
-This repository is a **frontend boilerplate**, not a finished product. Product
-positioning, personas, and business workflows are not finalized and must not be
-invented by the frontend.
+This repository currently serves as the **frontend foundation** with completed authentication and user session flows. The quantitative engines, market data pipelines, and stock analysis features are planned for subsequent phases.
 
 ## Implemented product surface
 
@@ -22,13 +17,13 @@ invented by the frontend.
 - Authentication flows: `/login`, `/register`.
 - Authenticated proof surface: `/profile` (shows the current user).
 
-## Not implemented
+## Target product surface (QuantLens Roadmap)
 
-- User personas and detailed workflows.
-- Dashboards, analytics, reports, or pricing.
-- Any business feature beyond authentication.
-
-The current surface exists to prove the auth/session foundation only.
+- **Stock Screener (`/stocks`)**: Multi-factor filtering (Momentum, Quality, Value, Risk, Growth, Sector, PER, ROE).
+- **Stock Detail (`/stocks/[symbol]`)**: Interactive TradingView charts, technical indicators, fundamental breakdown, quant score decomposition.
+- **Portfolio Management (`/portfolio`)**: Multi-asset tracking, PnL analysis, risk metrics.
+- **Strategy Backtesting (`/backtest`)**: Rule-based strategy simulation with CAGR, Sharpe Ratio, and Maximum Drawdown analysis.
+- **AI Analyst**: Automated strengths, risks, and synthesis generated from quant and fundamental signals.
 
 ## Business rules and enforcement
 

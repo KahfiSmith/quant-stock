@@ -1,36 +1,42 @@
 # API Overview
 
-API integration documentation for communication between the Next.js frontend
-and the Go Fiber backend.
+API integration documentation for communication between the Next.js frontend and the QuantLens backend service (FastAPI Quant Engine).
 
 ## Contract summary
 
 - Backend base URL is configured via `NEXT_PUBLIC_BACKEND_API_URL`
-  (see `.env.example`, default `http://localhost:8080`).
-- Endpoint paths carry the `/api/v1/...` prefix (e.g. `/api/v1/auth/login`).
-- Every response uses the `ApiResponse<T>` envelope
+  (see `.env.example`, default `http://localhost:8000` for FastAPI).
+- Endpoint paths carry the `/api/v1/...` prefix (e.g. `/api/v1/auth/login`, `/api/v1/stocks`).
+- Every response follows the standard `ApiResponse<T>` envelope
   (`src/types/api.types.ts`).
 - Axios clients are defined in `src/lib/api/client.ts`:
   - `authClient` - credentialed (`withCredentials: true`) for auth endpoints.
   - `apiClient` - Bearer token client with single-flight refresh and
     `response.data.data` unwrap.
 
-## Backend contract
+## Planned QuantLens API Endpoints (`/api/v1`)
 
-The API contract is owned by the backend repository
-(`fiber-boilerplate`, a Go Fiber service). See:
-
-- [Backend API overview](../../../../Backend/fiber-boilerplate/docs/api/overview.md)
-- [Backend authentication & token flow](../../../../Backend/fiber-boilerplate/docs/api/authentication.md)
-
-Endpoint paths and error codes in this repo must stay in sync with the backend
-routes (`src/modules/auth/auth.controller.go`) and error codes
-(`docs/api/authentication.md` there).
+| Module | Method | Path | Description |
+|---|---|---|---|
+| **Auth** | `POST` | `/api/v1/auth/login` | User login (JWT + refresh cookie) |
+| **Auth** | `POST` | `/api/v1/auth/register` | User registration |
+| **Auth** | `POST` | `/api/v1/auth/refresh` | Single-flight token refresh |
+| **Auth** | `POST` | `/api/v1/auth/logout` | Session invalidation |
+| **Market Data** | `GET` | `/api/v1/stocks` | List and search stocks with summary metrics |
+| **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
+| **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR) |
+| **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
+| **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |
+| **Screener** | `POST` | `/api/v1/screener` | Filter & rank stocks by multi-criteria |
+| **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
+| **Backtest** | `POST` | `/api/v1/backtest` | Run historical strategy backtest |
+| **AI Analyst** | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | AI-generated strengths, risks, conclusion |
 
 ## Related documents
 
-- [Authentication & Errors](./authentication.md) - Endpoint list, envelope,
-  and error codes.
+- [QuantLens PRD Specification](../product/quantlens-spec.md) - Full system specification.
+- [Authentication & Errors](./authentication.md) - Auth endpoint details, envelope, and error codes.
+- [Database Schema](../database/schema.md) - PostgreSQL & TimescaleDB schema definition.
 
 ## Axios clients
 

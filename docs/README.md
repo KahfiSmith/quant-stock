@@ -10,6 +10,7 @@ is `fiber-boilerplate` (Go Fiber); its contract is linked from the
 
 ## Current sources of truth
 
+- [Product PRD Specification](product/quantlens-spec.md) - QuantLens comprehensive PRD, architecture, and phase guide.
 - [Architecture](architecture/overview.md) - System design, folder structure, data flow, ADRs.
 - [Folder Structure & Dependency Rules](architecture/folder-structure.md) - Directory tree, ownership, dependency rules.
 - [API](api/overview.md) - Backend contract, Axios clients, query config.
@@ -24,9 +25,9 @@ is `fiber-boilerplate` (Go Fiber); its contract is linked from the
 - [Workflow](development/workflow.md) - Implementation patterns, handoff checklist.
 - [Debugging](development/debugging.md) - Common checks and failure modes.
 - [Features](features/authentication.md) - Implemented feature modules (authentication and user session).
-- [Product](product/overview.md) - Product status, business rules, terminology.
+- [Product Overview](product/overview.md) - Product status, business rules, terminology.
 - [Roadmap](../../ROADMAP.md) - Planned work and build order.
-- [Database](database/schema.md) - Database notes (managed by the backend service).
+- [Database](database/schema.md) - Database notes (PostgreSQL + TimescaleDB).
 - [Infrastructure](infrastructure/deployment.md) - Environments, deployment, CI/CD.
 - [Observability](infrastructure/observability.md) - Current signals and planned tooling.
 - [Verification harness](development/workflow.md) - `verify:*` commands, risk classification, cross-repo sync.

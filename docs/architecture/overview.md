@@ -1,39 +1,47 @@
 # Architecture Overview
 
-Next.js 16 App Router boilerplate connected with Go Fiber backend services.
+QuantLens system architecture: Next.js 16 App Router frontend connected to FastAPI Python Quant Engine and PostgreSQL + TimescaleDB.
 
-## Current system
+## Target Architecture
 
-This repository is one Next.js application. It is a frontend-only boilerplate:
-the Go Fiber backend owns authentication sessions, refresh cookies, and the
-database. The frontend owns rendering, client-side form validation, and an
-in-memory auth session.
+The target architecture follows a monorepo setup containing the frontend web app, the Python quant API engine, shared database schemas, and shared config:
+
+```text
+quantlens/
+├── apps/
+│   ├── web/               # Next.js 16+ App Router (React 19, TypeScript)
+│   └── quant-api/         # FastAPI Python 3.12 Quant Engine & REST API
+├── packages/
+│   ├── database/          # PostgreSQL + TimescaleDB schemas & migrations
+│   ├── ui/                # Shared UI primitives & design tokens
+│   └── config/            # Shared configuration & constants
+└── docker-compose.yml     # Local orchestration
+```
 
 ```text
 browser
-  -> Next.js App Router (React 19, client components)
+  -> Next.js App Router (React 19, client components, TradingView charts)
      -> feature components (src/components/features)
-        -> hooks (src/hooks/auth)
+        -> hooks (src/hooks)
            -> Axios clients (src/lib/api)
-              -> Zustand auth store (src/store)
-                 -> Go Fiber backend (NEXT_PUBLIC_BACKEND_API_URL)
+              -> Zustand stores (src/store)
+                 -> FastAPI Quant Engine backend (/api/v1)
+                    -> PostgreSQL (relational) + TimescaleDB (OHLCV time-series)
 ```
 
 ## Core stack
 
-| Concern      | Choice                          | Current use                                        |
+| Concern      | Choice                          | Purpose / Role                                     |
 | ------------ | ------------------------------- | -------------------------------------------------- |
-| Runtime      | Node.js 20+                     | Development and build                              |
-| Framework    | Next.js 16 (App Router)         | Route groups and layouts                           |
-| UI           | React 19                        | Client components for interactive pages            |
-| Language     | TypeScript 5.9 (strict)         | All application code                               |
-| Styling      | Tailwind CSS 4, CSS variables   | Tokens in `src/app/globals.css`                    |
-| UI primitives| shadcn/ui (`components.json`)   | `src/components/ui` (Button, Input, Label)         |
-| State        | Zustand 5                       | `auth-store` (in-memory), `theme-store` (persisted)|
-| Server state | TanStack Query 5                | Query config and auth invalidations                |
-| HTTP client  | Axios                           | `authClient` / `apiClient` in `src/lib/api`        |
-| Validation   | Zod 4, React Hook Form          | `src/lib/schemas/auth.schema.ts`, form resolvers   |
-| Package mgr  | pnpm 10.33.0                    | Pinned in `package.json`                           |
+| Frontend App | Next.js 16 (App Router)         | Web UI, routing, SSR/client views                  |
+| UI / Styling | React 19, Tailwind CSS 4        | Interactive UI & design tokens                     |
+| UI Components| shadcn/ui                       | Reusable UI primitives (`src/components/ui`)       |
+| Charts       | TradingView Lightweight Charts  | Interactive candlestick & technical indicator plots|
+| State & Cache| Zustand 5 + TanStack Query 5    | In-memory state, session, and server cache         |
+| Backend API  | FastAPI (Python 3.12)           | REST API, asynchronous service layer               |
+| Quant Engine | pandas, numpy, scipy, pandas-ta | Statistical analysis, indicators, quant scoring    |
+| Database     | PostgreSQL + TimescaleDB        | Users, portfolios, fundamentals, OHLCV time-series |
+| Container    | Docker + Docker Compose         | Unified local and deployment environment           |
 
 ## Implemented routes
 
@@ -47,15 +55,12 @@ browser
 All interactive pages are client components (`"use client"`). Layouts and
 `register/page.tsx` remain server components.
 
-## Backend
+## Backend & Engine Integration
 
-The backend is a separate repository (`fiber-boilerplate`, Go Fiber). See its
-[architecture overview](../../../../Backend/fiber-boilerplate/docs/architecture/overview.md)
-and [folder structure](../../../../Backend/fiber-boilerplate/docs/architecture/folder-structure.md).
+The backend is structured as a FastAPI service (`apps/quant-api`) serving `/api/v1` REST endpoints, with background workers/engines for market data processing, technical calculations, quant scoring, and backtesting. See [QuantLens PRD](../product/quantlens-spec.md) for full phase plans.
 
-## Not implemented
+## Current vs Planned Features
 
-- `src/app/api/**` - no server-side route handlers exist.
-- Middleware-enforced access control - `middleware.ts` is a pass-through.
-- Database layer - managed by the Go Fiber backend.
-- Server-only modules, services, or repositories.
+- **Current Frontend**: Auth & user profile, session bootstrap, Axios client with single-flight refresh.
+- **Planned Backend**: FastAPI quant engine with PostgreSQL & TimescaleDB hypertables.
+- **Planned Frontend Routes**: `/stocks` (screener), `/stocks/[symbol]` (details/chart), `/portfolio` (tracking), `/backtest` (strategy testing).
