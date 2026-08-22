@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+coverage.xml
+
+# Docker Compose local overrides
+compose.override.yaml
+/apps/quant-api/*.db

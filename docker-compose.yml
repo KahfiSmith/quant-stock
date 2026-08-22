@@ -1,0 +1,55 @@
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quantlens}
+      POSTGRES_USER: ${POSTGRES_USER:-quantlens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quantlens}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    ports:
+      - "5432:5432"
+    volumes:
+      - quantlens-postgres:/var/lib/postgresql/data
+
+  quant-api:
+    build:
+      context: ./apps/quant-api
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://$${POSTGRES_USER:-quantlens}:$${POSTGRES_PASSWORD:-quantlens}@db:5432/$${POSTGRES_DB:-quantlens}
+      FRONTEND_ORIGIN: http://localhost:3000
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-32-character-development-secret}
+      REFRESH_TOKEN_HMAC_KEY: ${REFRESH_TOKEN_HMAC_KEY:-replace-with-a-separate-32-character-development-secret}
+      COOKIE_SECURE: "false"
+      COOKIE_SAME_SITE: lax
+    ports:
+      - "8000:8000"
+
+  web:
+    image: node:20.19.2-alpine3.21
+    working_dir: /workspace
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm dev"
+    depends_on:
+      quant-api:
+        condition: service_started
+    environment:
+      NEXT_PUBLIC_BACKEND_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+      - quantlens-node-modules:/workspace/node_modules
+
+volumes:
+  quantlens-postgres:
+  quantlens-node-modules:

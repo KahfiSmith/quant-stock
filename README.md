@@ -1,11 +1,11 @@
-# Next.js Boilerplate
+# QuantLens
 
-Opinionated Next.js App Router starter integrated with Go Fiber backend authentication.
+Next.js App Router client with a FastAPI authentication service and a TimescaleDB/PostgreSQL data foundation.
 
 ## Security & Auth Architecture
 
 - **Access Token**: In-memory only via non-persisted Zustand store (`useAuthStore`).
-- **Refresh Token**: Managed via `HttpOnly` secure cookies sent directly by the Go Fiber backend. JavaScript cannot access the refresh token.
+- **Refresh Token**: Managed via `HttpOnly` secure cookies set by the FastAPI backend. JavaScript cannot access the refresh token.
 - **Session Bootstrap**: On application mount, `SessionProvider` triggers `POST /api/v1/auth/refresh` using `authClient` (`withCredentials: true`) to restore the in-memory access token.
 - **Single-Flight Refresh**: Concurrent `401 ACCESS_TOKEN_EXPIRED` requests are merged into a single shared refresh promise via `refreshAccessToken()`.
 - **Axios Clients**: `authClient` (for auth endpoints with credentials) and `apiClient` (for business endpoints with Bearer tokens).
