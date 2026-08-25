@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 
-import { DeleteAccountButton } from "@/components/features/auth/delete-account-button";
-import { LogoutButton } from "@/components/features/auth/logout-button";
-import { RequireAuth } from "@/components/features/auth/route-guards";
+import { DeleteAccountButton, LogoutButton, RequireAuth } from "@/components/features/auth";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/config/routes";
 import { useAuthStore } from "@/store";
