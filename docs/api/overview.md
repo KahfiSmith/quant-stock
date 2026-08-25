@@ -14,7 +14,7 @@ API integration documentation for communication between the Next.js frontend and
   - `apiClient` - Bearer token client with single-flight refresh and
     `response.data.data` unwrap.
 
-## Planned QuantLens API Endpoints (`/api/v1`)
+## Implemented QuantLens API Endpoints (`/api/v1`)
 
 | Module | Method | Path | Description |
 |---|---|---|---|
@@ -24,6 +24,11 @@ API integration documentation for communication between the Next.js frontend and
 | **Auth** | `POST` | `/api/v1/auth/logout` | Session invalidation |
 | **Market Data** | `GET` | `/api/v1/stocks` | List and search stocks with summary metrics |
 | **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
+
+## Planned QuantLens API Endpoints (`/api/v1`)
+
+| Module | Method | Path | Description |
+|---|---|---|---|
 | **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR) |
 | **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |

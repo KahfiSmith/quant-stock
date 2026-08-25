@@ -6,6 +6,8 @@ Overview of business features implemented in this application.
 
 - [Authentication & User Session](./authentication.md) - login, register,
   logout, session bootstrap, protected profile, delete account.
+- [Market Data](./market-data.md) - stock universe list and per-symbol price
+  history chart (schema-first Phase 2 slice).
 
 ## Route-group coverage
 
@@ -14,7 +16,9 @@ Every route group under `src/app/` must be documented here. The
 
 - `(auth)` - covered by [authentication.md](./authentication.md).
 - `(dashboard)` - the protected profile surface is part of
-  [authentication.md](./authentication.md).
+  [authentication.md](./authentication.md); the stock pages (`/stocks`,
+  `/stocks/[symbol]`) are covered by
+  [market-data.md](./market-data.md).
 - `(public)` - the landing page is a thin shell over the auth surface; see
   [product overview](../product/overview.md).
 

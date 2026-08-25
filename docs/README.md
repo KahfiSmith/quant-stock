@@ -24,6 +24,7 @@ layout and the planned expansion separately.
 - [Workflow](development/workflow.md) - Implementation patterns, handoff checklist.
 - [Debugging](development/debugging.md) - Common checks and failure modes.
 - [Features](features/authentication.md) - Implemented feature modules (authentication and user session).
+- [Market Data](features/market-data.md) - Stock universe and price-history chart feature.
 - [Product Overview](product/overview.md) - Product status, business rules, terminology.
 - [Roadmap](product/roadmap.md) - Planned work and build order.
 - [Database](database/schema.md) - Database notes (PostgreSQL + TimescaleDB).
@@ -41,7 +42,9 @@ The following are intentionally not described as implemented:
   `apiClient` interceptor, route guards); focused FastAPI auth tests exist under
   `apps/quant-api/tests`.
 - Observability tooling - not configured.
-- Market-data database layer - deferred beyond the implemented FastAPI authentication tables.
+- Market-data schema and read endpoints - the `stocks`/`prices` tables and
+  `GET /api/v1/stocks*` endpoints exist, but real market-data ingestion is
+  deferred pending a data-provider decision.
 
 When a planned capability is shipped, promote only its durable decisions into
 the current sources of truth.

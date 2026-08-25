@@ -34,11 +34,11 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [ ] Settings and profile preferences.
 - [ ] Google OAuth/OIDC, password reset, and email verification.
 
-### Phase 2 — Market Data System (Planned)
-- [ ] Ingest stock metadata and historical OHLCV data.
-- [ ] Setup `stocks` table and `prices` TimescaleDB hypertable.
-- [ ] Build endpoints: `GET /api/v1/stocks`, `GET /api/v1/stocks/{symbol}/prices`.
-- [ ] Integrate TradingView Lightweight Charts in frontend.
+### Phase 2 — Market Data System (In Progress)
+- [ ] Ingest stock metadata and historical OHLCV data (BLOCKED on data-provider decision).
+- [x] Setup `stocks` table and `prices` TimescaleDB hypertable (migration `0002_market_data`).
+- [x] Build endpoints: `GET /api/v1/stocks`, `GET /api/v1/stocks/{symbol}/prices`.
+- [x] Integrate TradingView Lightweight Charts in frontend (`/stocks`, `/stocks/[symbol]`).
 
 ### Phase 3 — Technical Analysis Engine (Planned)
 - [ ] Implement `apps/quant-api/app/technical` calculation module using `pandas-ta`.
