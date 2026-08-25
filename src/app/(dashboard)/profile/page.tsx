@@ -1,32 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 import { DeleteAccountButton } from "@/components/features/auth/delete-account-button";
 import { LogoutButton } from "@/components/features/auth/logout-button";
+import { RequireAuth } from "@/components/features/auth/route-guards";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/config/routes";
 import { useAuthStore } from "@/store";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const { status, user } = useAuthStore();
+  return (
+    <RequireAuth>
+      <ProfileContent />
+    </RequireAuth>
+  );
+}
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace(ROUTES.LOGIN);
-    }
-  }, [status, router]);
-
-  if (status === "checking" || status === "idle") {
-    return (
-      <div className="flex items-center justify-center p-6 text-sm text-muted-foreground">
-        Loading session...
-      </div>
-    );
-  }
+function ProfileContent() {
+  const user = useAuthStore((state) => state.user);
 
   if (!user) {
     return null;
