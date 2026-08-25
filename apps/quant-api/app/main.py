@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.api.errors import ApiError, api_error_handler, validation_error_handler
-from app.api.routes import auth, health
+from app.api.routes import auth, health, market_data
 from app.core.config import Settings, get_settings
 from app.core.rate_limit import SlidingWindowRateLimiter
 from app.db.session import Database
@@ -49,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.include_router(health.router)
     app.include_router(auth.router)
+    app.include_router(market_data.router)
     return app
 
 
