@@ -7,4 +7,8 @@ export const API_ENDPOINTS = {
     DELETE_ACCOUNT: "/api/v1/auth/account",
     ME: "/api/v1/auth/me",
   },
+  MARKET: {
+    STOCKS: "/api/v1/stocks",
+    PRICES: (symbol: string) => `/api/v1/stocks/${symbol}/prices`,
+  },
 } as const;
