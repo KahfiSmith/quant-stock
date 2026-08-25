@@ -18,9 +18,10 @@ session source.
 
 - `middleware.ts` is a pass-through (`NextResponse.next()`) and does not
   enforce access control.
-- Route protection is enforced in the pages:
-  - `(dashboard)/profile/page.tsx` redirects unauthenticated users to `/login`.
-  - `(auth)/login/page.tsx` redirects authenticated users to `/profile`.
+- Protection is delegated to shared guard components in
+  `src/components/features/auth/route-guards.tsx`:
+  - `RequireAuth` redirects unauthenticated users to `/login`.
+  - `RedirectAuthenticated` redirects authenticated users to `/profile`.
 - Guards read `useAuthStore` status and render a loading state while the
   session is `checking`/`idle`.
 
@@ -28,8 +29,9 @@ session source.
 
 - No server-side enforcement exists; the backend remains the real security
   boundary (protected routes reject without a valid Bearer token).
-- Guard logic is duplicated per protected page; a shared guard hook would be a
-  natural refactor when more protected routes appear.
+- Guard logic is centralized in shared `RequireAuth`/`RedirectAuthenticated`
+  components, so protected pages opt in by wrapping their content rather than
+  duplicating redirect logic.
 - Redirects happen after hydration, so there is a brief flash while the
   session boots.
 

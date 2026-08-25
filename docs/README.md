@@ -37,7 +37,9 @@ The following are intentionally not described as implemented:
 
 - Next.js server-side API routes (`src/app/api/**`) - none exist; FastAPI owns the active API boundary.
 - Middleware-enforced page access control - `middleware.ts` is a pass-through; API authorization is enforced by FastAPI.
-- Frontend test suite - no frontend test script is configured yet; focused FastAPI auth tests exist under `apps/quant-api/tests`.
+- Frontend test suite - Vitest covers the authentication flow (schemas, hooks,
+  `apiClient` interceptor, route guards); focused FastAPI auth tests exist under
+  `apps/quant-api/tests`.
 - Observability tooling - not configured.
 - Market-data database layer - deferred beyond the implemented FastAPI authentication tables.
 

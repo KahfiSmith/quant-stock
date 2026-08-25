@@ -13,7 +13,7 @@
 
 | Variable | Public | Default | Notes |
 |---|---|---|---|
-| `NEXT_PUBLIC_BACKEND_API_URL` | yes | `http://localhost:8080` | Backend base URL; read by the Axios clients |
+| `NEXT_PUBLIC_BACKEND_API_URL` | yes | `http://localhost:8000` | Backend base URL; read by the Axios clients |
 
 No server-only secrets exist in this repository yet. When one is added, it must
 be a non-prefixed variable and must never appear in client bundles.

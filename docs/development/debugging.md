@@ -3,7 +3,7 @@
 ## Verify the environment first
 
 - `NEXT_PUBLIC_BACKEND_API_URL` in `.env.local` must point at a running backend
-  (default `http://localhost:8080`).
+  (default `http://localhost:8000`).
 - Backend CORS must allow the frontend origin (`http://localhost:3000`) and
   credentials.
 
