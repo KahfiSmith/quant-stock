@@ -50,10 +50,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Process ratios: PER, PBV, ROE, ROA, DER, Revenue Growth, EPS Growth.
 - [x] Build endpoint: `GET /api/v1/stocks/{symbol}/fundamental`.
 
-### Phase 5 — Quant Scoring Engine (Planned)
-- [ ] Implement multi-factor scoring module in `apps/quant-api/app/quant/scoring.py`.
-- [ ] Apply formula: `30% Momentum + 25% Quality + 20% Value + 15% Risk + 10% Growth`.
-- [ ] Build endpoint: `GET /api/v1/stocks/{symbol}/score`.
+### Phase 5 — Quant Scoring Engine (Done)
+- [x] Implement multi-factor scoring module in `apps/quant-api/app/quant/scoring.py`.
+- [x] Apply formula: `30% Momentum + 25% Quality + 20% Value + 15% Risk + 10% Growth`.
+- [x] Build endpoint: `GET /api/v1/stocks/{symbol}/score`.
 
 ### Phase 6 — Stock Screener (Planned)
 - [ ] Build interactive screener table on `/stocks`.

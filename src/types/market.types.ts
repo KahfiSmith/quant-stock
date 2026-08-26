@@ -42,6 +42,23 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface QuantFactors {
+  momentum: number;
+  quality: number;
+  value: number;
+  risk: number;
+  growth: number;
+}
+
+export interface QuantScoreResponse {
+  symbol: string;
+  as_of: string;
+  score_version: string;
+  total_score: number;
+  factors: QuantFactors;
+  data_quality: "complete" | "partial" | "insufficient" | string;
+}
+
 export interface FundamentalRatios {
   pe_ratio: number | null;
   pb_ratio: number | null;

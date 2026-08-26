@@ -10,5 +10,6 @@ export const QUERY_KEYS = {
     PRICES: (symbol: string) => ["market", "prices", symbol] as const,
     TECHNICAL: (symbol: string) => ["market", "technical", symbol] as const,
     FUNDAMENTAL: (symbol: string) => ["market", "fundamental", symbol] as const,
+    SCORE: (symbol: string) => ["market", "score", symbol] as const,
   },
 } as const;

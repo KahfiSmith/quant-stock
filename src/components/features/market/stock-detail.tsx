@@ -7,6 +7,7 @@ import { StockChart } from "@/components/features/market/stock-chart";
 import {
   useStockFundamental,
   useStockPrices,
+  useStockScore,
   useStockTechnical,
   type PriceRange,
 } from "@/hooks/market";
@@ -43,6 +44,7 @@ export function StockDetail({ symbol }: StockDetailProps) {
   const { data, isPending, isError } = useStockPrices(symbol, rangeFor(days));
   const { data: technical } = useStockTechnical(symbol);
   const { data: fundamental } = useStockFundamental(symbol);
+  const { data: scoreData } = useStockScore(symbol);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
@@ -52,6 +54,11 @@ export function StockDetail({ symbol }: StockDetailProps) {
           <h1 className="text-2xl font-semibold tracking-tight">{symbol.toUpperCase()}</h1>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
+          {scoreData ? (
+            <span className="rounded-full bg-primary px-3 py-1 font-semibold text-primary-foreground shadow-sm">
+              Quant Score: {scoreData.total_score} ({scoreData.data_quality})
+            </span>
+          ) : null}
           {technical ? (
             <>
               <span
@@ -176,6 +183,30 @@ export function StockDetail({ symbol }: StockDetailProps) {
                   <dd className="font-medium">
                     {fundamental.ratios.revenue_growth !== null ? `${(fundamental.ratios.revenue_growth * 100).toFixed(1)}%` : "n/a"}
                   </dd>
+                </div>
+              </>
+            ) : null}
+            {scoreData ? (
+              <>
+                <div>
+                  <dt className="text-muted-foreground">Momentum Factor</dt>
+                  <dd className="font-medium">{scoreData.factors.momentum}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Quality Factor</dt>
+                  <dd className="font-medium">{scoreData.factors.quality}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Value Factor</dt>
+                  <dd className="font-medium">{scoreData.factors.value}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Risk Factor</dt>
+                  <dd className="font-medium">{scoreData.factors.risk}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Growth Factor</dt>
+                  <dd className="font-medium">{scoreData.factors.growth}</dd>
                 </div>
               </>
             ) : null}

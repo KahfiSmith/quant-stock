@@ -12,5 +12,6 @@ export const API_ENDPOINTS = {
     PRICES: (symbol: string) => `/api/v1/stocks/${symbol}/prices`,
     TECHNICAL: (symbol: string) => `/api/v1/stocks/${symbol}/technical`,
     FUNDAMENTAL: (symbol: string) => `/api/v1/stocks/${symbol}/fundamental`,
+    SCORE: (symbol: string) => `/api/v1/stocks/${symbol}/score`,
   },
 } as const;
