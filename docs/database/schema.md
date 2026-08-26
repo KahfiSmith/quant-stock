@@ -10,9 +10,9 @@ QuantLens uses PostgreSQL with the TimescaleDB extension. FastAPI owns migration
 
 The first migration is `0001_authentication`. Refresh tokens are never stored in raw form. A reused token revokes the related session.
 
-## Market data tables
+## Market data & fundamentals tables
 
-Migration `0002_market_data` adds Phase 2 groundwork:
+Migration `0002_market_data` and `0003_fundamentals` add market data and fundamental records:
 
 - `stocks`: numeric `id`, unique indexed `symbol`, `name`, optional `sector`,
   `market_cap`, `exchange`, `currency`, `timezone`, and timestamps.
@@ -22,6 +22,10 @@ Migration `0002_market_data` adds Phase 2 groundwork:
   is the canonical idempotency key. On PostgreSQL the table is created as a
   TimescaleDB hypertable partitioned on `time`; on other dialects (SQLite
   tests) it is a plain table.
+- `fundamentals`: numeric `id`, `stock_id` (FK to `stocks`), `period_end` (Date),
+  `period_type` (e.g. `TTM`), valuation/profitability/growth ratios (`pe_ratio`, `pb_ratio`,
+  `roe`, `roa`, `debt_to_equity`, `revenue_growth`, `eps_growth`), composite `score`,
+  `source`, and `created_at`. Unique on `(stock_id, period_end, period_type)`.
 
 The `prices.source` field carries data provenance (`sample` for seeded
 placeholder rows). Real ingestion is deferred pending a data-provider decision.

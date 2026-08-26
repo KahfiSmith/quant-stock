@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.fundamental import Fundamental
 
 
 class Stock(Base):
@@ -27,6 +31,9 @@ class Stock(Base):
     )
     prices: Mapped[list[Price]] = relationship(
         back_populates="stock", cascade="all, delete-orphan"
+    )
+    fundamentals: Mapped[list[Fundamental]] = relationship(
+        "Fundamental", back_populates="stock", cascade="all, delete-orphan"
     )
 
 

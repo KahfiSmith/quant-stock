@@ -82,6 +82,7 @@ user -> /stocks or /stocks/[symbol] -> RequireAuth (client guard)
 | `GET` | `/api/v1/stocks` | List/search the stock universe | Optional (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV candles | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/technical` | Calculated technical indicators (MA, RSI, MACD, BB, ATR) | Required (Bearer) |
+| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios and financial metrics | Required (Bearer) |
 
 Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
 `data_source` provenance.

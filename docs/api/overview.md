@@ -24,13 +24,13 @@ API integration documentation for communication between the Next.js frontend and
 | **Auth** | `POST` | `/api/v1/auth/logout` | Session invalidation |
 | **Market Data** | `GET` | `/api/v1/stocks` | List and search stocks with summary metrics |
 | **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
+| **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
 | **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger Bands) |
 
 ## Planned QuantLens API Endpoints (`/api/v1`)
 
 | Module | Method | Path | Description |
 |---|---|---|---|
-| **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |
 | **Screener** | `POST` | `/api/v1/screener` | Filter & rank stocks by multi-criteria |
 | **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |

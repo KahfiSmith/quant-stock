@@ -45,10 +45,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Support indicators: MA20/50/200, RSI, MACD, ATR, Bollinger Bands.
 - [x] Build endpoint: `GET /api/v1/stocks/{symbol}/technical`.
 
-### Phase 4 — Fundamental Analysis Engine (Planned)
-- [ ] Implement `apps/quant-api/app/fundamental` evaluation module.
-- [ ] Process ratios: PER, PBV, ROE, ROA, DER, Revenue Growth, EPS Growth.
-- [ ] Build endpoint: `GET /api/v1/stocks/{symbol}/fundamental`.
+### Phase 4 — Fundamental Analysis Engine (Done)
+- [x] Implement `apps/quant-api/app/fundamental` evaluation module and `fundamentals` table.
+- [x] Process ratios: PER, PBV, ROE, ROA, DER, Revenue Growth, EPS Growth.
+- [x] Build endpoint: `GET /api/v1/stocks/{symbol}/fundamental`.
 
 ### Phase 5 — Quant Scoring Engine (Planned)
 - [ ] Implement multi-factor scoring module in `apps/quant-api/app/quant/scoring.py`.

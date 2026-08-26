@@ -13,6 +13,7 @@ from app.schemas.market_data import (
     StocksResponse,
 )
 from app.schemas.technical import TechnicalAnalysisResponse
+from app.services.fundamental import get_latest_fundamental
 from app.services.market_data import get_stock_by_symbol, list_prices, list_stocks
 from app.services.technical import calculate_technical_analysis
 
@@ -95,3 +96,20 @@ def get_stock_technical(
         db, stock, interval=interval
     )
     return success(result.model_dump(mode="json"), "Technical indicators calculated")
+
+
+@router.get("/{symbol}/fundamental")
+def get_stock_fundamental(
+    symbol: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    stock = get_stock_by_symbol(db, symbol)
+    if stock is None:
+        raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {symbol.upper()}")
+
+    result = get_latest_fundamental(db, stock)
+    if result is None:
+        raise ApiError(404, "FUNDAMENTAL_NOT_FOUND", f"No fundamental data for {symbol.upper()}")
+
+    return success(result.model_dump(mode="json"), "Fundamental ratios retrieved")
