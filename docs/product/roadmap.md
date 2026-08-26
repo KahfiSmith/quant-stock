@@ -40,10 +40,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Build endpoints: `GET /api/v1/stocks`, `GET /api/v1/stocks/{symbol}/prices`.
 - [x] Integrate TradingView Lightweight Charts in frontend (`/stocks`, `/stocks/[symbol]`).
 
-### Phase 3 — Technical Analysis Engine (Planned)
-- [ ] Implement `apps/quant-api/app/technical` calculation module using `pandas-ta`.
-- [ ] Support indicators: MA20/50/200, RSI, MACD, ATR, Bollinger Bands.
-- [ ] Build endpoint: `GET /api/v1/stocks/{symbol}/technical`.
+### Phase 3 — Technical Analysis Engine (Done)
+- [x] Implement `apps/quant-api/app/technical` calculation module without unmaintained pandas-ta.
+- [x] Support indicators: MA20/50/200, RSI, MACD, ATR, Bollinger Bands.
+- [x] Build endpoint: `GET /api/v1/stocks/{symbol}/technical`.
 
 ### Phase 4 — Fundamental Analysis Engine (Planned)
 - [ ] Implement `apps/quant-api/app/fundamental` evaluation module.

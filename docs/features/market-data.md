@@ -81,6 +81,7 @@ user -> /stocks or /stocks/[symbol] -> RequireAuth (client guard)
 |---|---|---|---|
 | `GET` | `/api/v1/stocks` | List/search the stock universe | Optional (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV candles | Required (Bearer) |
+| `GET` | `/api/v1/stocks/{symbol}/technical` | Calculated technical indicators (MA, RSI, MACD, BB, ATR) | Required (Bearer) |
 
 Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
 `data_source` provenance.
@@ -108,11 +109,13 @@ Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
 - 2026-08-25: Schema-first slice with labeled `source="sample"` seed -> proves
   the full stack without waiting on a provider, and never presents placeholder
   data as real.
+- 2026-08-26: Pure indicator calculations in `app/technical/indicators.py` -> no
+  unmaintained pandas-ta dependency, returns `None` when lookback history is insufficient.
 
 ## Verification
 
 ```bash
-cd apps/quant-api && .venv/bin/pytest -q   # 8 tests incl. market data
+cd apps/quant-api && .venv/bin/pytest -q   # 16 tests incl. technical indicators & routes
 cd apps/quant-api && .venv/bin/ruff check .
 pnpm lint && pnpm type-check && pnpm docs:check && pnpm test && pnpm build
 ```

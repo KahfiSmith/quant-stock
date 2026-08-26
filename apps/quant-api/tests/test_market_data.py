@@ -90,6 +90,20 @@ def test_stock_prices_return_candles_and_provenance(client: TestClient) -> None:
     assert isinstance(data["items"][0]["close"], int | float)
 
 
+def test_stock_prices_filter_by_start_date(client: TestClient) -> None:
+    _seed(client)
+    response = client.get(
+        "/api/v1/stocks/BBCA/prices",
+        params={"start_date": "2026-01-06"},
+        headers=_auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["pagination"]["total"] == 2
+    assert all(item["time"] >= "2026-01-06" for item in data["items"])
+
+
 def test_stock_prices_unknown_symbol_returns_404(client: TestClient) -> None:
     _seed(client)
     response = client.get("/api/v1/stocks/XXXX/prices", headers=_auth_headers(client))

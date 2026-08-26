@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -12,7 +12,9 @@ from app.schemas.market_data import (
     StockResponse,
     StocksResponse,
 )
+from app.schemas.technical import TechnicalAnalysisResponse
 from app.services.market_data import get_stock_by_symbol, list_prices, list_stocks
+from app.services.technical import calculate_technical_analysis
 
 router = APIRouter(prefix="/api/v1/stocks", tags=["market-data"])
 
@@ -43,6 +45,8 @@ def get_stocks(
 def get_stock_prices(
     symbol: str,
     interval: str = Query(default="1d", pattern="^(1d|1w|1mo)$"),
+    start_date: date | None = Query(default=None),
+    end_date: date | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=200, ge=1, le=500),
     db: Session = Depends(get_db),
@@ -52,10 +56,15 @@ def get_stock_prices(
     if stock is None:
         raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {symbol.upper()}")
 
+    start = datetime.combine(start_date, datetime.min.time(), tzinfo=UTC) if start_date else None
+    end = datetime.combine(end_date, datetime.max.time(), tzinfo=UTC) if end_date else None
+
     rows, _total, meta, data_source = list_prices(
         db,
         stock.id,
         interval=interval,
+        start=start,
+        end=end,
         page=page,
         page_size=page_size,
     )
@@ -69,3 +78,20 @@ def get_stock_prices(
         ).model_dump(mode="json"),
         "Prices retrieved",
     )
+
+
+@router.get("/{symbol}/technical")
+def get_stock_technical(
+    symbol: str,
+    interval: str = Query(default="1d", pattern="^(1d|1w|1mo)$"),
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    stock = get_stock_by_symbol(db, symbol)
+    if stock is None:
+        raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {symbol.upper()}")
+
+    result: TechnicalAnalysisResponse = calculate_technical_analysis(
+        db, stock, interval=interval
+    )
+    return success(result.model_dump(mode="json"), "Technical indicators calculated")

@@ -114,9 +114,11 @@ User action
 | `/login` | `(auth)` | Login form | Redirects after an authenticated session is restored |
 | `/register` | `(auth)` | Registration form | Public |
 | `/profile` | `(dashboard)` | Profile page and logout action | Client guard for UX; FastAPI authorizes protected API calls |
+| `/stocks` | `(dashboard)` | Stock universe listing and search | Client guard for UX; protected market data |
+| `/stocks/[symbol]` | `(dashboard)` | Stock candlestick chart & technical indicators | Client guard for UX; protected market data |
 
 ## Current and planned scope
 
-- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, and protected profile UX.
-- **Deferred:** Market-data ingestion, technical and fundamental analysis, quant scoring, portfolios, backtesting, and AI-assisted analysis.
+- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, protected profile UX, market data universe listing and price candlestick chart, and technical analysis engine (SMA, EMA, RSI, MACD, ATR, Bollinger Bands).
+- **Deferred:** Real market-data provider ingestion, fundamental analysis, quant scoring, portfolios, backtesting, and AI-assisted analysis.
 - **Future repository structure:** Additional packages or a moved `apps/web` application require an explicit migration; they are not part of the current runtime layout.
