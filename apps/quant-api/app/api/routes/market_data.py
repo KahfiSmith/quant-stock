@@ -15,6 +15,7 @@ from app.schemas.market_data import (
 from app.schemas.technical import TechnicalAnalysisResponse
 from app.services.fundamental import get_latest_fundamental
 from app.services.market_data import get_stock_by_symbol, list_prices, list_stocks
+from app.services.quant import compute_stock_quant_score
 from app.services.technical import calculate_technical_analysis
 
 router = APIRouter(prefix="/api/v1/stocks", tags=["market-data"])
@@ -113,3 +114,17 @@ def get_stock_fundamental(
         raise ApiError(404, "FUNDAMENTAL_NOT_FOUND", f"No fundamental data for {symbol.upper()}")
 
     return success(result.model_dump(mode="json"), "Fundamental ratios retrieved")
+
+
+@router.get("/{symbol}/score")
+def get_stock_quant_score(
+    symbol: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    stock = get_stock_by_symbol(db, symbol)
+    if stock is None:
+        raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {symbol.upper()}")
+
+    result = compute_stock_quant_score(db, stock)
+    return success(result.model_dump(mode="json"), "Quant score calculated")
