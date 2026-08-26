@@ -1,2 +1,3 @@
-export { useStockPrices } from "@/hooks/market/use-stock-prices";
+export { useStockPrices, type PriceRange } from "@/hooks/market/use-stock-prices";
 export { useStocks } from "@/hooks/market/use-stocks";
+export { useStockTechnical } from "@/hooks/market/use-stock-technical";

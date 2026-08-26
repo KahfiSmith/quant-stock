@@ -1,37 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
 
+import { StateMessage } from "@/components/common";
 import { useStocks } from "@/hooks/market";
 
 export function StockList() {
   const { data, isPending, isError } = useStocks();
 
   if (isPending) {
-    return (
-      <div className="flex items-center justify-center p-6 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
-      </div>
-    );
+    return <StateMessage variant="loading" />;
   }
 
   if (isError) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+      <StateMessage variant="error">
         Failed to load the stock universe. Please try again.
-      </div>
+      </StateMessage>
     );
   }
 
   const stocks = data?.items ?? [];
 
   if (stocks.length === 0) {
-    return (
-      <div className="rounded-lg border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
-        No stocks available yet.
-      </div>
-    );
+    return <StateMessage variant="empty">No stocks available yet.</StateMessage>;
   }
 
   return (

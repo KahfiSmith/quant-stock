@@ -8,5 +8,6 @@ export const QUERY_KEYS = {
   MARKET: {
     STOCKS: ["market", "stocks"] as const,
     PRICES: (symbol: string) => ["market", "prices", symbol] as const,
+    TECHNICAL: (symbol: string) => ["market", "technical", symbol] as const,
   },
 } as const;

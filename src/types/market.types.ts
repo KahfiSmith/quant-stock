@@ -42,6 +42,38 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface BollingerBand {
+  middle: number | null;
+  upper: number | null;
+  lower: number | null;
+}
+
+export interface MacdIndicator {
+  line: number | null;
+  signal: number | null;
+  histogram: number | null;
+}
+
+export interface IndicatorsSummary {
+  ma20: number | null;
+  ma50: number | null;
+  ma200: number | null;
+  rsi14: number | null;
+  atr14: number | null;
+  macd: MacdIndicator;
+  bollinger: BollingerBand;
+}
+
+export interface TechnicalAnalysisResponse {
+  symbol: string;
+  interval: string;
+  as_of: string;
+  trend: "bullish" | "bearish" | "neutral" | string;
+  rsi: number | null;
+  ma_signal: "positive" | "negative" | "neutral" | string;
+  indicators: IndicatorsSummary;
+}
+
 /** Candle shape consumed by TradingView Lightweight Charts. */
 export interface ChartCandle {
   time: string;

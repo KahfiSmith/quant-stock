@@ -10,6 +10,7 @@ import {
 } from "lightweight-charts";
 import { useEffect, useRef } from "react";
 
+import { StateMessage } from "@/components/common";
 import type { ChartCandle } from "@/types";
 
 type StockChartProps = {
@@ -65,11 +66,7 @@ export function StockChart({ data }: StockChartProps) {
   }, [data]);
 
   if (data.length === 0) {
-    return (
-      <div className="flex h-[380px] w-full items-center justify-center rounded-lg border bg-muted/40 text-sm text-muted-foreground">
-        No price data available for this symbol yet.
-      </div>
-    );
+    return <StateMessage variant="empty">No price data available for this symbol yet.</StateMessage>;
   }
 
   return <div ref={containerRef} className="h-[380px] w-full" />;
