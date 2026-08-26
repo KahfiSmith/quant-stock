@@ -4,7 +4,12 @@ import { useState } from "react";
 
 import { StateMessage } from "@/components/common";
 import { StockChart } from "@/components/features/market/stock-chart";
-import { useStockPrices, useStockTechnical, type PriceRange } from "@/hooks/market";
+import {
+  useStockFundamental,
+  useStockPrices,
+  useStockTechnical,
+  type PriceRange,
+} from "@/hooks/market";
 import { toChartCandles } from "@/types";
 
 type StockDetailProps = {
@@ -37,6 +42,7 @@ export function StockDetail({ symbol }: StockDetailProps) {
   const [days, setDays] = useState<number>(0);
   const { data, isPending, isError } = useStockPrices(symbol, rangeFor(days));
   const { data: technical } = useStockTechnical(symbol);
+  const { data: fundamental } = useStockFundamental(symbol);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
@@ -45,26 +51,33 @@ export function StockDetail({ symbol }: StockDetailProps) {
           <p className="text-sm font-medium text-primary">Market data</p>
           <h1 className="text-2xl font-semibold tracking-tight">{symbol.toUpperCase()}</h1>
         </div>
-        {technical ? (
-          <div className="flex gap-2 text-xs">
-            <span
-              className={`rounded-full px-2.5 py-0.5 font-medium ${
-                technical.trend === "bullish"
-                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                  : technical.trend === "bearish"
-                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                    : "bg-muted text-muted-foreground"
-              }`}
-            >
-              Trend: {technical.trend}
-            </span>
-            {technical.rsi !== null ? (
-              <span className="rounded-full bg-muted px-2.5 py-0.5 font-medium text-foreground">
-                RSI(14): {technical.rsi}
+        <div className="flex flex-wrap gap-2 text-xs">
+          {technical ? (
+            <>
+              <span
+                className={`rounded-full px-2.5 py-0.5 font-medium ${
+                  technical.trend === "bullish"
+                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                    : technical.trend === "bearish"
+                      ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                      : "bg-muted text-muted-foreground"
+                }`}
+              >
+                Trend: {technical.trend}
               </span>
-            ) : null}
-          </div>
-        ) : null}
+              {technical.rsi !== null ? (
+                <span className="rounded-full bg-muted px-2.5 py-0.5 font-medium text-foreground">
+                  RSI(14): {technical.rsi}
+                </span>
+              ) : null}
+            </>
+          ) : null}
+          {fundamental?.score !== null && fundamental?.score !== undefined ? (
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary">
+              Fundamental Score: {fundamental.score}/100
+            </span>
+          ) : null}
+        </div>
       </header>
 
       <div className="flex gap-2" role="group" aria-label="Price range">
@@ -134,6 +147,34 @@ export function StockDetail({ symbol }: StockDetailProps) {
                   <dt className="text-muted-foreground">MACD Line / Signal</dt>
                   <dd className="font-medium">
                     {technical.indicators.macd.line ?? "n/a"} / {technical.indicators.macd.signal ?? "n/a"}
+                  </dd>
+                </div>
+              </>
+            ) : null}
+            {fundamental ? (
+              <>
+                <div>
+                  <dt className="text-muted-foreground">P/E Ratio</dt>
+                  <dd className="font-medium">{fundamental.ratios.pe_ratio ?? "n/a"}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">P/B Ratio</dt>
+                  <dd className="font-medium">{fundamental.ratios.pb_ratio ?? "n/a"}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">ROE</dt>
+                  <dd className="font-medium">
+                    {fundamental.ratios.roe !== null ? `${(fundamental.ratios.roe * 100).toFixed(1)}%` : "n/a"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">D/E</dt>
+                  <dd className="font-medium">{fundamental.ratios.debt_to_equity ?? "n/a"}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Rev Growth</dt>
+                  <dd className="font-medium">
+                    {fundamental.ratios.revenue_growth !== null ? `${(fundamental.ratios.revenue_growth * 100).toFixed(1)}%` : "n/a"}
                   </dd>
                 </div>
               </>

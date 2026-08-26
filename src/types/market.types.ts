@@ -42,6 +42,27 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface FundamentalRatios {
+  pe_ratio: number | null;
+  pb_ratio: number | null;
+  roe: number | null;
+  roa: number | null;
+  debt_to_equity: number | null;
+  revenue_growth: number | null;
+  eps_growth: number | null;
+}
+
+export interface FundamentalResponse {
+  symbol: string;
+  period_end: string;
+  published_at: string | null;
+  period_type: string;
+  score: number | null;
+  ratios: FundamentalRatios;
+  source: string;
+  as_of: string;
+}
+
 export interface BollingerBand {
   middle: number | null;
   upper: number | null;
