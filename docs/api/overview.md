@@ -26,6 +26,8 @@ API integration documentation for communication between the Next.js frontend and
 | **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
 | **AI Analyst** | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | AI-generated strengths, risks, conclusion |
 | **Backtest** | `POST` | `/api/v1/backtest` | Run historical strategy backtest |
+| **Backtest** | `GET` | `/api/v1/backtest/jobs` | List user's persistent backtest jobs |
+| **Backtest** | `GET` | `/api/v1/backtest/jobs/{id}` | Get detail of a specific persistent backtest job |
 | **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
 | **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |

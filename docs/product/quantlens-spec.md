@@ -91,10 +91,9 @@ quantlens/
 
 ### Phase 0 — Project Initialization
 
-- Status: `TODO`
-- Create the target monorepo structure: `apps/web`, `apps/quant-api`, and `packages/`.
-- Integrate the existing Next.js boilerplate.
-- Create the FastAPI service skeleton.
+- Status: `ACCEPTED DEVIATION (ADR-004) / COMPLETE (Services Foundation)`
+- Establish the active FastAPI service under `apps/quant-api`; the Next.js app remains at the repository root per ADR-004.
+- Monorepo restructuring (`apps/web` and `packages/`) is intentionally deferred via ADR-004.
 - Configure Docker Compose for the web app, API, PostgreSQL, and TimescaleDB.
 - Provide `.env.example` files with dummy values only.
 - **Verification:** `docker compose up` starts the required local stack from a clean clone.
@@ -288,13 +287,7 @@ When a conflict exists, preserve current runtime compatibility, record the decis
 
 ### Current repository baseline
 
-The historical baseline above described the repository before the QuantLens implementation work. The current runtime now contains the FastAPI service, TimescaleDB/PostgreSQL migrations, market-data read and provider-neutral ingestion boundaries, analytical surfaces, portfolio, backtest, AI evidence contract, and `/settings`; the remaining real-provider activation is externally blocked as documented below. Current runtime routes, migrations, and related implementation docs are authoritative for shipped behavior.
-
-Therefore:
-
-1. Phase 0 is not complete merely because the frontend boilerplate exists.
-2. Phase 1 has UI and session foundations, but FastAPI and database integration must be completed before the phase can be `Done`.
-3. Roadmap endpoints are target contracts; they do not prove that those endpoints currently exist.
+The current runtime contains the Next.js frontend at the root (per ADR-004), the FastAPI service under `apps/quant-api`, TimescaleDB/PostgreSQL migrations (0001–0010), market-data read and provider-neutral ingestion boundaries (prices and fundamentals), analytical surfaces, portfolio, backtesting with persistent job lifecycle (`backtest_jobs`), AI analyst with structured evidence contracts and configurable LLM boundary, and user settings. Commercial market data provider activation and licensed news integration remain external blockers as documented. Current runtime routes, migrations, and related implementation docs are authoritative for shipped behavior.
 
 ### Product boundaries and non-goals
 

@@ -46,6 +46,12 @@ is required by the active implementation.
 
 Migration `0008_user_preferences` adds `users.theme_preference` (`light`, `dark`, or `system`) and `users.timezone`.
 
+## Backtest jobs table
+
+Migration `0010_backtest_jobs` adds persistent backtest execution tracking:
+
+- `backtest_jobs`: string primary key `id` (UUID), `user_id` (FK to `users`), `symbol`, `strategy`, `status` (`queued`, `running`, `succeeded`, `failed`), `initial_capital`, `parameters` (JSON), `start_date`, `end_date`, `summary` (JSON), `equity_curve` (JSON), `metadata` (JSON), `error_message`, `retry_count`, `created_at`, `started_at`, and `finished_at`.
+
 1. Change SQLAlchemy models in `apps/quant-api/app/models`.
 2. Create and review an Alembic migration.
 3. Update Pydantic schemas and frontend types when the API contract changes.
