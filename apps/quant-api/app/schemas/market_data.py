@@ -44,7 +44,9 @@ class PriceResponse(BaseModel):
 class StocksResponse(BaseModel):
     items: list[StockResponse]
     pagination: PaginationMeta = Field(...)
-    as_of: datetime
+    as_of: datetime = Field(
+        description="Wall-clock time of the response. NOT the freshness of the underlying data.",
+    )
 
 
 class PricesResponse(BaseModel):
@@ -52,4 +54,21 @@ class PricesResponse(BaseModel):
     data_source: str
     items: list[PriceResponse]
     pagination: PaginationMeta
-    as_of: datetime
+    as_of: datetime = Field(
+        description="Wall-clock time of the response. NOT the freshness of the underlying data.",
+    )
+    price_as_of: datetime | None = Field(
+        default=None,
+        description=(
+            "Market observation time of the latest price in `items`. "
+            "This is the actual freshness of the data (EOD, with 1-day lag for yfinance EOD). "
+            "Distinct from `as_of` which is the request time."
+        ),
+    )
+    data_lag: str | None = Field(
+        default=None,
+        description=(
+            "Semantic description of the data staleness, e.g. 'eod_1d' (end-of-day, 1-day lag). "
+            "Use this instead of 'live' / 'real-time' which are not guaranteed."
+        ),
+    )
