@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.fundamental import Fundamental
@@ -57,9 +57,31 @@ def compute_stock_quant_score(
         eps_growth=eps_g,
     )
 
+    raw_inputs: dict[str, float | None] = {
+        "rsi": tech.rsi,
+        "roe": roe,
+        "roa": roa,
+        "debt_to_equity": de,
+        "pe_ratio": pe,
+        "pb_ratio": pb,
+        "atr_ratio": atr_ratio,
+        "revenue_growth": rev_g,
+        "eps_growth": eps_g,
+    }
+    missing_inputs = [name for name, value in raw_inputs.items() if value is None]
+    reason_codes = [f"{name.upper()}_UNAVAILABLE" for name in missing_inputs]
+    if tech.trend == "bullish":
+        reason_codes.append("PRICE_TREND_BULLISH")
+    elif tech.trend == "bearish":
+        reason_codes.append("PRICE_TREND_BEARISH")
+    if fund is None:
+        reason_codes.append("FUNDAMENTAL_DATA_MISSING")
+
+    universe_size = db.scalar(select(func.count()).select_from(Stock)) or 0
+    as_of = datetime.now(UTC)
     return QuantScoreResponse(
         symbol=stock.symbol,
-        as_of=datetime.now(UTC),
+        as_of=as_of,
         score_version="v1",
         total_score=factors.total_score,
         factors=QuantFactors(
@@ -70,4 +92,30 @@ def compute_stock_quant_score(
             growth=factors.growth,
         ),
         data_quality=factors.data_quality,
+        metadata={
+            "model_version": "v1",
+            "methodology_version": "fixed-threshold-v1",
+            "raw_inputs": raw_inputs,
+            "missing_inputs": missing_inputs,
+            "weights": {
+                "momentum": 0.30,
+                "quality": 0.25,
+                "value": 0.20,
+                "risk": 0.15,
+                "growth": 0.10,
+            },
+            "normalization": {
+                "momentum": "rsi_clamped_0_100_plus_trend_adjustment",
+                "quality": "roe_roa_scaled_and_debt_penalized_average",
+                "value": "pe_pb_piecewise_threshold_average",
+                "risk": "100_minus_atr_ratio_times_2000_clamped",
+                "growth": "50_plus_growth_times_250_clamped_average",
+            },
+            "reason_codes": reason_codes,
+            "comparison_universe": {"identifier": "all_stocks", "size": universe_size},
+            "technical_as_of": tech.as_of,
+            "fundamental_period_end": fund.period_end if fund else None,
+            "fundamental_published_at": fund.published_at if fund else None,
+            "price_as_of": latest_candle.time if latest_candle else None,
+        },
     )

@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from decimal import Decimal
 
@@ -12,8 +13,10 @@ from app.schemas.portfolio import (
     CreateTransactionRequest,
     HoldingResponse,
     PortfolioDetailResponse,
+    PortfolioRiskResponse,
     PortfolioSummaryResponse,
     TransactionResponse,
+    UpdatePortfolioRequest,
 )
 
 
@@ -64,6 +67,70 @@ def create_user_portfolio(
     )
 
 
+def update_user_portfolio(
+    db: Session, user_id: int, portfolio_id: int, req: UpdatePortfolioRequest
+) -> PortfolioSummaryResponse:
+    portfolio = db.scalar(
+        select(Portfolio).where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
+    )
+    if not portfolio:
+        raise ApiError(404, "PORTFOLIO_NOT_FOUND", "Portfolio not found")
+    if req.name is not None:
+        normalized_name = req.name.strip()
+        duplicate = db.scalar(
+            select(Portfolio).where(
+                Portfolio.user_id == user_id,
+                Portfolio.name == normalized_name,
+                Portfolio.id != portfolio_id,
+            )
+        )
+        if duplicate:
+            raise ApiError(409, "PORTFOLIO_EXISTS", f"Portfolio '{normalized_name}' already exists")
+        portfolio.name = normalized_name
+    if req.description is not None:
+        portfolio.description = req.description.strip() or None
+    if req.currency is not None:
+        portfolio.currency = req.currency.upper()
+    db.commit()
+    db.refresh(portfolio)
+    return PortfolioSummaryResponse(
+        id=portfolio.id,
+        name=portfolio.name,
+        description=portfolio.description,
+        currency=portfolio.currency,
+        created_at=portfolio.created_at,
+        updated_at=portfolio.updated_at,
+    )
+
+
+def _replay_transactions(
+    transactions: list[Transaction],
+) -> tuple[dict[int, Decimal], dict[int, Decimal], Decimal]:
+    shares: dict[int, Decimal] = defaultdict(Decimal)
+    cost: dict[int, Decimal] = defaultdict(Decimal)
+    realized = Decimal(0)
+    for tx in transactions:
+        quantity = Decimal(str(tx.quantity))
+        price = Decimal(str(tx.price))
+        fee = Decimal(str(tx.fee))
+        if tx.transaction_type == "BUY":
+            shares[tx.stock_id] += quantity
+            cost[tx.stock_id] += quantity * price + fee
+        else:
+            held = shares[tx.stock_id]
+            if quantity > held:
+                raise ApiError(
+                    409,
+                    "INSUFFICIENT_HOLDINGS",
+                    f"Cannot sell {quantity} shares; only {held} shares are held",
+                )
+            average_cost = cost[tx.stock_id] / held if held else Decimal(0)
+            realized += quantity * price - fee - quantity * average_cost
+            shares[tx.stock_id] -= quantity
+            cost[tx.stock_id] -= quantity * average_cost
+    return shares, cost, realized
+
+
 def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> PortfolioDetailResponse:
     portfolio = db.scalar(
         select(Portfolio).where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
@@ -79,28 +146,7 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
         )
     )
 
-    # Compute holdings via weighted average cost.
-    stock_shares: dict[int, Decimal] = defaultdict(Decimal)
-    stock_cost: dict[int, Decimal] = defaultdict(Decimal)
-
-    for tx in transactions:
-        qty = Decimal(str(tx.quantity))
-        price = Decimal(str(tx.price))
-        fee = Decimal(str(tx.fee))
-        if tx.transaction_type == "BUY":
-            stock_shares[tx.stock_id] += qty
-            stock_cost[tx.stock_id] += qty * price + fee
-        elif tx.transaction_type == "SELL":
-            curr_shares = stock_shares[tx.stock_id]
-            if qty > curr_shares:
-                raise ApiError(
-                    409,
-                    "INSUFFICIENT_HOLDINGS",
-                    f"Cannot sell {qty} shares; only {curr_shares} shares are held",
-                )
-            avg_cost = stock_cost[tx.stock_id] / curr_shares if curr_shares else Decimal(0)
-            stock_shares[tx.stock_id] -= qty
-            stock_cost[tx.stock_id] -= qty * avg_cost
+    stock_shares, stock_cost, total_realized_pnl = _replay_transactions(transactions)
 
     holdings: list[HoldingResponse] = []
     total_cost = Decimal(0)
@@ -151,6 +197,52 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
     total_pnl = current_value - total_cost
     total_pnl_pct = (total_pnl / total_cost * hundred) if total_cost > 0 else Decimal(0)
 
+    latest_values = [
+        Decimal(str(holding.current_value))
+        for holding in holdings
+        if holding.current_value is not None
+    ]
+    concentration = (
+        max(latest_values) / sum(latest_values) * hundred
+        if latest_values and sum(latest_values) > 0
+        else Decimal(0)
+    )
+    daily_values: dict = {}
+    historical_shares: dict[int, Decimal] = defaultdict(Decimal)
+    transactions_by_time = sorted(transactions, key=lambda tx: (tx.transacted_at, tx.id))
+    transaction_index = 0
+    all_prices = list(
+        db.scalars(
+            select(Price)
+            .where(Price.stock_id.in_(stock_shares.keys()), Price.interval == "1d")
+            .order_by(Price.time.asc())
+        )
+    )
+    for price_record in all_prices:
+        while (
+            transaction_index < len(transactions_by_time)
+            and transactions_by_time[transaction_index].transacted_at.date() <= price_record.time.date()
+        ):
+            transaction = transactions_by_time[transaction_index]
+            quantity = Decimal(str(transaction.quantity))
+            historical_shares[transaction.stock_id] += quantity if transaction.transaction_type == "BUY" else -quantity
+            transaction_index += 1
+        shares = historical_shares[price_record.stock_id]
+        if shares > 0:
+            day = price_record.time.date()
+            daily_values[day] = daily_values.get(day, Decimal(0)) + shares * Decimal(str(price_record.close))
+    ordered_values = [daily_values[day] for day in sorted(daily_values)]
+    returns = [
+        (current - previous) / previous
+        for previous, current in zip(ordered_values, ordered_values[1:])
+        if previous > 0
+    ]
+    volatility = Decimal(0)
+    if len(returns) > 1:
+        mean = sum(returns) / Decimal(len(returns))
+        variance = sum((value - mean) ** 2 for value in returns) / Decimal(len(returns) - 1)
+        volatility = Decimal(str(math.sqrt(float(variance)) * math.sqrt(252) * 100))
+
     return PortfolioDetailResponse(
         id=portfolio.id,
         name=portfolio.name,
@@ -158,9 +250,15 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
         currency=portfolio.currency,
         total_cost=float(total_cost.quantize(cents)),
         current_value=float(current_value.quantize(cents)),
+        total_realized_pnl=float(total_realized_pnl.quantize(cents)),
         total_unrealized_pnl=float(total_pnl.quantize(cents)),
         total_unrealized_pnl_percent=float(total_pnl_pct.quantize(cents)),
         holdings=holdings,
+        risk=PortfolioRiskResponse(
+            annualized_volatility_percent=float(volatility.quantize(cents)),
+            max_holding_concentration_percent=float(concentration.quantize(cents)),
+            observations=len(returns),
+        ),
         created_at=portfolio.created_at,
         updated_at=portfolio.updated_at,
     )
@@ -189,12 +287,9 @@ def add_portfolio_transaction(
                 .order_by(Transaction.transacted_at.asc(), Transaction.id.asc())
             )
         )
-        held_quantity = sum(
-            (Decimal(str(tx.quantity)) if tx.transaction_type == "BUY" else -Decimal(str(tx.quantity)))
-            for tx in transactions
-            if tx.stock_id == stock.id
-        )
+        shares, _, _ = _replay_transactions(transactions)
         requested_quantity = Decimal(str(req.quantity))
+        held_quantity = shares[stock.id]
         if requested_quantity > held_quantity:
             raise ApiError(
                 409,
@@ -209,6 +304,7 @@ def add_portfolio_transaction(
         quantity=req.quantity,
         price=req.price,
         fee=req.fee,
+        transacted_at=req.transacted_at,
     )
     db.add(tx)
     db.commit()

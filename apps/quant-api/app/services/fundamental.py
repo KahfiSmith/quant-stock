@@ -36,6 +36,7 @@ def get_latest_fundamental(db: Session, stock: Stock) -> FundamentalResponse | N
         symbol=stock.symbol,
         period_end=record.period_end,
         published_at=record.published_at,
+        currency=record.currency or stock.currency,
         period_type=record.period_type,
         score=calculated_score,
         ratios=RatiosSummary(
@@ -48,5 +49,18 @@ def get_latest_fundamental(db: Session, stock: Stock) -> FundamentalResponse | N
             eps_growth=eps_g,
         ),
         source=record.source,
+        source_record_id=record.source_record_id,
+        retrieved_at=record.retrieved_at,
+        payload_checksum=record.payload_checksum,
+        validation_state=("flagged" if record.published_at is None else record.validation_state),
+        units={
+            "pe_ratio": "ratio",
+            "pb_ratio": "ratio",
+            "roe": "decimal",
+            "roa": "decimal",
+            "debt_to_equity": "ratio",
+            "revenue_growth": "decimal",
+            "eps_growth": "decimal",
+        },
         as_of=datetime.now(UTC),
     )

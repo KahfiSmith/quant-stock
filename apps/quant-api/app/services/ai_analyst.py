@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.market_data import Stock
-from app.schemas.ai_analyst import AiAnalystResponse
+from app.models.market_data import Price, Stock
+from app.schemas.ai_analyst import AiAnalystResponse, AiEvidence
 from app.services.fundamental import get_latest_fundamental
 from app.services.quant import compute_stock_quant_score
 from app.services.technical import calculate_technical_analysis
@@ -26,7 +27,13 @@ DISCLAIMER = (
 def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
     tech = calculate_technical_analysis(db, stock, interval="1d")
     fund = get_latest_fundamental(db, stock)
-    quant = compute_stock_quant_score(db, stock)
+    quant = compute_stock_quant_score(db, stock, technical=tech)
+    latest_price = db.scalar(
+        select(Price)
+        .where(Price.stock_id == stock.id, Price.interval == "1d")
+        .order_by(Price.time.desc())
+        .limit(1)
+    )
 
     strengths: list[str] = []
     risks: list[str] = []
@@ -120,6 +127,47 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
             f"Look for catalyst developments in quarterly earnings or trend continuation."
         )
 
+    evidence = [
+        AiEvidence(
+            category="technical",
+            metric="trend",
+            value=tech.trend,
+            source=latest_price.source if latest_price else None,
+            as_of=latest_price.time if latest_price else tech.as_of,
+        ),
+        AiEvidence(
+            category="technical",
+            metric="rsi14",
+            value=tech.rsi,
+            source=latest_price.source if latest_price else None,
+            as_of=latest_price.time if latest_price else tech.as_of,
+        ),
+        AiEvidence(
+            category="quant",
+            metric="total_score",
+            value=quant.total_score,
+            source="calculated",
+            as_of=quant.as_of,
+            score_version=quant.score_version,
+        ),
+    ]
+    data_used = ["technical_indicators", "quant_score"]
+    data_unavailable = list(quant.metadata.missing_inputs)
+    if fund:
+        data_used.append("fundamental_ratios")
+        evidence.append(
+            AiEvidence(
+                category="fundamental",
+                metric="fundamental_record",
+                value="available",
+                source=fund.source,
+                as_of=fund.published_at,
+                period_end=fund.period_end,
+            )
+        )
+    else:
+        data_unavailable.append("fundamental_record")
+
     return AiAnalystResponse(
         symbol=stock.symbol,
         strengths=strengths,
@@ -128,4 +176,9 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
         conclusion=conclusion,
         disclaimer=DISCLAIMER,
         as_of=datetime.now(UTC),
+        analysis_version="deterministic-v1",
+        data_quality=quant.data_quality,
+        data_used=data_used,
+        data_unavailable=sorted(set(data_unavailable)),
+        evidence=evidence,
     )

@@ -37,6 +37,7 @@ def calculate_technical_analysis(
         return TechnicalAnalysisResponse(
             symbol=stock.symbol,
             interval=interval,
+            data_source=None,
             as_of=datetime.now(UTC),
             trend="neutral",
             rsi=None,
@@ -93,6 +94,7 @@ def calculate_technical_analysis(
     return TechnicalAnalysisResponse(
         symbol=stock.symbol,
         interval=interval,
+        data_source=prices[-1].source,
         as_of=prices[-1].time if prices else datetime.now(UTC),
         trend=trend,
         rsi=round(latest_rsi, 2) if latest_rsi is not None else None,

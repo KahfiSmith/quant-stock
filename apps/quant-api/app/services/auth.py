@@ -14,7 +14,7 @@ from app.core.security import (
 )
 from app.models.auth_session import AuthSession, RefreshToken
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RegisterRequest
+from app.schemas.auth import LoginRequest, RegisterRequest, UpdateProfileRequest
 
 
 def utc_now() -> datetime:
@@ -33,6 +33,18 @@ def register_user(db: Session, payload: RegisterRequest) -> User:
 
     user = User(email=email, name=payload.name.strip(), password_hash=hash_password(payload.password))
     db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_profile(db: Session, user: User, payload: UpdateProfileRequest) -> User:
+    if payload.name is not None:
+        user.name = payload.name.strip()
+    if payload.theme_preference is not None:
+        user.theme_preference = payload.theme_preference
+    if payload.timezone is not None:
+        user.timezone = payload.timezone.strip()
     db.commit()
     db.refresh(user)
     return user
