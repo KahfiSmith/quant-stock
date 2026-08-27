@@ -288,7 +288,7 @@ When a conflict exists, preserve current runtime compatibility, record the decis
 
 ### Current repository baseline
 
-At the time of writing, this repository is a **Next.js frontend boilerplate**, not a running QuantLens monorepo. It currently contains a landing page, login, registration, profile, TanStack Query providers, Zustand session state, and Axios clients for the existing backend contract. FastAPI, TimescaleDB, QuantLens Docker Compose, market data, `/stocks`, and the quant engine are planned work.
+The historical baseline above described the repository before the QuantLens implementation work. The current runtime now contains the FastAPI service, TimescaleDB/PostgreSQL migrations, market-data read and provider-neutral ingestion boundaries, analytical surfaces, portfolio, backtest, AI evidence contract, and `/settings`; the remaining real-provider activation is externally blocked as documented below. Current runtime routes, migrations, and related implementation docs are authoritative for shipped behavior.
 
 Therefore:
 

@@ -9,7 +9,7 @@ For the full product specification and architecture phases, see the [QuantLens P
 
 ## Product status
 
-This repository contains the active QuantLens frontend and FastAPI-backed analytical prototype. Authentication, market-data reads, technical/fundamental analysis, scoring, screener, portfolio tracking, backtesting, and deterministic AI summaries are implemented; real provider ingestion remains blocked pending licensing decisions.
+This repository contains the active QuantLens frontend and FastAPI-backed analytical implementation. Authentication, market-data reads, technical/fundamental analysis, scoring, screener, portfolio tracking, backtesting, deterministic AI summaries, provenance contracts, and provider-neutral ingestion validation are implemented. Activation of a real provider remains blocked pending external licensing and coverage decisions.
 
 ## Implemented product surface
 
@@ -18,12 +18,12 @@ This repository contains the active QuantLens frontend and FastAPI-backed analyt
 - Protected stock screener and stock detail: `/stocks`, `/stocks/[symbol]`.
 - Protected portfolio tracking: `/portfolio`.
 - Protected strategy backtesting: `/backtest`.
-- Deterministic AI Analyst summaries from available technical, fundamental, and quant facts.
+- Deterministic AI Analyst summaries from available technical, fundamental, and quant facts, with supporting evidence and data-quality metadata.
 
 ## Deferred or incomplete scope
 
-- Real market-data ingestion and provider integration remain blocked pending licensing and coverage decisions.
-- Portfolio risk metrics and full edit/delete CRUD are not implemented.
+- Provider-neutral market-data ingestion validation and idempotent persistence are implemented; activation of a real provider remains BLOCKED pending licensing and coverage decisions.
+- Portfolio editing, realized/unrealized PnL, and deterministic risk metrics are implemented. Transaction update/delete and portfolio deletion are OUT OF SCOPE because they are not explicit acceptance criteria.
 - Google OAuth/OIDC, password reset, email verification, and settings remain deferred.
 
 ## Business rules and enforcement

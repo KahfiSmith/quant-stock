@@ -32,9 +32,17 @@ API integration documentation for communication between the Next.js frontend and
 | **Screener** | `POST` | `/api/v1/screener` | Filter & rank stocks by multi-criteria |
 | **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger Bands) |
 
-## Planned QuantLens API Endpoints (`/api/v1`)
+## API scope status
 
-*(All core phases 1–10 endpoints implemented; future data provider collectors planned)*
+The active endpoints implement the current synchronous analytical contracts. Portfolio
+editing is available through `PATCH /api/v1/portfolios/{id}`; portfolio detail includes
+realized/unrealized PnL and deterministic risk metrics. Backtest responses include
+Sortino and reproducibility metadata. AI responses include evidence and data-quality
+metadata. Real provider activation remains BLOCKED until provider, licensing, and
+coverage decisions are recorded.
+
+Provider-neutral ingestion contracts are internal service modules, not public API
+endpoints.
 
 ## Related documents
 

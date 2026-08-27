@@ -12,12 +12,13 @@ The first migration is `0001_authentication`. Refresh tokens are never stored in
 
 ## Market data & fundamentals tables
 
-Migration `0002_market_data` and `0003_fundamentals` add market data and fundamental records:
+Migrations `0002_market_data`, `0003_fundamentals`, `0006_fundamental_provenance`, and `0007_price_provenance` add market data and fundamental records:
 
 - `stocks`: numeric `id`, unique indexed `symbol`, `name`, optional `sector`,
   `market_cap`, `exchange`, `currency`, `timezone`, and timestamps.
 - `prices`: numeric `id`, `stock_id` (FK to `stocks`), `time`
   (`TIMESTAMPTZ`), OHLC `open/high/low/close`, `volume`, `interval`, `source`,
+  source-record identifier, retrieval time, payload checksum, validation state,
   and `created_at`. A unique constraint on `(stock_id, time, interval, source)`
   is the canonical idempotency key. On PostgreSQL the table is created as a
   TimescaleDB hypertable partitioned on `time`; on other dialects (SQLite
@@ -25,17 +26,25 @@ Migration `0002_market_data` and `0003_fundamentals` add market data and fundame
 - `fundamentals`: numeric `id`, `stock_id` (FK to `stocks`), `period_end` (Date),
   `period_type` (e.g. `TTM`), valuation/profitability/growth ratios (`pe_ratio`, `pb_ratio`,
   `roe`, `roa`, `debt_to_equity`, `revenue_growth`, `eps_growth`), composite `score`,
-  `source`, and `created_at`. Unique on `(stock_id, period_end, period_type)`.
+  `source`, currency, source-record identifier, retrieval time, payload checksum,
+  validation state, and `created_at`. Unique on `(stock_id, period_end, period_type)`.
+  Legacy sample rows may be flagged when `published_at` is unavailable.
 
 The `prices.source` field carries data provenance (`sample` for seeded
 placeholder rows). Real ingestion is deferred pending a data-provider decision.
 
 ## Portfolio & transaction tables
 
-Migration `0004_portfolios` adds portfolio management:
+Migrations `0004_portfolios`, `0005_transaction_constraints`, `0008_user_preferences`, and `0009_unique_lookup_indexes` add portfolio management and schema integrity alignment:
+
+Portfolio detail derives weighted-average realized/unrealized PnL and a deterministic
+risk summary from transactions and available daily prices; no separate holdings table
+is required by the active implementation.
 
 - `portfolios`: numeric `id`, `user_id` (FK to `users`), unique per user `name`, `currency`, and timestamps.
-- `transactions`: numeric `id`, `portfolio_id` (FK to `portfolios`), `stock_id` (FK to `stocks`), `transaction_type` (`BUY` or `SELL`), `quantity`, `price`, `fee`, `transacted_at`, and `created_at`.
+- `transactions`: numeric `id`, `portfolio_id` (FK to `portfolios`), `stock_id` (FK to `stocks`), `transaction_type` (`BUY` or `SELL`), `quantity`, `price`, `fee`, `transacted_at`, and `created_at`. Database checks enforce valid type, positive quantity/price, and non-negative fees.
+
+Migration `0008_user_preferences` adds `users.theme_preference` (`light`, `dark`, or `system`) and `users.timezone`.
 
 1. Change SQLAlchemy models in `apps/quant-api/app/models`.
 2. Create and review an Alembic migration.

@@ -2,7 +2,7 @@
 
 ## Overview
 
-QuantLens Phase 1 provides registration, login, session bootstrap, logout, account deletion, and a protected profile proof surface. The active backend is `apps/quant-api` (FastAPI).
+QuantLens Phase 1 provides registration, login, session bootstrap, logout, account deletion, profile management, preferences settings, and protected profile/settings surfaces. The active backend is `apps/quant-api` (FastAPI).
 
 ## Flow
 
@@ -13,11 +13,12 @@ App mount -> /auth/refresh -> token rotation -> restored session
 Expired access token -> one shared refresh request -> retry
 ```
 
-Users have numeric PostgreSQL IDs. Refresh tokens are HMAC-hashed in `sessions` and `refresh_tokens`; a reused rotated token revokes its session.
+Users have numeric PostgreSQL IDs. Refresh tokens are HMAC-hashed in `sessions` and `refresh_tokens`; a reused rotated token revokes its session. The protected `/settings` route updates display name, theme preference (`light`, `dark`, or `system`), and timezone through `PATCH /api/v1/auth/me`.
 
 ## Frontend modules
 
 - Forms: `src/components/features/auth/`
+- Settings page: `src/app/(dashboard)/settings/page.tsx`
 - Hooks: `src/hooks/auth/`
 - Session state: `src/store/auth-store.ts`
 - Bootstrap: `src/providers/session-provider.tsx`

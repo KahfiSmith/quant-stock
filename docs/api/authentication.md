@@ -10,7 +10,8 @@ The active QuantLens backend is the FastAPI service in `apps/quant-api`, normall
 | `POST` | `/api/v1/auth/login` | Issue access token and HttpOnly refresh cookie | `LoginForm` → `useLogin` |
 | `POST` | `/api/v1/auth/refresh` | Rotate refresh token and issue access token | session bootstrap and single-flight retry |
 | `POST` | `/api/v1/auth/logout` | Revoke refresh-session family and clear cookie | `LogoutButton` → `useLogout` |
-| `GET` | `/api/v1/auth/me` | Return the authenticated user | available for profile queries |
+| `GET` | `/api/v1/auth/me` | Return the authenticated user and preferences | available for profile queries |
+| `PATCH` | `/api/v1/auth/me` | Update name, theme preference, and timezone | `/settings` → `useUpdateProfile` |
 | `DELETE` | `/api/v1/auth/account` | Confirm password and delete the current account | `DeleteAccountButton` → `useDeleteAccount` |
 
 Google OAuth, password reset, and email verification are deliberately deferred and are not active FastAPI endpoints.
@@ -29,13 +30,17 @@ Login and refresh return:
     "id": 1,
     "email": "user@example.com",
     "name": "Quant User",
+    "theme_preference": "system",
+    "timezone": "UTC",
     "role": "user",
     "is_email_verified": false
   }
 }
 ```
 
-`id` is a numeric, auto-incrementing user ID. The refresh credential is opaque, HMAC-hashed before persistence, is never exposed in JSON, and is sent only in an HttpOnly cookie.
+`id` is a numeric, auto-incrementing user ID. Profile responses also include `theme_preference` (`light`, `dark`, or `system`) and `timezone`. The refresh credential is opaque, HMAC-hashed before persistence, is never exposed in JSON, and is sent only in an HttpOnly cookie.
+
+`PATCH /api/v1/auth/me` accepts `name`, `theme_preference`, and `timezone`; omitted fields remain unchanged.
 
 ## Relevant error codes
 

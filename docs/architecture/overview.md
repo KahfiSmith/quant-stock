@@ -114,6 +114,7 @@ User action
 | `/login` | `(auth)` | Login form | Redirects after an authenticated session is restored |
 | `/register` | `(auth)` | Registration form | Public |
 | `/profile` | `(dashboard)` | Profile page and logout action | Client guard for UX; FastAPI authorizes protected API calls |
+| `/settings` | `(dashboard)` | Profile preferences (name, theme, timezone) | Client guard for UX; FastAPI authorizes protected API calls |
 | `/stocks` | `(dashboard)` | Stock universe listing and search | Client guard for UX; protected market data |
 | `/stocks/[symbol]` | `(dashboard)` | Stock detail with chart, fundamentals, quant score, and AI analyst | Client guard for UX; protected market data |
 | `/portfolio` | `(dashboard)` | Portfolio holdings, transactions, and PnL | Client guard for UX; protected portfolio API |
@@ -121,6 +122,6 @@ User action
 
 ## Current and planned scope
 
-- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, protected profile UX, market-data listing and chart, technical analysis, fundamentals, quant scoring, screener, portfolio tracking, backtesting, and deterministic AI analyst summaries.
-- **In progress/blocked:** Real market-data provider ingestion remains blocked pending provider and licensing decisions. Portfolio risk metrics, full portfolio CRUD, and production-grade backtest reproducibility metadata remain incomplete.
+- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, protected profile/settings UX, market-data listing and chart, technical analysis, fundamentals with provenance, quant scoring metadata, screener, portfolio editing/accounting/risk summary, backtesting with reproducibility metadata, provider-neutral ingestion validation, and deterministic AI analyst evidence.
+- **Blocked/deferred:** Real market-data provider activation remains blocked pending provider and licensing decisions. OAuth/OIDC, password reset, email verification, transaction deletion/update, portfolio deletion, and real-time streaming are not active scope. Backtest execution is synchronous and reports its lifecycle explicitly; it does not provide a background worker or queue.
 - **Future repository structure:** Additional packages or a moved `apps/web` application require an explicit migration; they are not part of the current runtime layout.

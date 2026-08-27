@@ -5,7 +5,7 @@ Overview of business features implemented in this application.
 ## Implemented features
 
 - [Authentication & User Session](./authentication.md) - login, register,
-  logout, session bootstrap, protected profile, delete account.
+  logout, session bootstrap, protected profile/settings, preferences, and delete account.
 - [Market Data](./market-data.md) - stock universe, chart, technical,
   fundamental, quant, screener, and AI summary surfaces.
 - Portfolio tracking, transaction recording, and PnL are implemented under the
@@ -17,7 +17,7 @@ Every route group under `src/app/` must be documented here. The
 `docs:check` gate fails when a route group has no feature doc.
 
 - `(auth)` - covered by [authentication.md](./authentication.md).
-- `(dashboard)` - the protected profile surface is part of
+- `(dashboard)` - the protected profile and settings surfaces are part of
   [authentication.md](./authentication.md); the stock pages (`/stocks`,
   `/stocks/[symbol]`) are covered by
   [market-data.md](./market-data.md).

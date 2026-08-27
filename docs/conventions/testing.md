@@ -12,6 +12,10 @@ environment. Focused tests cover the authentication flow:
   attach, single-flight refresh, `_retry`).
 - **Route guards**: `RequireAuth` / `RedirectAuthenticated` render and redirect
   behavior.
+- **Domain contracts**: settings preferences, quant metadata, portfolio accounting/risk,
+  backtest reproducibility/anti-bias behavior, AI evidence, and ingestion validation.
+- **AI evaluation**: deterministic structured-output, evidence, unavailable-data,
+  disclaimer, and safety-contract tests; no external LLM or licensed-news provider is configured.
 
 A test script is wired into `verify` and `verify:all`. The full quality gates are:
 

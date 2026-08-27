@@ -1,7 +1,7 @@
 # Feature: Market Data
 
 **Feature ID:** market-data
-**Status:** implemented
+**Status:** COMPLETE for provider-neutral software; real provider activation BLOCKED
 **Owner:** engineer
 **Risk:** medium
 **Routes:** `(dashboard)/stocks`, `(dashboard)/stocks/[symbol]`
@@ -30,10 +30,13 @@ tables.
 - Architecture constraints: fence market-data access behind `src/lib/api` and
   feature hooks; pages reuse the shared `RequireAuth` guard.
 - Product/runtime constraints: prices carry an explicit `data_source` and `as_of`
-  (`source="sample"` is placeholder data, never real market data).
-- Out of scope: real ingestion/collectors and provider selection. The current
-  screener, quant score, fundamentals, and AI summary use the available sample
-  dataset and are not real-time market data.
+  (`source="sample"` is development fixture data, never real market data).
+- Price and fundamental responses expose source-record, retrieval, checksum/version,
+  and validation metadata when available; sample records remain explicitly labeled.
+- Provider-neutral ingestion contracts, OHLCV validation, provenance, and idempotent persistence are implemented.
+- Real provider activation is BLOCKED pending provider selection, exchange coverage, cadence, licensing, redistribution rights, and credentials.
+- The current screener, quant score, fundamentals, and AI summary use explicitly labeled sample data and are not real-time market data.
+- Real-time streaming is OUT OF SCOPE.
 
 ## Impact Areas
 
@@ -93,8 +96,11 @@ user -> /stocks or /stocks/[symbol] -> RequireAuth (client guard)
 | `POST` | `/api/v1/backtest` | Run historical quantitative strategy backtest | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | Automated structured AI analyst synthesis | Required (Bearer) |
 
-Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
-`data_source` provenance.
+Responses use the standard `ApiResponse` envelope. Prices include `as_of`,
+`data_source`, and ingestion provenance fields. Fundamental responses include
+reporting period, currency, units, source, retrieval, checksum, and validation fields.
+Quant scores include model/weight/normalization/input metadata; AI summaries include
+supporting evidence and data availability metadata.
 
 ## Acceptance Criteria
 
@@ -121,6 +127,8 @@ Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
   data as real.
 - 2026-08-26: Pure indicator calculations in `app/technical/indicators.py` -> no
   unmaintained pandas-ta dependency, returns `None` when lookback history is insufficient.
+- 2026-08-27: Provider-neutral ingestion contract and persistence boundary added;
+  provider activation remains blocked until licensing and coverage are decided.
 
 ## Verification
 
