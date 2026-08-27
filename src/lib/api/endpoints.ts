@@ -7,6 +7,12 @@ export const API_ENDPOINTS = {
     DELETE_ACCOUNT: "/api/v1/auth/account",
     ME: "/api/v1/auth/me",
   },
+  PORTFOLIO: {
+    LIST: "/api/v1/portfolios",
+    CREATE: "/api/v1/portfolios",
+    DETAIL: (id: number | string) => `/api/v1/portfolios/${id}`,
+    ADD_TRANSACTION: (id: number | string) => `/api/v1/portfolios/${id}/transactions`,
+  },
   MARKET: {
     STOCKS: "/api/v1/stocks",
     PRICES: (symbol: string) => `/api/v1/stocks/${symbol}/prices`,

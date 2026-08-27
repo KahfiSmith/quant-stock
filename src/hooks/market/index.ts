@@ -1,3 +1,9 @@
+export {
+  useAddTransaction,
+  useCreatePortfolio,
+  usePortfolioDetail,
+  usePortfolios,
+} from "@/hooks/market/use-portfolios";
 export { useStockFundamental } from "@/hooks/market/use-stock-fundamental";
 export { useStockPrices, type PriceRange } from "@/hooks/market/use-stock-prices";
 export { useStockScore } from "@/hooks/market/use-stock-score";

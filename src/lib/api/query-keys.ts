@@ -5,6 +5,10 @@ export const QUERY_KEYS = {
   USER: {
     PROFILE: ["user", "profile"] as const,
   },
+  PORTFOLIO: {
+    LIST: ["portfolio", "list"] as const,
+    DETAIL: (id: number | string) => ["portfolio", "detail", String(id)] as const,
+  },
   MARKET: {
     STOCKS: ["market", "stocks"] as const,
     PRICES: (symbol: string) => ["market", "prices", symbol] as const,

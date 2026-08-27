@@ -42,6 +42,55 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface PortfolioSummary {
+  id: number;
+  name: string;
+  description: string | null;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PortfolioHolding {
+  stock_id: number;
+  symbol: string;
+  name: string;
+  quantity: number;
+  avg_buy_price: number;
+  current_price: number | null;
+  current_value: number | null;
+  unrealized_pnl: number | null;
+  unrealized_pnl_percent: number | null;
+}
+
+export interface PortfolioDetail {
+  id: number;
+  name: string;
+  description: string | null;
+  currency: string;
+  total_cost: number;
+  current_value: number;
+  total_unrealized_pnl: number;
+  total_unrealized_pnl_percent: number;
+  holdings: PortfolioHolding[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePortfolioInput {
+  name: string;
+  description?: string;
+  currency?: string;
+}
+
+export interface CreateTransactionInput {
+  symbol: string;
+  transaction_type: "BUY" | "SELL";
+  quantity: number;
+  price: number;
+  fee?: number;
+}
+
 export interface ScreenerItem {
   id: number;
   symbol: string;
