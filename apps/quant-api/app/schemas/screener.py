@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.market_data import PaginationMeta
 
@@ -27,6 +27,20 @@ class ScreenerRequest(BaseModel):
     sort_order: SortOrder = "desc"
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
+
+    @model_validator(mode="after")
+    def validate_ranges(self) -> "ScreenerRequest":
+        ranges = (
+            ("market_cap", self.min_market_cap, self.max_market_cap),
+            ("score", self.min_score, self.max_score),
+            ("pe", self.min_pe, self.max_pe),
+            ("pb", self.min_pb, self.max_pb),
+            ("rsi", self.min_rsi, self.max_rsi),
+        )
+        for name, minimum, maximum in ranges:
+            if minimum is not None and maximum is not None and minimum > maximum:
+                raise ValueError(f"min_{name} must be less than or equal to max_{name}")
+        return self
 
 
 class ScreenerItem(BaseModel):

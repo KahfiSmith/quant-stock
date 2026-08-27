@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 StrategyType = Literal["SMA_CROSSOVER", "RSI_MOMENTUM", "BUY_AND_HOLD"]
 
@@ -17,6 +17,16 @@ class BacktestRequest(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
     fee_percent: float = Field(default=0.0015, ge=0, le=0.05)
+
+    @model_validator(mode="after")
+    def validate_ranges(self) -> "BacktestRequest":
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValueError("start_date must be on or before end_date")
+        if self.fast_period >= self.slow_period:
+            raise ValueError("fast_period must be less than slow_period")
+        if self.rsi_oversold >= self.rsi_overbought:
+            raise ValueError("rsi_oversold must be less than rsi_overbought")
+        return self
 
 
 class EquityPoint(BaseModel):

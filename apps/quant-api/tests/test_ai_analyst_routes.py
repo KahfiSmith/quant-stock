@@ -81,3 +81,24 @@ def test_get_stock_ai_summary(client: TestClient) -> None:
     assert len(data["unknowns"]) > 0
     assert "disclaimer" in data
     assert "not constitute financial" in data["disclaimer"].lower()
+
+
+def test_ai_summary_does_not_claim_unavailable_data(client: TestClient) -> None:
+    headers = _auth_headers(client)
+
+    db = client.app.state.database.session()
+    try:
+        stock = _make_stock(db, "BBRI", "Bank Rakyat Indonesia")
+        _make_candles(db, stock, datetime(2026, 1, 1, tzinfo=UTC), count=35)
+        db.commit()
+    finally:
+        db.close()
+
+    res = client.get("/api/v1/stocks/BBRI/ai-summary", headers=headers)
+    assert res.status_code == 200
+    data = res.json()["data"]
+    statements = " ".join(data["strengths"] + data["risks"] + [data["conclusion"]]).lower()
+    assert "ma50" not in statements
+    assert "ma200" not in statements
+    assert "sound fundamentals" not in statements
+    assert any("fundamental" in unknown.lower() for unknown in data["unknowns"])

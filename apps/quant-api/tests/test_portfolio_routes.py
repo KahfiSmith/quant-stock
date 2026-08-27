@@ -83,3 +83,47 @@ def test_portfolio_lifecycle_and_holdings_pnl(client: TestClient) -> None:
     assert holding["quantity"] == 100
     assert holding["current_price"] == 9500.0
     assert holding["unrealized_pnl"] > 0
+
+    sell_res = client.post(
+        f"/api/v1/portfolios/{portfolio_id}/transactions",
+        json={"symbol": "BBCA", "transaction_type": "SELL", "quantity": 40, "price": 9500},
+        headers=headers,
+    )
+    assert sell_res.status_code == 200
+
+    remaining_res = client.get(f"/api/v1/portfolios/{portfolio_id}", headers=headers)
+    assert remaining_res.json()["data"]["holdings"][0]["quantity"] == 60
+
+    oversell_res = client.post(
+        f"/api/v1/portfolios/{portfolio_id}/transactions",
+        json={"symbol": "BBCA", "transaction_type": "SELL", "quantity": 61, "price": 9500},
+        headers=headers,
+    )
+    assert oversell_res.status_code == 409
+    assert oversell_res.json()["code"] == "INSUFFICIENT_HOLDINGS"
+
+
+def test_portfolio_rejects_sell_without_holdings(client: TestClient) -> None:
+    headers = _auth_headers(client)
+
+    db = client.app.state.database.session()
+    try:
+        _make_stock(db, "BBCA", "Bank Central Asia")
+        db.commit()
+    finally:
+        db.close()
+
+    create_res = client.post(
+        "/api/v1/portfolios",
+        json={"name": "Empty Portfolio"},
+        headers=headers,
+    )
+    portfolio_id = create_res.json()["data"]["id"]
+
+    sell_res = client.post(
+        f"/api/v1/portfolios/{portfolio_id}/transactions",
+        json={"symbol": "BBCA", "transaction_type": "SELL", "quantity": 1, "price": 100},
+        headers=headers,
+    )
+    assert sell_res.status_code == 409
+    assert sell_res.json()["code"] == "INSUFFICIENT_HOLDINGS"

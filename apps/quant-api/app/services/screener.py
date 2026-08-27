@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.market_data import Stock
+from app.models.market_data import Price, Stock
 from app.schemas.screener import ScreenerItem, ScreenerRequest, ScreenerResponse
 from app.services.fundamental import get_latest_fundamental
 from app.services.market_data import pagination_meta
@@ -31,7 +31,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
     for stock in stocks:
         tech = calculate_technical_analysis(db, stock, interval="1d")
         fund = get_latest_fundamental(db, stock)
-        quant = compute_stock_quant_score(db, stock)
+        quant = compute_stock_quant_score(db, stock, technical=tech)
 
         # Filter criteria
         if req.min_score is not None and quant.total_score < req.min_score:
@@ -61,6 +61,13 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         if req.max_rsi is not None and (rsi_val is None or rsi_val > req.max_rsi):
             continue
 
+        latest_price = db.scalar(
+            select(Price)
+            .where(Price.stock_id == stock.id, Price.interval == "1d")
+            .order_by(Price.time.desc())
+            .limit(1)
+        )
+
         enriched.append(
             ScreenerItem(
                 id=stock.id,
@@ -69,7 +76,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
                 sector=stock.sector,
                 market_cap=float(stock.market_cap) if stock.market_cap is not None else None,
                 currency=stock.currency,
-                close_price=tech.indicators.ma20,  # Proxy or latest close
+                close_price=float(latest_price.close) if latest_price is not None else None,
                 quant_score=quant.total_score,
                 pe_ratio=pe,
                 pb_ratio=pb,

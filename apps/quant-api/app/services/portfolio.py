@@ -1,4 +1,5 @@
 from collections import defaultdict
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -78,26 +79,35 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
         )
     )
 
-    # Compute holdings via FIFO / weighted average cost
-    stock_shares: dict[int, float] = defaultdict(float)
-    stock_cost: dict[int, float] = defaultdict(float)
+    # Compute holdings via weighted average cost.
+    stock_shares: dict[int, Decimal] = defaultdict(Decimal)
+    stock_cost: dict[int, Decimal] = defaultdict(Decimal)
 
     for tx in transactions:
-        qty = float(tx.quantity)
-        price = float(tx.price)
+        qty = Decimal(str(tx.quantity))
+        price = Decimal(str(tx.price))
+        fee = Decimal(str(tx.fee))
         if tx.transaction_type == "BUY":
             stock_shares[tx.stock_id] += qty
-            stock_cost[tx.stock_id] += qty * price + float(tx.fee)
+            stock_cost[tx.stock_id] += qty * price + fee
         elif tx.transaction_type == "SELL":
             curr_shares = stock_shares[tx.stock_id]
-            if curr_shares > 0:
-                avg_cost = stock_cost[tx.stock_id] / curr_shares
-                stock_shares[tx.stock_id] -= qty
-                stock_cost[tx.stock_id] -= qty * avg_cost
+            if qty > curr_shares:
+                raise ApiError(
+                    409,
+                    "INSUFFICIENT_HOLDINGS",
+                    f"Cannot sell {qty} shares; only {curr_shares} shares are held",
+                )
+            avg_cost = stock_cost[tx.stock_id] / curr_shares if curr_shares else Decimal(0)
+            stock_shares[tx.stock_id] -= qty
+            stock_cost[tx.stock_id] -= qty * avg_cost
 
     holdings: list[HoldingResponse] = []
-    total_cost = 0.0
-    current_value = 0.0
+    total_cost = Decimal(0)
+    current_value = Decimal(0)
+    hundred = Decimal("100")
+    cents = Decimal("0.01")
+    shares_precision = Decimal("0.0001")
 
     for stock_id, shares in stock_shares.items():
         if shares <= 0:
@@ -112,13 +122,13 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
             .order_by(Price.time.desc())
             .limit(1)
         )
-        curr_price = float(latest_price_rec.close) if latest_price_rec else None
+        curr_price = Decimal(latest_price_rec.close) if latest_price_rec else None
 
         cost = stock_cost[stock_id]
-        avg_buy = cost / shares if shares > 0 else 0.0
+        avg_buy = cost / shares if shares > 0 else Decimal(0)
         val = curr_price * shares if curr_price is not None else None
         pnl = (val - cost) if val is not None else None
-        pnl_pct = (pnl / cost * 100.0) if pnl is not None and cost > 0 else None
+        pnl_pct = (pnl / cost * hundred) if pnl is not None and cost > 0 else None
 
         total_cost += cost
         if val is not None:
@@ -129,27 +139,27 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
                 stock_id=stock.id,
                 symbol=stock.symbol,
                 name=stock.name,
-                quantity=round(shares, 4),
-                avg_buy_price=round(avg_buy, 2),
-                current_price=round(curr_price, 2) if curr_price is not None else None,
-                current_value=round(val, 2) if val is not None else None,
-                unrealized_pnl=round(pnl, 2) if pnl is not None else None,
-                unrealized_pnl_percent=round(pnl_pct, 2) if pnl_pct is not None else None,
+                quantity=float(shares.quantize(shares_precision)),
+                avg_buy_price=float(avg_buy.quantize(cents)),
+                current_price=float(curr_price.quantize(cents)) if curr_price is not None else None,
+                current_value=float(val.quantize(cents)) if val is not None else None,
+                unrealized_pnl=float(pnl.quantize(cents)) if pnl is not None else None,
+                unrealized_pnl_percent=float(pnl_pct.quantize(cents)) if pnl_pct is not None else None,
             )
         )
 
     total_pnl = current_value - total_cost
-    total_pnl_pct = (total_pnl / total_cost * 100.0) if total_cost > 0 else 0.0
+    total_pnl_pct = (total_pnl / total_cost * hundred) if total_cost > 0 else Decimal(0)
 
     return PortfolioDetailResponse(
         id=portfolio.id,
         name=portfolio.name,
         description=portfolio.description,
         currency=portfolio.currency,
-        total_cost=round(total_cost, 2),
-        current_value=round(current_value, 2),
-        total_unrealized_pnl=round(total_pnl, 2),
-        total_unrealized_pnl_percent=round(total_pnl_pct, 2),
+        total_cost=float(total_cost.quantize(cents)),
+        current_value=float(current_value.quantize(cents)),
+        total_unrealized_pnl=float(total_pnl.quantize(cents)),
+        total_unrealized_pnl_percent=float(total_pnl_pct.quantize(cents)),
         holdings=holdings,
         created_at=portfolio.created_at,
         updated_at=portfolio.updated_at,
@@ -160,7 +170,9 @@ def add_portfolio_transaction(
     db: Session, user_id: int, portfolio_id: int, req: CreateTransactionRequest
 ) -> TransactionResponse:
     portfolio = db.scalar(
-        select(Portfolio).where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
+        select(Portfolio)
+        .where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
+        .with_for_update()
     )
     if not portfolio:
         raise ApiError(404, "PORTFOLIO_NOT_FOUND", "Portfolio not found")
@@ -168,6 +180,27 @@ def add_portfolio_transaction(
     stock = db.scalar(select(Stock).where(Stock.symbol == req.symbol.upper()))
     if not stock:
         raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {req.symbol.upper()}")
+
+    if req.transaction_type == "SELL":
+        transactions = list(
+            db.scalars(
+                select(Transaction)
+                .where(Transaction.portfolio_id == portfolio.id)
+                .order_by(Transaction.transacted_at.asc(), Transaction.id.asc())
+            )
+        )
+        held_quantity = sum(
+            (Decimal(str(tx.quantity)) if tx.transaction_type == "BUY" else -Decimal(str(tx.quantity)))
+            for tx in transactions
+            if tx.stock_id == stock.id
+        )
+        requested_quantity = Decimal(str(req.quantity))
+        if requested_quantity > held_quantity:
+            raise ApiError(
+                409,
+                "INSUFFICIENT_HOLDINGS",
+                f"Cannot sell {requested_quantity} shares; only {held_quantity} shares are held",
+            )
 
     tx = Transaction(
         portfolio_id=portfolio.id,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -24,11 +24,30 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
     if not stock:
         raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {req.symbol.upper()}")
 
-    stmt = select(Price).where(Price.stock_id == stock.id, Price.interval == "1d").order_by(Price.time.asc())
-    prices = list(db.scalars(stmt))
+    stmt = select(Price).where(Price.stock_id == stock.id, Price.interval == "1d")
+    if req.end_date:
+        end_at = datetime.combine(req.end_date, time.max, tzinfo=UTC)
+        stmt = stmt.where(Price.time <= end_at)
+    prices = list(db.scalars(stmt.order_by(Price.time.asc())))
 
-    if len(prices) < max(req.slow_period, 30):
+    evaluation_start = 0
+    if req.start_date:
+        evaluation_start = next(
+            (index for index, price in enumerate(prices) if price.time.date() >= req.start_date),
+            len(prices),
+        )
+
+    required_history = max(req.slow_period, 30)
+    if len(prices) < required_history:
         raise ApiError(400, "INSUFFICIENT_DATA", "Not enough price history to run this backtest")
+    if evaluation_start == len(prices):
+        raise ApiError(400, "INSUFFICIENT_DATA", "No price history exists in the requested backtest period")
+    if req.start_date and evaluation_start < required_history - 1:
+        raise ApiError(
+            400,
+            "INSUFFICIENT_DATA",
+            "Not enough warm-up history exists before the requested backtest period",
+        )
 
     dates = [p.time.strftime("%Y-%m-%d") for p in prices]
     closes = [float(p.close) for p in prices]
@@ -48,9 +67,9 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
     peak_equity = req.initial_capital
     daily_returns: list[float] = []
 
-    initial_close = closes[0]
+    initial_close = closes[evaluation_start]
 
-    for i in range(len(prices)):
+    for i in range(evaluation_start, len(prices)):
         close = closes[i]
         date_str = dates[i]
 
@@ -121,7 +140,7 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
     total_return_pct = (final_equity - req.initial_capital) / req.initial_capital * 100.0
 
     # CAGR calculation
-    days = max(1, len(prices))
+    days = max(1, len(prices) - evaluation_start)
     years = days / 252.0
     cagr_pct = (
         ((final_equity / req.initial_capital) ** (1.0 / years) - 1.0) * 100.0

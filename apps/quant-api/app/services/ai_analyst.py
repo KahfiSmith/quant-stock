@@ -33,10 +33,23 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
     unknowns: list[str] = []
 
     # 1. Evaluate Technical Insights
+    has_long_term_trend = (
+        tech.indicators.ma50 is not None and tech.indicators.ma200 is not None
+    )
     if tech.trend == "bullish":
-        strengths.append("Price action exhibits a bullish trend with MA50 positioned above MA200.")
+        if has_long_term_trend:
+            strengths.append("Price action exhibits a bullish trend with MA50 positioned above MA200.")
+        elif tech.indicators.ma20 is not None:
+            strengths.append("Price action is above its MA20, indicating short-term bullish momentum.")
+        else:
+            strengths.append("Price action is classified as bullish by the available technical data.")
     elif tech.trend == "bearish":
-        risks.append("Underlying trend is bearish with primary moving averages showing downward pressure.")
+        if has_long_term_trend:
+            risks.append("Underlying trend is bearish with primary moving averages showing downward pressure.")
+        elif tech.indicators.ma20 is not None:
+            risks.append("Price action is below its MA20, indicating short-term bearish momentum.")
+        else:
+            risks.append("Price action is classified as bearish by the available technical data.")
 
     if tech.rsi is not None:
         if tech.rsi < 35:
@@ -89,9 +102,12 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
 
     # 4. Formulate Conclusion
     if quant.total_score >= 70 and tech.trend == "bullish":
+        support = "constructive price momentum"
+        if fund:
+            support += " and the available fundamental data"
         conclusion = (
-            f"{stock.symbol} displays a robust quantitative profile supported by constructive price momentum "
-            f"and sound fundamentals. Suitable for further disciplined quantitative evaluation."
+            f"{stock.symbol} displays a robust quantitative profile supported by {support}. "
+            f"Suitable for further disciplined quantitative evaluation."
         )
     elif quant.total_score < 50 or tech.trend == "bearish":
         conclusion = (

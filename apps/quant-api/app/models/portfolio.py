@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -41,6 +41,12 @@ class Portfolio(Base):
 
 class Transaction(Base):
     __tablename__ = "transactions"
+    __table_args__ = (
+        CheckConstraint("transaction_type IN ('BUY', 'SELL')", name="ck_transactions_type"),
+        CheckConstraint("quantity > 0", name="ck_transactions_quantity_positive"),
+        CheckConstraint("price > 0", name="ck_transactions_price_positive"),
+        CheckConstraint("fee >= 0", name="ck_transactions_fee_nonnegative"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     portfolio_id: Mapped[int] = mapped_column(

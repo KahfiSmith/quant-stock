@@ -108,3 +108,34 @@ def test_screener_filters_and_sorts(client: TestClient) -> None:
     data2 = resp2.json()["data"]
     assert len(data2["items"]) == 1
     assert data2["items"][0]["symbol"] == "BBCA"
+    assert data2["items"][0]["close_price"] == 9390.0
+
+
+def test_screener_rejects_reversed_ranges(client: TestClient) -> None:
+    headers = _auth_headers(client)
+    res = client.post(
+        "/api/v1/screener",
+        json={"min_score": 90, "max_score": 10},
+        headers=headers,
+    )
+    assert res.status_code == 422
+    assert res.json()["code"] == "VALIDATION_ERROR"
+
+
+def test_screener_close_price_is_latest_close_without_ma20(client: TestClient) -> None:
+    db = client.app.state.database.session()
+    try:
+        stock = _make_stock(db, "BBRI", "Bank Rakyat Indonesia")
+        _make_candles(db, stock, datetime(2026, 1, 1, tzinfo=UTC), count=30)
+        db.commit()
+    finally:
+        db.close()
+
+    resp = client.post(
+        "/api/v1/screener",
+        json={},
+        headers=_auth_headers(client),
+    )
+    assert resp.status_code == 200
+    item = next(item for item in resp.json()["data"]["items"] if item["symbol"] == "BBRI")
+    assert item["close_price"] == 9340.0

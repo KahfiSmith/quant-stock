@@ -7,11 +7,14 @@ from app.models.fundamental import Fundamental
 from app.models.market_data import Price, Stock
 from app.quant.scoring import calculate_quant_score
 from app.schemas.quant import QuantFactors, QuantScoreResponse
+from app.schemas.technical import TechnicalAnalysisResponse
 from app.services.technical import calculate_technical_analysis
 
 
-def compute_stock_quant_score(db: Session, stock: Stock) -> QuantScoreResponse:
-    tech = calculate_technical_analysis(db, stock, interval="1d")
+def compute_stock_quant_score(
+    db: Session, stock: Stock, technical: TechnicalAnalysisResponse | None = None
+) -> QuantScoreResponse:
+    tech = technical or calculate_technical_analysis(db, stock, interval="1d")
 
     # Get latest candle for ATR ratio
     latest_candle = db.scalar(
