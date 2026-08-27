@@ -16,30 +16,28 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.create_check_constraint(
-        "ck_transactions_type",
-        "transactions",
-        "transaction_type IN ('BUY', 'SELL')",
-    )
-    op.create_check_constraint(
-        "ck_transactions_quantity_positive",
-        "transactions",
-        "quantity > 0",
-    )
-    op.create_check_constraint(
-        "ck_transactions_price_positive",
-        "transactions",
-        "price > 0",
-    )
-    op.create_check_constraint(
-        "ck_transactions_fee_nonnegative",
-        "transactions",
-        "fee >= 0",
-    )
+    with op.batch_alter_table("transactions") as batch_op:
+        batch_op.create_check_constraint(
+            "ck_transactions_type",
+            "transaction_type IN ('BUY', 'SELL')",
+        )
+        batch_op.create_check_constraint(
+            "ck_transactions_quantity_positive",
+            "quantity > 0",
+        )
+        batch_op.create_check_constraint(
+            "ck_transactions_price_positive",
+            "price > 0",
+        )
+        batch_op.create_check_constraint(
+            "ck_transactions_fee_nonnegative",
+            "fee >= 0",
+        )
 
 
 def downgrade() -> None:
-    op.drop_constraint("ck_transactions_fee_nonnegative", "transactions", type_="check")
-    op.drop_constraint("ck_transactions_price_positive", "transactions", type_="check")
-    op.drop_constraint("ck_transactions_quantity_positive", "transactions", type_="check")
-    op.drop_constraint("ck_transactions_type", "transactions", type_="check")
+    with op.batch_alter_table("transactions") as batch_op:
+        batch_op.drop_constraint("ck_transactions_fee_nonnegative", type_="check")
+        batch_op.drop_constraint("ck_transactions_price_positive", type_="check")
+        batch_op.drop_constraint("ck_transactions_quantity_positive", type_="check")
+        batch_op.drop_constraint("ck_transactions_type", type_="check")
