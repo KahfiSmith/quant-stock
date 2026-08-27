@@ -9,6 +9,7 @@ import {
   useCreatePortfolio,
   usePortfolioDetail,
   usePortfolios,
+  useUpdatePortfolio,
 } from "@/hooks/market";
 
 export function PortfolioManager() {
@@ -16,6 +17,8 @@ export function PortfolioManager() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [newPortfolioName, setNewPortfolioName] = useState("");
+  const [editPortfolioName, setEditPortfolioName] = useState("");
+  const [editPortfolioCurrency, setEditPortfolioCurrency] = useState("");
   const createPortfolio = useCreatePortfolio();
 
   const [txSymbol, setTxSymbol] = useState("");
@@ -27,6 +30,7 @@ export function PortfolioManager() {
   const activeId = selectedId ?? (portfolios && portfolios.length > 0 ? portfolios[0].id : null);
   const { data: detail, isPending: isDetailPending } = usePortfolioDetail(activeId ?? 0);
   const addTx = useAddTransaction(activeId ?? 0);
+  const updatePortfolio = useUpdatePortfolio(activeId ?? 0);
 
   const handleCreatePortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +42,20 @@ export function PortfolioManager() {
       toast.success("Portfolio created");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create portfolio");
+    }
+  };
+
+  const handleUpdatePortfolio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!(editPortfolioName.trim() || detail?.name) || !(editPortfolioCurrency.trim() || detail?.currency)) return;
+    try {
+      await updatePortfolio.mutateAsync({
+        name: (editPortfolioName.trim() || detail?.name || "").trim(),
+        currency: (editPortfolioCurrency.trim() || detail?.currency || "").toUpperCase(),
+      });
+      toast.success("Portfolio updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update portfolio");
     }
   };
 
@@ -83,28 +101,53 @@ export function PortfolioManager() {
           </select>
         </div>
 
-        <form onSubmit={handleCreatePortfolio} className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="New portfolio name..."
-            className="rounded-md border bg-background px-3 py-1.5 text-sm"
-            value={newPortfolioName}
-            onChange={(e) => setNewPortfolioName(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={createPortfolio.isPending || !newPortfolioName.trim()}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
-          >
-            Create
-          </button>
-        </form>
+        <div className="flex flex-wrap items-center gap-2">
+          <form onSubmit={handleCreatePortfolio} className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="New portfolio name..."
+              className="rounded-md border bg-background px-3 py-1.5 text-sm"
+              value={newPortfolioName}
+              onChange={(e) => setNewPortfolioName(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={createPortfolio.isPending || !newPortfolioName.trim()}
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            >
+              Create
+            </button>
+          </form>
+          {detail ? (
+            <form key={detail.id} onSubmit={handleUpdatePortfolio} className="flex items-center gap-2">
+              <input
+                aria-label="Portfolio name"
+                className="w-36 rounded-md border bg-background px-3 py-1.5 text-sm"
+                value={editPortfolioName || detail.name}
+                onChange={(e) => setEditPortfolioName(e.target.value)}
+              />
+              <input
+                aria-label="Portfolio currency"
+                className="w-20 rounded-md border bg-background px-3 py-1.5 text-sm uppercase"
+                value={editPortfolioCurrency || detail.currency}
+                onChange={(e) => setEditPortfolioCurrency(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={updatePortfolio.isPending}
+                className="rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+              >
+                Save
+              </button>
+            </form>
+          ) : null}
+        </div>
       </div>
 
       {activeId && detail ? (
         <div className="flex flex-col gap-6">
           {/* Summary Metric Cards */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
             <div className="rounded-xl border bg-card p-4">
               <p className="text-xs text-muted-foreground">Total Cost</p>
               <p className="text-xl font-semibold">
@@ -130,6 +173,18 @@ export function PortfolioManager() {
             <div className="rounded-xl border bg-card p-4">
               <p className="text-xs text-muted-foreground">Holdings Count</p>
               <p className="text-xl font-semibold">{detail.holdings.length} Assets</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Realized PnL</p>
+              <p className="text-xl font-semibold">{detail.currency} {detail.total_realized_pnl.toLocaleString()}</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Annualized Volatility</p>
+              <p className="text-xl font-semibold">{detail.risk.annualized_volatility_percent}%</p>
+            </div>
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Max Concentration</p>
+              <p className="text-xl font-semibold">{detail.risk.max_holding_concentration_percent}%</p>
             </div>
           </div>
 

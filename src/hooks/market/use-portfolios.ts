@@ -6,6 +6,7 @@ import { QUERY_KEYS } from "@/lib/api/query-keys";
 import type {
   CreatePortfolioInput,
   CreateTransactionInput,
+  UpdatePortfolioInput,
   PortfolioDetail,
   PortfolioSummary,
 } from "@/types";
@@ -43,6 +44,23 @@ export const useCreatePortfolio = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PORTFOLIO.LIST });
+    },
+  });
+};
+
+export const useUpdatePortfolio = (portfolioId: number | string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdatePortfolioInput) => {
+      const response = await apiClient.patch<PortfolioSummary>(
+        API_ENDPOINTS.PORTFOLIO.UPDATE(portfolioId),
+        input
+      );
+      return response as unknown as PortfolioSummary;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PORTFOLIO.LIST });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PORTFOLIO.DETAIL(portfolioId) });
     },
   });
 };

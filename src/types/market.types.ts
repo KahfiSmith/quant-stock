@@ -19,6 +19,10 @@ export interface PriceCandle {
   volume: number;
   interval: string;
   source: string;
+  source_record_id?: string | null;
+  retrieved_at?: string | null;
+  payload_checksum?: string | null;
+  validation_state?: string;
 }
 
 export interface PaginationMeta {
@@ -42,6 +46,16 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface AiEvidence {
+  category: string;
+  metric: string;
+  value: number | string | null;
+  source: string | null;
+  as_of: string | null;
+  period_end: string | null;
+  score_version: string | null;
+}
+
 export interface AiAnalystResponse {
   symbol: string;
   strengths: string[];
@@ -50,6 +64,11 @@ export interface AiAnalystResponse {
   conclusion: string;
   disclaimer: string;
   as_of: string;
+  analysis_version: string;
+  data_quality: string;
+  data_used: string[];
+  data_unavailable: string[];
+  evidence: AiEvidence[];
 }
 
 export interface EquityPoint {
@@ -64,10 +83,39 @@ export interface BacktestSummary {
   cagr_pct: number;
   annualized_volatility_pct: number;
   sharpe_ratio: number;
+  sortino_ratio: number;
   max_drawdown_pct: number;
   total_trades: number;
   win_rate_pct: number;
   final_equity: number;
+}
+
+export interface BacktestMetadata {
+  run_id: string;
+  status: "succeeded";
+  status_history: ("queued" | "running" | "succeeded" | "failed")[];
+  retry_policy: string;
+  dataset_id: string;
+  dataset_version: string;
+  strategy_id: string;
+  strategy_version: string;
+  requested_start_date: string | null;
+  requested_end_date: string | null;
+  effective_start_date: string;
+  effective_end_date: string;
+  warmup_bars: number;
+  evaluation_bars: number;
+  universe: string[];
+  execution_price: string;
+  fee_percent: number;
+  slippage_percent: number;
+  initial_cash: number;
+  cash_policy: string;
+  lot_rounding: string;
+  corporate_action_policy: string;
+  benchmark: string;
+  risk_free_rate: number;
+  last_data_timestamp: string;
 }
 
 export interface BacktestResponse {
@@ -76,6 +124,7 @@ export interface BacktestResponse {
   initial_capital: number;
   summary: BacktestSummary;
   equity_curve: EquityPoint[];
+  metadata: BacktestMetadata;
   as_of: string;
 }
 
@@ -88,6 +137,7 @@ export interface BacktestParams {
   rsi_oversold?: number;
   rsi_overbought?: number;
   fee_percent?: number;
+  slippage_percent?: number;
 }
 
 export interface PortfolioSummary {
@@ -111,6 +161,12 @@ export interface PortfolioHolding {
   unrealized_pnl_percent: number | null;
 }
 
+export interface PortfolioRisk {
+  annualized_volatility_percent: number;
+  max_holding_concentration_percent: number;
+  observations: number;
+}
+
 export interface PortfolioDetail {
   id: number;
   name: string;
@@ -118,9 +174,11 @@ export interface PortfolioDetail {
   currency: string;
   total_cost: number;
   current_value: number;
+  total_realized_pnl: number;
   total_unrealized_pnl: number;
   total_unrealized_pnl_percent: number;
   holdings: PortfolioHolding[];
+  risk: PortfolioRisk;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +186,12 @@ export interface PortfolioDetail {
 export interface CreatePortfolioInput {
   name: string;
   description?: string;
+  currency?: string;
+}
+
+export interface UpdatePortfolioInput {
+  name?: string;
+  description?: string | null;
   currency?: string;
 }
 
@@ -148,6 +212,9 @@ export interface ScreenerItem {
   currency: string;
   close_price: number | null;
   quant_score: number | null;
+  score_version: string | null;
+  data_source: string | null;
+  as_of: string | null;
   pe_ratio: number | null;
   pb_ratio: number | null;
   roe: number | null;
@@ -189,6 +256,21 @@ export interface QuantFactors {
   growth: number;
 }
 
+export interface QuantMetadata {
+  model_version: string;
+  methodology_version: string;
+  raw_inputs: Record<string, number | null>;
+  missing_inputs: string[];
+  weights: Record<string, number>;
+  normalization: Record<string, string>;
+  reason_codes: string[];
+  comparison_universe: { identifier: string; size: number };
+  technical_as_of: string | null;
+  fundamental_period_end: string | null;
+  fundamental_published_at: string | null;
+  price_as_of: string | null;
+}
+
 export interface QuantScoreResponse {
   symbol: string;
   as_of: string;
@@ -196,6 +278,7 @@ export interface QuantScoreResponse {
   total_score: number;
   factors: QuantFactors;
   data_quality: "complete" | "partial" | "insufficient" | string;
+  metadata: QuantMetadata;
 }
 
 export interface FundamentalRatios {
@@ -212,10 +295,16 @@ export interface FundamentalResponse {
   symbol: string;
   period_end: string;
   published_at: string | null;
+  currency: string | null;
   period_type: string;
   score: number | null;
   ratios: FundamentalRatios;
   source: string;
+  source_record_id: string | null;
+  retrieved_at: string | null;
+  payload_checksum: string | null;
+  validation_state: string;
+  units: Record<string, string>;
   as_of: string;
 }
 

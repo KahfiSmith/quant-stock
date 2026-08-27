@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
     REGISTER: "/api/v1/auth/register",
     DELETE_ACCOUNT: "/api/v1/auth/account",
     ME: "/api/v1/auth/me",
+    UPDATE_PROFILE: "/api/v1/auth/me",
   },
   BACKTEST: {
     RUN: "/api/v1/backtest",
@@ -14,6 +15,7 @@ export const API_ENDPOINTS = {
     LIST: "/api/v1/portfolios",
     CREATE: "/api/v1/portfolios",
     DETAIL: (id: number | string) => `/api/v1/portfolios/${id}`,
+    UPDATE: (id: number | string) => `/api/v1/portfolios/${id}`,
     ADD_TRANSACTION: (id: number | string) => `/api/v1/portfolios/${id}/transactions`,
   },
   MARKET: {

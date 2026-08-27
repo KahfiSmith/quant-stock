@@ -68,6 +68,17 @@ export function BacktestRunner() {
           </>
         )}
 
+        <input
+         type="number"
+         min="0"
+         max="5"
+         step="0.01"
+         placeholder="Slippage %"
+         className="w-24 rounded-md border bg-background px-3 py-1.5 text-sm"
+         value={params.slippage_percent ?? 0}
+         onChange={(e) => setParams((p) => ({ ...p, slippage_percent: Number(e.target.value) || 0 }))}
+        />
+
         <button
           type="submit"
           disabled={runBacktest.isPending || !params.symbol}
@@ -104,6 +115,10 @@ export function BacktestRunner() {
               <p className="text-lg font-semibold">{result.summary.sharpe_ratio}</p>
             </div>
             <div className="rounded-xl border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Sortino Ratio</p>
+              <p className="text-lg font-semibold">{result.summary.sortino_ratio}</p>
+            </div>
+            <div className="rounded-xl border bg-card p-3">
               <p className="text-xs text-muted-foreground">Max Drawdown</p>
               <p className="text-lg font-semibold text-red-600 dark:text-red-400">
                 {result.summary.max_drawdown_pct}%
@@ -120,6 +135,13 @@ export function BacktestRunner() {
               </p>
             </div>
           </div>
+
+          <dl className="grid grid-cols-1 gap-2 rounded-xl border bg-card p-4 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
+            <div><dt>Dataset</dt><dd className="font-medium text-foreground">{result.metadata.dataset_id} / {result.metadata.dataset_version}</dd></div>
+            <div><dt>Evaluation</dt><dd className="font-medium text-foreground">{result.metadata.effective_start_date} → {result.metadata.effective_end_date}</dd></div>
+            <div><dt>Execution</dt><dd className="font-medium text-foreground">{result.metadata.execution_price}</dd></div>
+            <div><dt>Costs</dt><dd className="font-medium text-foreground">Fee {result.metadata.fee_percent * 100}% / Slip {result.metadata.slippage_percent * 100}%</dd></div>
+          </dl>
 
           {/* Equity Curve Data Summary Table */}
           <div className="overflow-hidden rounded-xl border bg-card shadow-sm">

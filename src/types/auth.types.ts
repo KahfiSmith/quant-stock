@@ -2,6 +2,8 @@ export interface User {
   email: string;
   id: number;
   name: string;
+  theme_preference?: "light" | "dark" | "system";
+  timezone?: string;
   role: string;
   is_email_verified: boolean;
   created_at?: string;

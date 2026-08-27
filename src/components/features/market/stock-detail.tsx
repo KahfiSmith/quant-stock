@@ -355,9 +355,14 @@ export function StockDetail({ symbol }: StockDetailProps) {
                     </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground">
-                    Model Version: {scoreData.score_version} | Completeness: {scoreData.data_quality}
-                  </p>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <p>
+                      Model Version: {scoreData.score_version} | Completeness: {scoreData.data_quality} | Universe: {scoreData.metadata.comparison_universe.identifier} ({scoreData.metadata.comparison_universe.size})
+                    </p>
+                    {scoreData.metadata.missing_inputs.length > 0 ? (
+                      <p>Unavailable inputs: {scoreData.metadata.missing_inputs.join(", ")}</p>
+                    ) : null}
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">No quantitative score available for this symbol.</p>
@@ -424,6 +429,21 @@ export function StockDetail({ symbol }: StockDetailProps) {
                         <li key={idx}>{u}</li>
                       ))}
                     </ul>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/20 p-4 text-xs text-muted-foreground">
+                    <p className="font-semibold text-foreground">Supporting Facts</p>
+                    <ul className="mt-2 space-y-1">
+                      {aiData.evidence.map((fact) => (
+                        <li key={`${fact.category}-${fact.metric}`}>
+                          {fact.metric}: {fact.value ?? "unavailable"} ({fact.source ?? "unknown source"})
+                        </li>
+                      ))}
+                    </ul>
+                    {aiData.data_unavailable.length > 0 ? (
+                      <p className="mt-2">Unavailable: {aiData.data_unavailable.join(", ")}</p>
+                    ) : null}
+                    <p className="mt-2">Analysis version: {aiData.analysis_version} | Quality: {aiData.data_quality}</p>
                   </div>
 
                   {/* Disclaimer */}

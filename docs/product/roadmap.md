@@ -1,15 +1,16 @@
 # Roadmap — QuantLens AI Development
 
-- Status: Working draft (planning artifact based on [QuantLens PRD](docs/product/quantlens-spec.md))
-- Date: 2026-08-22
+- Status: Current implementation status (based on [QuantLens PRD](./quantlens-spec.md))
+- Date: 2026-08-27
 - Purpose: Single source of truth for build order across all QuantLens development phases.
 
 ## Conventions
 
-- Status legend: **done** = implemented; **in-progress** = actively being built;
-  **planned** = to build; **candidate** = considered, not committed.
-- When a feature ships, mark it **done** and make sure it has a
-  `docs/features/<feature>.md` (the `docs:check` gate requires it).
+- Status legend: **COMPLETE** = implemented and verified; **PARTIAL** = implemented
+  only in part of the requirement; **BLOCKED** = dependency decision required;
+  **DEFERRED** = intentionally postponed; **OUT OF SCOPE** = not required.
+- A feature is **COMPLETE** only when its documented acceptance and exit criteria
+  are verified; keep dependency-blocked work explicitly marked **BLOCKED**.
 
 ## Implemented
 
@@ -28,14 +29,15 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Configure Docker Compose with PostgreSQL + TimescaleDB.
 - [x] Configure environment variables and Alembic migrations.
 
-### Phase 1 — Authentication & User System (In Progress)
+### Phase 1 — Authentication & User System (PARTIAL / DEFERRED OPTIONAL FLOWS)
 - [x] Integrate frontend auth forms with FastAPI JWT + HttpOnly refresh-cookie endpoints.
 - [x] Create numeric-ID `users`, `sessions`, and refresh-token history tables.
-- [ ] Settings and profile preferences.
-- [ ] Google OAuth/OIDC, password reset, and email verification.
+- [x] Settings and profile preferences via protected `PATCH /api/v1/auth/me` and `/settings`.
+- [ ] Google OAuth/OIDC, password reset, and email verification (DEFERRED).
 
-### Phase 2 — Market Data System (In Progress)
-- [ ] Ingest stock metadata and historical OHLCV data (BLOCKED on data-provider decision).
+### Phase 2 — Market Data System (PARTIAL / BLOCKED)
+- [ ] Activate real stock metadata and historical OHLCV provider ingestion (BLOCKED on provider and licensing decision).
+- [x] Provider-neutral ingestion contracts, validation, provenance, and idempotent persistence boundary.
 - [x] Setup `stocks` table and `prices` TimescaleDB hypertable (migration `0002_market_data`).
 - [x] Build endpoints: `GET /api/v1/stocks`, `GET /api/v1/stocks/{symbol}/prices`.
 - [x] Integrate TradingView Lightweight Charts in frontend (`/stocks`, `/stocks/[symbol]`).
@@ -64,20 +66,24 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Build comprehensive stock view on `/stocks/[symbol]`.
 - [x] Sections: Overview, Candlestick Chart, Financial Ratios, Quant Score Breakdown with tab navigation.
 
-### Phase 8 — Portfolio System (Done)
-- [x] Setup `portfolios`, `transactions` database tables and migration 0004.
-- [x] Build CRUD & detail calculation endpoints `/api/v1/portfolios[/{id}/transactions]`.
-- [x] Portfolio tracking page `/portfolio` with PnL, asset allocation, and transaction logs.
+### Phase 8 — Portfolio System (COMPLETE)
+- [x] Setup `portfolios`, `transactions` database tables and migrations 0004–0005.
+- [x] Portfolio editing with ownership and validation via `PATCH /api/v1/portfolios/{id}`.
+- [x] Weighted-average realized/unrealized PnL, holdings, allocation, and deterministic risk summary.
+- [x] Portfolio tracking page `/portfolio` with edit feedback and risk metrics.
 
-### Phase 9 — Backtesting Engine (Done)
+### Phase 9 — Backtesting Engine (COMPLETE)
 - [x] Implement backtest simulation in `apps/quant-api/app/quant/backtest.py`.
-- [x] Strategy rules execution with CAGR, Sharpe Ratio, Max Drawdown, Annual Volatility, Win Rate metrics.
+- [x] Strategy rules execution with CAGR, Sharpe, Sortino, Max Drawdown, Annual Volatility, and Win Rate metrics.
+- [x] Reproducibility metadata, execution costs/slippage, explicit policies, and anti-bias regression coverage.
 - [x] Build endpoint `POST /api/v1/backtest` and `/backtest` simulation UI in frontend.
 
-### Phase 10 — AI Analyst (Done)
-- [x] Implement structured facts synthesis module in `apps/quant-api/app/services/ai_analyst.py`.
-- [x] Build endpoint `GET /api/v1/stocks/{symbol}/ai-summary` (Strengths, Risks, Unknowns, Conclusion).
+### Phase 10 — AI Analyst (COMPLETE for current approved deterministic policy)
+- [x] Implement deterministic structured facts synthesis module in `apps/quant-api/app/services/ai_analyst.py`.
+- [x] Build endpoint `GET /api/v1/stocks/{symbol}/ai-summary` with strengths, risks, unknowns, conclusion, evidence, provenance, and data-quality metadata.
 - [x] Add interactive AI Analyst tab on `/stocks/[symbol]`.
+- [x] Add offline structured-output, factuality, safety, and untrusted-text evaluation tests.
+- [ ] Licensed-news/LLM provider integration (BLOCKED until approved provider and policy).
 
 ---
 

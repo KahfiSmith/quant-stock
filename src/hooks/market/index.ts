@@ -4,6 +4,7 @@ export {
   useCreatePortfolio,
   usePortfolioDetail,
   usePortfolios,
+  useUpdatePortfolio,
 } from "@/hooks/market/use-portfolios";
 export { useStockAiSummary } from "@/hooks/market/use-stock-ai-summary";
 export { useStockFundamental } from "@/hooks/market/use-stock-fundamental";
