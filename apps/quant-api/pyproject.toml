@@ -5,6 +5,10 @@ pythonpath = ["."]
 [tool.ruff]
 target-version = "py312"
 line-length = 120
+extend-exclude = [
+    "scripts/verify_real_data.py",
+    "scripts/verify_portfolio_and_fixes.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
