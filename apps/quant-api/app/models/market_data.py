@@ -55,6 +55,10 @@ class Price(Base):
     volume: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False)
     interval: Mapped[str] = mapped_column(String(8), nullable=False, default="1d")
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="sample")
+    source_record_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    payload_checksum: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    validation_state: Mapped[str] = mapped_column(String(16), nullable=False, default="valid")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

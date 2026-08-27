@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 from datetime import UTC, datetime, time
+from hashlib import sha256
+from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -77,7 +79,7 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
         signal = 0  # 1 = BUY, -1 = SELL, 0 = HOLD
 
         if req.strategy == "BUY_AND_HOLD":
-            if i == 0:
+            if i == evaluation_start:
                 signal = 1
         elif req.strategy == "SMA_CROSSOVER":
             if (
@@ -100,18 +102,20 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
 
         # Execute signals
         if signal == 1 and cash > 0:
+            execution_price = close * (1.0 + req.slippage_percent)
             fee = cash * req.fee_percent
             investable = cash - fee
-            bought_shares = investable / close
+            bought_shares = investable / execution_price
             shares += bought_shares
             cash = 0.0
-            last_buy_price = close
+            last_buy_price = execution_price
             trades_count += 1
         elif signal == -1 and shares > 0:
-            gross = shares * close
+            execution_price = close * (1.0 - req.slippage_percent)
+            gross = shares * execution_price
             fee = gross * req.fee_percent
             cash = gross - fee
-            if close > last_buy_price:
+            if execution_price > last_buy_price:
                 winning_trades += 1
             shares = 0.0
             trades_count += 1
@@ -148,18 +152,26 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
         else 0.0
     )
 
-    # Volatility & Sharpe
+    # Volatility, Sharpe, and Sortino use the same daily return series.
+    rf_annual = 0.05
+    rf_daily = rf_annual / 252.0
     if len(daily_returns) > 1:
         mean_ret = sum(daily_returns) / len(daily_returns)
         var = sum((r - mean_ret) ** 2 for r in daily_returns) / (len(daily_returns) - 1)
         daily_std = math.sqrt(var)
         ann_vol = daily_std * math.sqrt(252.0) * 100.0
-        # Risk free rate baseline 5%
-        rf_daily = 0.05 / 252.0
         sharpe = (mean_ret - rf_daily) / daily_std * math.sqrt(252.0) if daily_std > 0 else 0.0
+        downside = [min(0.0, r - rf_daily) ** 2 for r in daily_returns]
+        downside_deviation = math.sqrt(sum(downside) / len(downside))
+        sortino = (
+            (mean_ret - rf_daily) / downside_deviation * math.sqrt(252.0)
+            if downside_deviation > 0
+            else 0.0
+        )
     else:
         ann_vol = 0.0
         sharpe = 0.0
+        sortino = 0.0
 
     max_dd = min((pt.drawdown for pt in equity_curve), default=0.0)
     win_rate = (winning_trades / (trades_count / 2) * 100.0) if trades_count >= 2 else 0.0
@@ -169,11 +181,20 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
         cagr_pct=round(cagr_pct, 2),
         annualized_volatility_pct=round(ann_vol, 2),
         sharpe_ratio=round(sharpe, 2),
+        sortino_ratio=round(sortino, 2),
         max_drawdown_pct=round(max_dd, 2),
         total_trades=trades_count,
         win_rate_pct=round(win_rate, 2),
         final_equity=round(final_equity, 2),
     )
+    data_signature = "|".join(
+        f"{price.time.isoformat()}:{price.close}:{price.source}:{price.interval}" for price in prices
+    )
+    dataset_version = sha256(data_signature.encode()).hexdigest()[:16]
+    run_id = str(uuid4())
+    evaluation_prices = prices[evaluation_start:]
+    evaluation_end = evaluation_prices[-1].time.date()
+    as_of = datetime.now(UTC)
 
     return BacktestResponse(
         symbol=stock.symbol,
@@ -181,5 +202,32 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
         initial_capital=req.initial_capital,
         summary=summary,
         equity_curve=equity_curve,
-        as_of=datetime.now(UTC),
+        metadata={
+            "run_id": run_id,
+            "status": "succeeded",
+            "status_history": ["queued", "running", "succeeded"],
+            "retry_policy": "none_synchronous_execution",
+            "dataset_id": f"{stock.symbol}:1d",
+            "dataset_version": dataset_version,
+            "strategy_id": req.strategy,
+            "strategy_version": "v1",
+            "requested_start_date": req.start_date,
+            "requested_end_date": req.end_date,
+            "effective_start_date": evaluation_prices[0].time.date(),
+            "effective_end_date": evaluation_end,
+            "warmup_bars": evaluation_start,
+            "evaluation_bars": len(evaluation_prices),
+            "universe": [stock.symbol],
+            "execution_price": "same_candle_close_with_slippage",
+            "fee_percent": req.fee_percent,
+            "slippage_percent": req.slippage_percent,
+            "initial_cash": req.initial_capital,
+            "cash_policy": "fully_invest_when_signal_and_hold_cash_after_sell",
+            "lot_rounding": "fractional_shares",
+            "corporate_action_policy": "not_adjusted",
+            "benchmark": "buy_and_hold_from_effective_start_close",
+            "risk_free_rate": rf_annual,
+            "last_data_timestamp": prices[-1].time,
+        },
+        as_of=as_of,
     )
