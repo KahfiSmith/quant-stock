@@ -85,6 +85,10 @@ user -> /stocks or /stocks/[symbol] -> RequireAuth (client guard)
 | `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios and financial metrics | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor composite score and factor breakdown | Required (Bearer) |
 | `POST` | `/api/v1/screener` | Multi-parameter stock screening and ranking | Required (Bearer) |
+| `GET` | `/api/v1/portfolios` | List user portfolios | Required (Bearer) |
+| `POST` | `/api/v1/portfolios` | Create a new portfolio | Required (Bearer) |
+| `GET` | `/api/v1/portfolios/{id}` | Portfolio detail and computed holdings PnL | Required (Bearer) |
+| `POST` | `/api/v1/portfolios/{id}/transactions` | Add BUY/SELL transaction | Required (Bearer) |
 
 Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
 `data_source` provenance.

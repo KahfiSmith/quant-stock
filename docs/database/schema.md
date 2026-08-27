@@ -30,7 +30,12 @@ Migration `0002_market_data` and `0003_fundamentals` add market data and fundame
 The `prices.source` field carries data provenance (`sample` for seeded
 placeholder rows). Real ingestion is deferred pending a data-provider decision.
 
-## Migration workflow
+## Portfolio & transaction tables
+
+Migration `0004_portfolios` adds portfolio management:
+
+- `portfolios`: numeric `id`, `user_id` (FK to `users`), unique per user `name`, `currency`, and timestamps.
+- `transactions`: numeric `id`, `portfolio_id` (FK to `portfolios`), `stock_id` (FK to `stocks`), `transaction_type` (`BUY` or `SELL`), `quantity`, `price`, `fee`, `transacted_at`, and `created_at`.
 
 1. Change SQLAlchemy models in `apps/quant-api/app/models`.
 2. Create and review an Alembic migration.

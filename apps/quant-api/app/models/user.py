@@ -31,3 +31,6 @@ class User(Base):
     sessions: Mapped[list[AuthSession]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    portfolios: Mapped[list[Portfolio]] = relationship(  # noqa: F821
+        "Portfolio", back_populates="user", cascade="all, delete-orphan"
+    )

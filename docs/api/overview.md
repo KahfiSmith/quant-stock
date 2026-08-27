@@ -25,6 +25,7 @@ API integration documentation for communication between the Next.js frontend and
 | **Market Data** | `GET` | `/api/v1/stocks` | List and search stocks with summary metrics |
 | **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
 | **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
+| **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |
 | **Screener** | `POST` | `/api/v1/screener` | Filter & rank stocks by multi-criteria |
 | **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger Bands) |
@@ -33,7 +34,6 @@ API integration documentation for communication between the Next.js frontend and
 
 | Module | Method | Path | Description |
 |---|---|---|---|
-| **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
 | **Backtest** | `POST` | `/api/v1/backtest` | Run historical strategy backtest |
 | **AI Analyst** | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | AI-generated strengths, risks, conclusion |
 

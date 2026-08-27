@@ -64,9 +64,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [ ] Build comprehensive stock view on `/stocks/[symbol]`.
 - [ ] Sections: Overview, Candlestick Chart, Financial Ratios, Quant Score Breakdown.
 
-### Phase 8 — Portfolio System (Planned)
-- [ ] Setup `portfolios`, `transactions`, `holdings` database tables.
-- [ ] Portfolio tracking page `/portfolio` with PnL, asset allocation, and risk metrics.
+### Phase 8 — Portfolio System (Done)
+- [x] Setup `portfolios`, `transactions` database tables and migration 0004.
+- [x] Build CRUD & detail calculation endpoints `/api/v1/portfolios[/{id}/transactions]`.
+- [x] Portfolio tracking page `/portfolio` with PnL, asset allocation, and transaction logs.
 
 ### Phase 9 — Backtesting Engine (Planned)
 - [ ] Implement backtest simulation in `apps/quant-api/app/quant/backtest.py`.
