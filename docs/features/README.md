@@ -6,8 +6,10 @@ Overview of business features implemented in this application.
 
 - [Authentication & User Session](./authentication.md) - login, register,
   logout, session bootstrap, protected profile, delete account.
-- [Market Data](./market-data.md) - stock universe list and per-symbol price
-  history chart (schema-first Phase 2 slice).
+- [Market Data](./market-data.md) - stock universe, chart, technical,
+  fundamental, quant, screener, and AI summary surfaces.
+- Portfolio tracking, transaction recording, and PnL are implemented under the
+  `(dashboard)` route group; backtesting is implemented under the same group.
 
 ## Route-group coverage
 

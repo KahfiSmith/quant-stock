@@ -9,21 +9,22 @@ For the full product specification and architecture phases, see the [QuantLens P
 
 ## Product status
 
-This repository currently serves as the **frontend foundation** with completed authentication and user session flows. The quantitative engines, market data pipelines, and stock analysis features are planned for subsequent phases.
+This repository contains the active QuantLens frontend and FastAPI-backed analytical prototype. Authentication, market-data reads, technical/fundamental analysis, scoring, screener, portfolio tracking, backtesting, and deterministic AI summaries are implemented; real provider ingestion remains blocked pending licensing decisions.
 
 ## Implemented product surface
 
 - Generic public landing page (`/`).
-- Authentication flows: `/login`, `/register`.
-- Authenticated proof surface: `/profile` (shows the current user).
+- Authentication flows: `/login`, `/register`, and protected `/profile`.
+- Protected stock screener and stock detail: `/stocks`, `/stocks/[symbol]`.
+- Protected portfolio tracking: `/portfolio`.
+- Protected strategy backtesting: `/backtest`.
+- Deterministic AI Analyst summaries from available technical, fundamental, and quant facts.
 
-## Target product surface (QuantLens Roadmap)
+## Deferred or incomplete scope
 
-- **Stock Screener (`/stocks`)**: Multi-factor filtering (Momentum, Quality, Value, Risk, Growth, Sector, PER, ROE).
-- **Stock Detail (`/stocks/[symbol]`)**: Interactive TradingView charts, technical indicators, fundamental breakdown, quant score decomposition.
-- **Portfolio Management (`/portfolio`)**: Multi-asset tracking, PnL analysis, risk metrics.
-- **Strategy Backtesting (`/backtest`)**: Rule-based strategy simulation with CAGR, Sharpe Ratio, and Maximum Drawdown analysis.
-- **AI Analyst**: Automated strengths, risks, and synthesis generated from quant and fundamental signals.
+- Real market-data ingestion and provider integration remain blocked pending licensing and coverage decisions.
+- Portfolio risk metrics and full edit/delete CRUD are not implemented.
+- Google OAuth/OIDC, password reset, email verification, and settings remain deferred.
 
 ## Business rules and enforcement
 

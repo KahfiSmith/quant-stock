@@ -1,7 +1,7 @@
 # Feature: Market Data
 
 **Feature ID:** market-data
-**Status:** in-progress
+**Status:** implemented
 **Owner:** engineer
 **Risk:** medium
 **Routes:** `(dashboard)/stocks`, `(dashboard)/stocks/[symbol]`
@@ -31,8 +31,9 @@ tables.
   feature hooks; pages reuse the shared `RequireAuth` guard.
 - Product/runtime constraints: prices carry an explicit `data_source` and `as_of`
   (`source="sample"` is placeholder data, never real market data).
-- Out of scope: real ingestion/collectors, provider selection, the `/stocks`
-  screener (Phase 6), and quant scoring (Phase 5).
+- Out of scope: real ingestion/collectors and provider selection. The current
+  screener, quant score, fundamentals, and AI summary use the available sample
+  dataset and are not real-time market data.
 
 ## Impact Areas
 

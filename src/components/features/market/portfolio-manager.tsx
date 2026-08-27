@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { StateMessage } from "@/components/common";
 import {
@@ -30,24 +31,34 @@ export function PortfolioManager() {
   const handleCreatePortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPortfolioName.trim()) return;
-    const res = await createPortfolio.mutateAsync({ name: newPortfolioName.trim() });
-    setNewPortfolioName("");
-    setSelectedId(res.id);
+    try {
+      const res = await createPortfolio.mutateAsync({ name: newPortfolioName.trim() });
+      setNewPortfolioName("");
+      setSelectedId(res.id);
+      toast.success("Portfolio created");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create portfolio");
+    }
   };
 
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!txSymbol.trim() || !txQuantity || !txPrice) return;
-    await addTx.mutateAsync({
-      symbol: txSymbol.trim().toUpperCase(),
-      transaction_type: txType,
-      quantity: parseFloat(txQuantity),
-      price: parseFloat(txPrice),
-      fee: parseFloat(txFee) || 0,
-    });
-    setTxSymbol("");
-    setTxQuantity("");
-    setTxPrice("");
+    try {
+      await addTx.mutateAsync({
+        symbol: txSymbol.trim().toUpperCase(),
+        transaction_type: txType,
+        quantity: parseFloat(txQuantity),
+        price: parseFloat(txPrice),
+        fee: parseFloat(txFee) || 0,
+      });
+      setTxSymbol("");
+      setTxQuantity("");
+      setTxPrice("");
+      toast.success("Transaction recorded");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to record transaction");
+    }
   };
 
   if (isPending) return <StateMessage variant="loading" />;
