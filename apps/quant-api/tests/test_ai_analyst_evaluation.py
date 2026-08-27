@@ -12,6 +12,9 @@ def test_ai_output_evaluation_contract_is_structured_and_safe() -> None:
         conclusion="BBCA reflects a quantitative summary for further evaluation.",
         disclaimer="This does not constitute financial, investment, or trading advice.",
         as_of=datetime(2026, 1, 1, tzinfo=UTC),
+        analysis_engine="deterministic",
+        provider=None,
+        model=None,
         analysis_version="deterministic-v1",
         data_quality="partial",
         data_used=["technical_indicators", "quant_score"],
@@ -28,6 +31,13 @@ def test_ai_output_evaluation_contract_is_structured_and_safe() -> None:
     )
 
     assert set(("strengths", "risks", "unknowns", "conclusion")) <= set(AiAnalystResponse.model_fields)
+    # New required fields
+    assert "analysis_engine" in AiAnalystResponse.model_fields
+    assert "provider" in AiAnalystResponse.model_fields
+    assert "model" in AiAnalystResponse.model_fields
+    assert response.analysis_engine == "deterministic"
+    assert response.provider is None
+    assert response.model is None
     assert response.evidence[0].value == 30.0
     assert "advice" in response.disclaimer.lower()
     assert "buy" not in response.conclusion.lower()
@@ -44,6 +54,9 @@ def test_ai_evaluation_does_not_treat_untrusted_text_as_instructions() -> None:
         conclusion="No conclusion is derived from untrusted text.",
         disclaimer="This does not constitute financial, investment, or trading advice.",
         as_of=datetime(2026, 1, 1, tzinfo=UTC),
+        analysis_engine="deterministic",
+        provider=None,
+        model=None,
         analysis_version="deterministic-v1",
         data_quality="insufficient",
         data_used=[],
@@ -56,7 +69,11 @@ def test_ai_evaluation_does_not_treat_untrusted_text_as_instructions() -> None:
     assert "buy recommendation" not in output
 
 
-def test_ai_analysis_uses_llm_version_when_configured(client, monkeypatch) -> None:
+def test_ai_analysis_engine_is_deterministic_even_with_provider_configured(client, monkeypatch) -> None:
+    """The current AI analyst implementation does NOT perform LLM calls
+    regardless of provider config. analysis_engine must be 'deterministic'.
+    This is the audit fix for the misleading 'llm-<model>' version label.
+    """
     from app.core.config import get_settings
 
     # Override settings to simulate configured LLM provider
@@ -74,7 +91,12 @@ def test_ai_analysis_uses_llm_version_when_configured(client, monkeypatch) -> No
         db.commit()
 
         analysis = generate_ai_analysis(db, stock)
-        assert analysis.analysis_version == "llm-gpt-4o-mini"
+        # The implementation does not call any LLM. Engine must reflect reality.
+        assert analysis.analysis_engine == "deterministic"
+        assert analysis.provider is None
+        assert analysis.model is None
+        assert analysis.analysis_version == "deterministic-v1"
+        assert not analysis.analysis_version.startswith("llm-")
         assert analysis.disclaimer is not None
         assert "advice" in analysis.disclaimer.lower()
     finally:
