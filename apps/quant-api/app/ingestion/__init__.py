@@ -1,5 +1,5 @@
 from app.ingestion.contracts import CollectedFundamental, CollectedPrice, CollectionRequest, MarketDataCollector
-from app.ingestion.persistence import ingest_prices
+from app.ingestion.persistence import ingest_fundamentals, ingest_prices
 from app.ingestion.validation import (
     IngestionValidationError,
     validate_fundamental,
@@ -13,6 +13,7 @@ __all__ = [
     "CollectionRequest",
     "IngestionValidationError",
     "MarketDataCollector",
+    "ingest_fundamentals",
     "ingest_prices",
     "validate_fundamental",
     "validate_price",

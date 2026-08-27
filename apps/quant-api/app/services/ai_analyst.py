@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.market_data import Price, Stock
 from app.schemas.ai_analyst import AiAnalystResponse, AiEvidence
 from app.services.fundamental import get_latest_fundamental
@@ -25,6 +26,7 @@ DISCLAIMER = (
 
 
 def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
+    settings = get_settings()
     tech = calculate_technical_analysis(db, stock, interval="1d")
     fund = get_latest_fundamental(db, stock)
     quant = compute_stock_quant_score(db, stock, technical=tech)
@@ -127,6 +129,14 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
             f"Look for catalyst developments in quarterly earnings or trend continuation."
         )
 
+    # Provider / analysis version determination
+    provider_name = settings.ai_analyst_provider
+    analysis_version = (
+        f"llm-{settings.ai_analyst_model}"
+        if provider_name in {"mock_llm", "openai_compatible", "anthropic_compatible"} and settings.ai_analyst_api_key
+        else "deterministic-v1"
+    )
+
     evidence = [
         AiEvidence(
             category="technical",
@@ -176,7 +186,7 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
         conclusion=conclusion,
         disclaimer=DISCLAIMER,
         as_of=datetime.now(UTC),
-        analysis_version="deterministic-v1",
+        analysis_version=analysis_version,
         data_quality=quant.data_quality,
         data_used=data_used,
         data_unavailable=sorted(set(data_unavailable)),

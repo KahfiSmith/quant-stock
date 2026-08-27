@@ -85,3 +85,28 @@ class BacktestResponse(BaseModel):
     equity_curve: list[EquityPoint]
     metadata: BacktestMetadata
     as_of: datetime
+    job_id: str | None = None
+
+
+class BacktestJobItem(BaseModel):
+    id: str
+    symbol: str
+    strategy: str
+    status: Literal["queued", "running", "succeeded", "failed"]
+    initial_capital: float
+    parameters: dict[str, object]
+    start_date: date | None
+    end_date: date | None
+    summary: BacktestSummary | None = None
+    equity_curve: list[EquityPoint] | None = None
+    metadata: dict[str, object] | None = None
+    error_message: str | None = None
+    retry_count: int = 0
+    created_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
+class BacktestJobListResponse(BaseModel):
+    items: list[BacktestJobItem]
+    total: int

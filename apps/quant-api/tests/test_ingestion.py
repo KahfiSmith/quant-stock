@@ -8,10 +8,12 @@ from app.ingestion import (
     CollectedFundamental,
     CollectedPrice,
     IngestionValidationError,
+    ingest_fundamentals,
     ingest_prices,
     validate_fundamental,
     validate_price_batch,
 )
+from app.models.fundamental import Fundamental
 from app.models.market_data import Price, Stock
 
 
@@ -87,6 +89,94 @@ def test_ingest_prices_rejects_unknown_symbol(client) -> None:
     try:
         with pytest.raises(ApiError) as error:
             ingest_prices(db, [_record("UNKNOWN")])
+        assert error.value.code == "UNKNOWN_SYMBOL"
+    finally:
+        db.close()
+
+
+def test_ingest_fundamentals_is_idempotent_and_calculates_score(client) -> None:
+    db = client.app.state.database.session()
+    try:
+        stock = Stock(symbol="BBCA", name="Bank Central Asia", currency="IDR")
+        db.add(stock)
+        db.commit()
+
+        fund_record = CollectedFundamental(
+            symbol="BBCA",
+            period_end=date(2025, 12, 31),
+            published_at=datetime(2026, 1, 15, tzinfo=UTC),
+            currency="IDR",
+            period_type="TTM",
+            metrics={
+                "pe_ratio": Decimal("12.5"),
+                "pb_ratio": Decimal("1.8"),
+                "roe": Decimal("0.18"),
+                "roa": Decimal("0.05"),
+                "debt_to_equity": Decimal("0.4"),
+                "revenue_growth": Decimal("0.12"),
+                "eps_growth": Decimal("0.15"),
+            },
+            source="sec_filing",
+            source_record_id="filing-2025-q4",
+            retrieved_at=datetime(2026, 1, 16, tzinfo=UTC),
+            payload_checksum="chk-1234",
+        )
+
+        assert ingest_fundamentals(db, [fund_record]) == 1
+        rows = db.query(Fundamental).all()
+        assert len(rows) == 1
+        assert float(rows[0].pe_ratio) == 12.5
+        assert float(rows[0].score) > 80.0
+        assert rows[0].validation_state == "valid"
+        assert rows[0].source_record_id == "filing-2025-q4"
+
+        # Ingest update idempotently
+        updated_record = CollectedFundamental(
+            symbol="BBCA",
+            period_end=date(2025, 12, 31),
+            published_at=datetime(2026, 1, 15, tzinfo=UTC),
+            currency="IDR",
+            period_type="TTM",
+            metrics={
+                "pe_ratio": Decimal("10.0"),
+                "pb_ratio": Decimal("1.5"),
+                "roe": Decimal("0.20"),
+                "roa": Decimal("0.06"),
+                "debt_to_equity": Decimal("0.3"),
+                "revenue_growth": Decimal("0.15"),
+                "eps_growth": Decimal("0.18"),
+            },
+            source="sec_filing",
+            source_record_id="filing-2025-q4-amended",
+            retrieved_at=datetime(2026, 1, 17, tzinfo=UTC),
+            payload_checksum="chk-amended",
+        )
+        assert ingest_fundamentals(db, [updated_record]) == 1
+        rows = db.query(Fundamental).all()
+        assert len(rows) == 1
+        assert float(rows[0].pe_ratio) == 10.0
+        assert rows[0].source_record_id == "filing-2025-q4-amended"
+        assert rows[0].payload_checksum == "chk-amended"
+    finally:
+        db.close()
+
+
+def test_ingest_fundamentals_rejects_unknown_symbol(client) -> None:
+    db = client.app.state.database.session()
+    try:
+        fund_record = CollectedFundamental(
+            symbol="UNKNOWN",
+            period_end=date(2025, 12, 31),
+            published_at=datetime(2026, 1, 15, tzinfo=UTC),
+            currency="IDR",
+            period_type="TTM",
+            metrics={},
+            source="sec_filing",
+            source_record_id="rec-1",
+            retrieved_at=datetime(2026, 1, 16, tzinfo=UTC),
+        )
+        with pytest.raises(ApiError) as error:
+            ingest_fundamentals(db, [fund_record])
         assert error.value.code == "UNKNOWN_SYMBOL"
     finally:
         db.close()

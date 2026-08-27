@@ -36,3 +36,6 @@ class User(Base):
     portfolios: Mapped[list[Portfolio]] = relationship(  # noqa: F821
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
     )
+    backtest_jobs: Mapped[list[BacktestJob]] = relationship(  # noqa: F821
+        "BacktestJob", back_populates="user", cascade="all, delete-orphan"
+    )

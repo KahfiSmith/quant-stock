@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     cookie_same_site: Literal["lax", "strict", "none"] = "lax"
     auth_rate_limit_per_minute: int = Field(default=20, ge=1, le=1000)
 
+    # LLM / AI Analyst provider configuration
+    ai_analyst_provider: Literal[
+        "deterministic", "mock_llm", "openai_compatible", "anthropic_compatible"
+    ] = "deterministic"
+    ai_analyst_api_key: str | None = None
+    ai_analyst_base_url: str | None = None
+    ai_analyst_model: str = "gpt-4o-mini"
+    ai_analyst_timeout_seconds: float = Field(default=10.0, ge=1.0, le=60.0)
+
     @model_validator(mode="after")
     def reject_default_secrets_outside_development(self) -> "Settings":
         defaults = {

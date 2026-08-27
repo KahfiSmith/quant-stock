@@ -11,7 +11,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.errors import ApiError
+from app.models.backtest import BacktestJob
 from app.models.market_data import Price, Stock
+from app.models.user import User
 from app.schemas.backtest import (
     BacktestRequest,
     BacktestResponse,
@@ -21,9 +23,39 @@ from app.schemas.backtest import (
 from app.technical.indicators import rsi, sma
 
 
-def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse:
+def run_strategy_backtest(
+    db: Session, req: BacktestRequest, user: User | None = None
+) -> BacktestResponse:
+    run_id = str(uuid4())
+    created_at = datetime.now(UTC)
+
+    # 1. Create or initialize persistent job if user provided
+    job: BacktestJob | None = None
+    if user is not None:
+        job = BacktestJob(
+            id=run_id,
+            user_id=user.id,
+            symbol=req.symbol.upper(),
+            strategy=req.strategy,
+            status="running",
+            initial_capital=req.initial_capital,
+            parameters=req.model_dump(mode="json"),
+            start_date=req.start_date,
+            end_date=req.end_date,
+            created_at=created_at,
+            started_at=created_at,
+            retry_count=0,
+        )
+        db.add(job)
+        db.commit()
+
     stock = db.scalar(select(Stock).where(Stock.symbol == req.symbol.upper()))
     if not stock:
+        if job is not None:
+            job.status = "failed"
+            job.error_message = f"Unknown symbol: {req.symbol.upper()}"
+            job.finished_at = datetime.now(UTC)
+            db.commit()
         raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {req.symbol.upper()}")
 
     stmt = select(Price).where(Price.stock_id == stock.id, Price.interval == "1d")
@@ -41,10 +73,25 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
 
     required_history = max(req.slow_period, 30)
     if len(prices) < required_history:
+        if job is not None:
+            job.status = "failed"
+            job.error_message = "Not enough price history to run this backtest"
+            job.finished_at = datetime.now(UTC)
+            db.commit()
         raise ApiError(400, "INSUFFICIENT_DATA", "Not enough price history to run this backtest")
     if evaluation_start == len(prices):
+        if job is not None:
+            job.status = "failed"
+            job.error_message = "No price history exists in the requested backtest period"
+            job.finished_at = datetime.now(UTC)
+            db.commit()
         raise ApiError(400, "INSUFFICIENT_DATA", "No price history exists in the requested backtest period")
     if req.start_date and evaluation_start < required_history - 1:
+        if job is not None:
+            job.status = "failed"
+            job.error_message = "Not enough warm-up history exists before the requested backtest period"
+            job.finished_at = datetime.now(UTC)
+            db.commit()
         raise ApiError(
             400,
             "INSUFFICIENT_DATA",
@@ -191,10 +238,45 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
         f"{price.time.isoformat()}:{price.close}:{price.source}:{price.interval}" for price in prices
     )
     dataset_version = sha256(data_signature.encode()).hexdigest()[:16]
-    run_id = str(uuid4())
     evaluation_prices = prices[evaluation_start:]
     evaluation_end = evaluation_prices[-1].time.date()
     as_of = datetime.now(UTC)
+
+    metadata_dict = {
+        "run_id": run_id,
+        "status": "succeeded",
+        "status_history": ["queued", "running", "succeeded"],
+        "retry_policy": "none_synchronous_execution",
+        "dataset_id": f"{stock.symbol}:1d",
+        "dataset_version": dataset_version,
+        "strategy_id": req.strategy,
+        "strategy_version": "v1",
+        "requested_start_date": req.start_date.isoformat() if req.start_date else None,
+        "requested_end_date": req.end_date.isoformat() if req.end_date else None,
+        "effective_start_date": evaluation_prices[0].time.date().isoformat(),
+        "effective_end_date": evaluation_end.isoformat(),
+        "warmup_bars": evaluation_start,
+        "evaluation_bars": len(evaluation_prices),
+        "universe": [stock.symbol],
+        "execution_price": "same_candle_close_with_slippage",
+        "fee_percent": req.fee_percent,
+        "slippage_percent": req.slippage_percent,
+        "initial_cash": req.initial_capital,
+        "cash_policy": "fully_invest_when_signal_and_hold_cash_after_sell",
+        "lot_rounding": "fractional_shares",
+        "corporate_action_policy": "not_adjusted",
+        "benchmark": "buy_and_hold_from_effective_start_close",
+        "risk_free_rate": rf_annual,
+        "last_data_timestamp": prices[-1].time.isoformat(),
+    }
+
+    if job is not None:
+        job.status = "succeeded"
+        job.summary = summary.model_dump(mode="json")
+        job.equity_curve = [pt.model_dump(mode="json") for pt in equity_curve]
+        job.metadata_json = metadata_dict
+        job.finished_at = as_of
+        db.commit()
 
     return BacktestResponse(
         symbol=stock.symbol,
@@ -230,4 +312,5 @@ def run_strategy_backtest(db: Session, req: BacktestRequest) -> BacktestResponse
             "last_data_timestamp": prices[-1].time,
         },
         as_of=as_of,
+        job_id=run_id if job is not None else None,
     )

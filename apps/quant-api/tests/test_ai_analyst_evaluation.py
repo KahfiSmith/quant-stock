@@ -54,3 +54,28 @@ def test_ai_evaluation_does_not_treat_untrusted_text_as_instructions() -> None:
     assert untrusted_fact.lower() not in output
     assert "guarantee" not in output
     assert "buy recommendation" not in output
+
+
+def test_ai_analysis_uses_llm_version_when_configured(client, monkeypatch) -> None:
+    from app.core.config import get_settings
+
+    # Override settings to simulate configured LLM provider
+    monkeypatch.setattr(get_settings(), "ai_analyst_provider", "openai_compatible")
+    monkeypatch.setattr(get_settings(), "ai_analyst_api_key", "sk-test-key-1234")
+    monkeypatch.setattr(get_settings(), "ai_analyst_model", "gpt-4o-mini")
+
+    db = client.app.state.database.session()
+    try:
+        from app.models.market_data import Stock
+        from app.services.ai_analyst import generate_ai_analysis
+
+        stock = Stock(symbol="TLKM", name="Telkom Indonesia", currency="IDR")
+        db.add(stock)
+        db.commit()
+
+        analysis = generate_ai_analysis(db, stock)
+        assert analysis.analysis_version == "llm-gpt-4o-mini"
+        assert analysis.disclaimer is not None
+        assert "advice" in analysis.disclaimer.lower()
+    finally:
+        db.close()

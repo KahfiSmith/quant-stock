@@ -253,3 +253,101 @@ def test_backtest_slippage_changes_execution_result(client: TestClient) -> None:
         < no_slippage.json()["data"]["summary"]["final_equity"]
     )
     assert with_slippage.json()["data"]["metadata"]["slippage_percent"] == 0.01
+
+
+def test_backtest_job_lifecycle_persistence_and_unauthorized_isolation(client: TestClient) -> None:
+    # 1. Register User 1 and User 2
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "u1@example.com", "name": "U1", "password": "password123"},
+    )
+    t1 = client.post(
+        "/api/v1/auth/login",
+        json={"email": "u1@example.com", "password": "password123"},
+    ).json()["data"]["access_token"]
+    h1 = {"Authorization": f"Bearer {t1}"}
+
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "u2@example.com", "name": "U2", "password": "password123"},
+    )
+    t2 = client.post(
+        "/api/v1/auth/login",
+        json={"email": "u2@example.com", "password": "password123"},
+    ).json()["data"]["access_token"]
+    h2 = {"Authorization": f"Bearer {t2}"}
+
+    db = client.app.state.database.session()
+    try:
+        stock = _make_stock(db, "TLKM", "Telkom Indonesia")
+        _make_candles(db, stock, datetime(2026, 1, 1, tzinfo=UTC), count=65)
+        db.commit()
+    finally:
+        db.close()
+
+    # User 1 runs backtest
+    res = client.post(
+        "/api/v1/backtest",
+        json={"symbol": "TLKM", "strategy": "BUY_AND_HOLD"},
+        headers=h1,
+    )
+    assert res.status_code == 200
+    job_id = res.json()["data"]["job_id"]
+    assert job_id is not None
+
+    # User 1 lists jobs
+    jobs_res = client.get("/api/v1/backtest/jobs", headers=h1)
+    assert jobs_res.status_code == 200
+    jobs_data = jobs_res.json()["data"]
+    assert jobs_data["total"] >= 1
+    assert any(j["id"] == job_id for j in jobs_data["items"])
+    target_job = next(j for j in jobs_data["items"] if j["id"] == job_id)
+    assert target_job["status"] == "succeeded"
+    assert target_job["symbol"] == "TLKM"
+    assert target_job["summary"]["total_trades"] == 1
+
+    # User 1 gets specific job
+    single_res = client.get(f"/api/v1/backtest/jobs/{job_id}", headers=h1)
+    assert single_res.status_code == 200
+    assert single_res.json()["data"]["id"] == job_id
+    assert len(single_res.json()["data"]["equity_curve"]) > 50
+
+    # User 2 cannot access User 1's job
+    u2_single = client.get(f"/api/v1/backtest/jobs/{job_id}", headers=h2)
+    assert u2_single.status_code == 404
+    assert u2_single.json()["code"] == "JOB_NOT_FOUND"
+
+    u2_list = client.get("/api/v1/backtest/jobs", headers=h2)
+    assert u2_list.status_code == 200
+    assert not any(j["id"] == job_id for j in u2_list.json()["data"]["items"])
+
+
+def test_backtest_job_records_failure_lifecycle(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "fail@example.com", "name": "FailUser", "password": "password123"},
+    )
+    token = client.post(
+        "/api/v1/auth/login",
+        json={"email": "fail@example.com", "password": "password123"},
+    ).json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Request backtest for unknown symbol
+    res = client.post(
+        "/api/v1/backtest",
+        json={"symbol": "NONEXISTENT", "strategy": "BUY_AND_HOLD"},
+        headers=headers,
+    )
+    assert res.status_code == 404
+
+    # Check job history recorded the failure
+    jobs_res = client.get("/api/v1/backtest/jobs", headers=headers)
+    assert jobs_res.status_code == 200
+    items = jobs_res.json()["data"]["items"]
+    assert len(items) == 1
+    failed_job = items[0]
+    assert failed_job["symbol"] == "NONEXISTENT"
+    assert failed_job["status"] == "failed"
+    assert "Unknown symbol" in failed_job["error_message"]
+    assert failed_job["finished_at"] is not None
