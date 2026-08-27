@@ -1,5 +1,6 @@
 import math
 from collections import defaultdict
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -155,6 +156,10 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
     cents = Decimal("0.01")
     shares_precision = Decimal("0.0001")
 
+    # Track freshest/stalest price_as_of across all holdings
+    earliest_price_as_of: datetime | None = None
+    data_lag: str | None = None
+
     for stock_id, shares in stock_shares.items():
         if shares <= 0:
             continue
@@ -169,6 +174,20 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
             .limit(1)
         )
         curr_price = Decimal(latest_price_rec.close) if latest_price_rec else None
+        price_as_of = latest_price_rec.time if latest_price_rec else None
+        price_source = latest_price_rec.source if latest_price_rec else None
+        # Declare data_lag based on the source of the price row.
+        holding_data_lag: str | None = None
+        if price_source == "yfinance":
+            holding_data_lag = "eod_1d"
+
+        if holding_data_lag and data_lag is None:
+            data_lag = holding_data_lag
+
+        # Update portfolio-level earliest (most stale) price_as_of
+        if price_as_of is not None:
+            if earliest_price_as_of is None or price_as_of < earliest_price_as_of:
+                earliest_price_as_of = price_as_of
 
         cost = stock_cost[stock_id]
         avg_buy = cost / shares if shares > 0 else Decimal(0)
@@ -191,6 +210,9 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
                 current_value=float(val.quantize(cents)) if val is not None else None,
                 unrealized_pnl=float(pnl.quantize(cents)) if pnl is not None else None,
                 unrealized_pnl_percent=float(pnl_pct.quantize(cents)) if pnl_pct is not None else None,
+                price_as_of=price_as_of,
+                data_source=price_source,
+                data_lag=holding_data_lag,
             )
         )
 
@@ -259,6 +281,9 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
             max_holding_concentration_percent=float(concentration.quantize(cents)),
             observations=len(returns),
         ),
+        as_of=datetime.now(UTC),
+        price_as_of=earliest_price_as_of,
+        data_lag=data_lag,
         created_at=portfolio.created_at,
         updated_at=portfolio.updated_at,
     )

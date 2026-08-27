@@ -80,6 +80,9 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
                 quant_score=quant.total_score,
                 score_version=quant.score_version,
                 data_source=latest_price.source if latest_price is not None else None,
+                # price_as_of = market observation time of THIS item's latest close.
+                price_as_of=latest_price.time if latest_price is not None else None,
+                # as_of kept for backward compat. Will be deprecated.
                 as_of=latest_price.time if latest_price is not None else quant.as_of,
                 pe_ratio=pe,
                 pb_ratio=pb,
@@ -107,8 +110,14 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
 
     meta = pagination_meta(req.page, req.page_size, total)
 
+    # Determine data_lag: if any item is backed by yfinance, declare eod_1d.
+    data_lag: str | None = None
+    if any(item.data_source == "yfinance" for item in page_items):
+        data_lag = "eod_1d"
+
     return ScreenerResponse(
         items=page_items,
         pagination=meta,
         as_of=datetime.now(UTC),
+        data_lag=data_lag,
     )

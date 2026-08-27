@@ -12,7 +12,6 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.models.market_data import Price, Stock
 from app.schemas.ai_analyst import AiAnalystResponse, AiEvidence
 from app.services.fundamental import get_latest_fundamental
@@ -26,7 +25,6 @@ DISCLAIMER = (
 
 
 def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
-    settings = get_settings()
     tech = calculate_technical_analysis(db, stock, interval="1d")
     fund = get_latest_fundamental(db, stock)
     quant = compute_stock_quant_score(db, stock, technical=tech)
@@ -129,13 +127,18 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
             f"Look for catalyst developments in quarterly earnings or trend continuation."
         )
 
-    # Provider / analysis version determination
-    provider_name = settings.ai_analyst_provider
-    analysis_version = (
-        f"llm-{settings.ai_analyst_model}"
-        if provider_name in {"mock_llm", "openai_compatible", "anthropic_compatible"} and settings.ai_analyst_api_key
-        else "deterministic-v1"
-    )
+    # Analysis engine / version determination.
+    # The current implementation ALWAYS uses rule-based synthesis (no LLM call).
+    # Therefore analysis_engine="deterministic" regardless of configured provider.
+    # When an actual LLM call is wired in (separate task), this branch must be
+    # gated on whether the call succeeded. Until then, do NOT claim an LLM was used.
+    analysis_engine = "deterministic"
+    provider_used: str | None = None
+    model_used: str | None = None
+    analysis_version = "deterministic-v1"
+    # The legacy `llm-{model}` version string is intentionally NOT emitted
+    # because the current code does not perform LLM calls. This avoids the
+    # misleading "AI Analyst is LLM-backed" claim that the audit flagged.
 
     evidence = [
         AiEvidence(
@@ -186,6 +189,9 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
         conclusion=conclusion,
         disclaimer=DISCLAIMER,
         as_of=datetime.now(UTC),
+        analysis_engine=analysis_engine,
+        provider=provider_used,
+        model=model_used,
         analysis_version=analysis_version,
         data_quality=quant.data_quality,
         data_used=data_used,
