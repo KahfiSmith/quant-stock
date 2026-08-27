@@ -84,6 +84,23 @@ def test_get_stock_quant_score_success(client: TestClient) -> None:
     assert 0 <= data["factors"]["value"] <= 100
     assert 0 <= data["factors"]["risk"] <= 100
     assert 0 <= data["factors"]["growth"] <= 100
+    metadata = data["metadata"]
+    assert metadata["model_version"] == "v1"
+    assert metadata["comparison_universe"] == {"identifier": "all_stocks", "size": 1}
+    assert metadata["missing_inputs"] == []
+    assert metadata["raw_inputs"]["rsi"] is not None
+    assert metadata["weights"] == {
+        "momentum": 0.3,
+        "quality": 0.25,
+        "value": 0.2,
+        "risk": 0.15,
+        "growth": 0.1,
+    }
+    weighted_total = sum(
+        data["factors"][factor] * metadata["weights"][factor]
+        for factor in ("momentum", "quality", "value", "risk", "growth")
+    )
+    assert data["total_score"] == round(weighted_total, 2)
 
 
 def test_get_stock_quant_score_unknown_symbol(client: TestClient) -> None:

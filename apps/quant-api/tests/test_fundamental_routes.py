@@ -43,6 +43,11 @@ def test_get_stock_fundamental_success(client: TestClient) -> None:
             eps_growth=0.15,
             score=82.5,
             source="sample",
+            currency="IDR",
+            source_record_id="fixture:BBCA:2025-12-31:TTM",
+            retrieved_at=datetime(2026, 2, 2, tzinfo=UTC),
+            payload_checksum="fixture-checksum",
+            validation_state="valid",
         )
         db.add(fund)
         db.commit()
@@ -59,6 +64,13 @@ def test_get_stock_fundamental_success(client: TestClient) -> None:
     assert data["score"] == 82.5
     assert data["ratios"]["pe_ratio"] == 18.5
     assert data["ratios"]["roe"] == 0.21
+    assert data["currency"] == "IDR"
+    assert data["source"] == "sample"
+    assert data["source_record_id"] == "fixture:BBCA:2025-12-31:TTM"
+    assert data["retrieved_at"].startswith("2026-02-02T00:00:00")
+    assert data["payload_checksum"] == "fixture-checksum"
+    assert data["validation_state"] == "valid"
+
 
 
 def test_get_stock_fundamental_not_found(client: TestClient) -> None:

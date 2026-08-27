@@ -32,6 +32,35 @@ def test_authentication_lifecycle_with_numeric_user_id(client: TestClient) -> No
     )
     assert me.status_code == 200
     assert me.json()["data"]["email"] == "user@example.com"
+    assert me.json()["data"]["theme_preference"] == "system"
+    assert me.json()["data"]["timezone"] == "UTC"
+
+
+def test_profile_preferences_can_be_updated(client: TestClient) -> None:
+    register(client)
+    payload = login(client)
+    headers = {
+        "Authorization": f"Bearer {payload['access_token']}",
+        "Origin": "http://localhost:3000",
+    }
+    updated = client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"name": "Updated User", "theme_preference": "dark", "timezone": "Asia/Jakarta"},
+    )
+    assert updated.status_code == 200
+    data = updated.json()["data"]
+    assert data["name"] == "Updated User"
+    assert data["theme_preference"] == "dark"
+    assert data["timezone"] == "Asia/Jakarta"
+
+    invalid = client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"theme_preference": "solarized"},
+    )
+    assert invalid.status_code == 422
+    assert invalid.json()["code"] == "VALIDATION_ERROR"
 
 
 def test_refresh_rotation_detects_reuse_and_revokes_session(client: TestClient) -> None:

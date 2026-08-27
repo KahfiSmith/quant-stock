@@ -109,6 +109,9 @@ def test_screener_filters_and_sorts(client: TestClient) -> None:
     assert len(data2["items"]) == 1
     assert data2["items"][0]["symbol"] == "BBCA"
     assert data2["items"][0]["close_price"] == 9390.0
+    assert data2["items"][0]["score_version"] == "v1"
+    assert data2["items"][0]["data_source"] == "sample"
+    assert data2["items"][0]["as_of"]
 
 
 def test_screener_rejects_reversed_ranges(client: TestClient) -> None:

@@ -92,7 +92,20 @@ def test_portfolio_lifecycle_and_holdings_pnl(client: TestClient) -> None:
     assert sell_res.status_code == 200
 
     remaining_res = client.get(f"/api/v1/portfolios/{portfolio_id}", headers=headers)
-    assert remaining_res.json()["data"]["holdings"][0]["quantity"] == 60
+    remaining_data = remaining_res.json()["data"]
+    assert remaining_data["holdings"][0]["quantity"] == 60
+    assert remaining_data["total_realized_pnl"] == 19_400.0
+    assert remaining_data["risk"]["max_holding_concentration_percent"] == 100.0
+    assert remaining_data["risk"]["observations"] == 0
+
+    update_res = client.patch(
+        f"/api/v1/portfolios/{portfolio_id}",
+        json={"name": "Main Income", "currency": "USD"},
+        headers=headers,
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["data"]["name"] == "Main Income"
+    assert update_res.json()["data"]["currency"] == "USD"
 
     oversell_res = client.post(
         f"/api/v1/portfolios/{portfolio_id}/transactions",
@@ -101,6 +114,41 @@ def test_portfolio_lifecycle_and_holdings_pnl(client: TestClient) -> None:
     )
     assert oversell_res.status_code == 409
     assert oversell_res.json()["code"] == "INSUFFICIENT_HOLDINGS"
+
+
+def test_portfolio_risk_uses_historical_transaction_date(client: TestClient) -> None:
+    headers = _auth_headers(client)
+
+    db = client.app.state.database.session()
+    try:
+        stock = _make_stock(db, "BBCA", "Bank Central Asia")
+        _make_candles(db, stock, datetime(2026, 1, 1, tzinfo=UTC), count=30)
+        db.commit()
+    finally:
+        db.close()
+
+    create_res = client.post(
+        "/api/v1/portfolios",
+        json={"name": "Historical Portfolio"},
+        headers=headers,
+    )
+    portfolio_id = create_res.json()["data"]["id"]
+    buy_res = client.post(
+        f"/api/v1/portfolios/{portfolio_id}/transactions",
+        json={
+            "symbol": "BBCA",
+            "transaction_type": "BUY",
+            "quantity": 100,
+            "price": 9000,
+            "transacted_at": "2026-01-05T00:00:00Z",
+        },
+        headers=headers,
+    )
+    assert buy_res.status_code == 200
+
+    detail = client.get(f"/api/v1/portfolios/{portfolio_id}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["data"]["risk"]["observations"] == 25
 
 
 def test_portfolio_rejects_sell_without_holdings(client: TestClient) -> None:

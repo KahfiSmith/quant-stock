@@ -81,6 +81,11 @@ def test_get_stock_ai_summary(client: TestClient) -> None:
     assert len(data["unknowns"]) > 0
     assert "disclaimer" in data
     assert "not constitute financial" in data["disclaimer"].lower()
+    assert data["analysis_version"] == "deterministic-v1"
+    assert data["data_quality"] in {"complete", "partial", "insufficient"}
+    assert "technical_indicators" in data["data_used"]
+    assert any(item["metric"] == "total_score" for item in data["evidence"])
+    assert any(item["source"] == "sample" for item in data["evidence"])
 
 
 def test_ai_summary_does_not_claim_unavailable_data(client: TestClient) -> None:
