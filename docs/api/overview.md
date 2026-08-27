@@ -24,6 +24,7 @@ API integration documentation for communication between the Next.js frontend and
 | **Auth** | `POST` | `/api/v1/auth/logout` | Session invalidation |
 | **Market Data** | `GET` | `/api/v1/stocks` | List and search stocks with summary metrics |
 | **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
+| **AI Analyst** | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | AI-generated strengths, risks, conclusion |
 | **Backtest** | `POST` | `/api/v1/backtest` | Run historical strategy backtest |
 | **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
 | **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
@@ -33,9 +34,7 @@ API integration documentation for communication between the Next.js frontend and
 
 ## Planned QuantLens API Endpoints (`/api/v1`)
 
-| Module | Method | Path | Description |
-|---|---|---|---|
-| **AI Analyst** | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | AI-generated strengths, risks, conclusion |
+*(All core phases 1–10 endpoints implemented; future data provider collectors planned)*
 
 ## Related documents
 

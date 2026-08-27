@@ -90,6 +90,7 @@ user -> /stocks or /stocks/[symbol] -> RequireAuth (client guard)
 | `GET` | `/api/v1/portfolios/{id}` | Portfolio detail and computed holdings PnL | Required (Bearer) |
 | `POST` | `/api/v1/portfolios/{id}/transactions` | Add BUY/SELL transaction | Required (Bearer) |
 | `POST` | `/api/v1/backtest` | Run historical quantitative strategy backtest | Required (Bearer) |
+| `GET` | `/api/v1/stocks/{symbol}/ai-summary` | Automated structured AI analyst synthesis | Required (Bearer) |
 
 Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
 `data_source` provenance.

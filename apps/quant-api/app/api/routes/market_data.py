@@ -13,6 +13,7 @@ from app.schemas.market_data import (
     StocksResponse,
 )
 from app.schemas.technical import TechnicalAnalysisResponse
+from app.services.ai_analyst import generate_ai_analysis
 from app.services.fundamental import get_latest_fundamental
 from app.services.market_data import get_stock_by_symbol, list_prices, list_stocks
 from app.services.quant import compute_stock_quant_score
@@ -128,3 +129,17 @@ def get_stock_quant_score(
 
     result = compute_stock_quant_score(db, stock)
     return success(result.model_dump(mode="json"), "Quant score calculated")
+
+
+@router.get("/{symbol}/ai-summary")
+def get_stock_ai_summary(
+    symbol: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    stock = get_stock_by_symbol(db, symbol)
+    if stock is None:
+        raise ApiError(404, "SYMBOL_NOT_FOUND", f"Unknown symbol: {symbol.upper()}")
+
+    result = generate_ai_analysis(db, stock)
+    return success(result.model_dump(mode="json"), "AI summary synthesized")

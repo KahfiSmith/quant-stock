@@ -60,9 +60,9 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Multi-parameter filters: Sector, Market Cap, Quant Score, ROE, PER, PBV, RSI.
 - [x] Dynamic ranking and pagination via `POST /api/v1/screener`.
 
-### Phase 7 — Stock Detail Page (Planned)
-- [ ] Build comprehensive stock view on `/stocks/[symbol]`.
-- [ ] Sections: Overview, Candlestick Chart, Financial Ratios, Quant Score Breakdown.
+### Phase 7 — Stock Detail Page (Done)
+- [x] Build comprehensive stock view on `/stocks/[symbol]`.
+- [x] Sections: Overview, Candlestick Chart, Financial Ratios, Quant Score Breakdown with tab navigation.
 
 ### Phase 8 — Portfolio System (Done)
 - [x] Setup `portfolios`, `transactions` database tables and migration 0004.
@@ -74,8 +74,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Strategy rules execution with CAGR, Sharpe Ratio, Max Drawdown, Annual Volatility, Win Rate metrics.
 - [x] Build endpoint `POST /api/v1/backtest` and `/backtest` simulation UI in frontend.
 
-### Phase 10 — AI Analyst (Future)
-- [ ] LLM-assisted synthesis for stock reports (Strengths, Risks, Conclusion).
+### Phase 10 — AI Analyst (Done)
+- [x] Implement structured facts synthesis module in `apps/quant-api/app/services/ai_analyst.py`.
+- [x] Build endpoint `GET /api/v1/stocks/{symbol}/ai-summary` (Strengths, Risks, Unknowns, Conclusion).
+- [x] Add interactive AI Analyst tab on `/stocks/[symbol]`.
 
 ---
 
