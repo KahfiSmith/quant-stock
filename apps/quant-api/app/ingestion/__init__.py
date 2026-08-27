@@ -6,6 +6,7 @@ from app.ingestion.validation import (
     validate_price,
     validate_price_batch,
 )
+from app.ingestion.yfinance_collector import StockMetadata, YFinanceCollector
 
 __all__ = [
     "CollectedFundamental",
@@ -13,6 +14,8 @@ __all__ = [
     "CollectionRequest",
     "IngestionValidationError",
     "MarketDataCollector",
+    "StockMetadata",
+    "YFinanceCollector",
     "ingest_fundamentals",
     "ingest_prices",
     "validate_fundamental",

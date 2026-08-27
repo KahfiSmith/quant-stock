@@ -63,3 +63,7 @@ class MarketDataCollector(Protocol):
     name: str
 
     def collect_prices(self, request: CollectionRequest) -> Iterable[CollectedPrice]: ...
+
+    def collect_fundamentals(
+        self, request: CollectionRequest
+    ) -> Iterable[CollectedFundamental]: ...
