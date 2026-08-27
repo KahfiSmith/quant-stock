@@ -84,6 +84,7 @@ user -> /stocks or /stocks/[symbol] -> RequireAuth (client guard)
 | `GET` | `/api/v1/stocks/{symbol}/technical` | Calculated technical indicators (MA, RSI, MACD, BB, ATR) | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios and financial metrics | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor composite score and factor breakdown | Required (Bearer) |
+| `POST` | `/api/v1/screener` | Multi-parameter stock screening and ranking | Required (Bearer) |
 
 Responses use the standard `ApiResponse` envelope. Prices include `as_of` and
 `data_source` provenance.

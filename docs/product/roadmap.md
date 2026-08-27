@@ -55,10 +55,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Apply formula: `30% Momentum + 25% Quality + 20% Value + 15% Risk + 10% Growth`.
 - [x] Build endpoint: `GET /api/v1/stocks/{symbol}/score`.
 
-### Phase 6 — Stock Screener (Planned)
-- [ ] Build interactive screener table on `/stocks`.
-- [ ] Multi-parameter filters: Sector, Market Cap, Quant Score, ROE, PER, PBV.
-- [ ] Dynamic ranking and pagination.
+### Phase 6 — Stock Screener (Done)
+- [x] Build interactive screener table on `/stocks`.
+- [x] Multi-parameter filters: Sector, Market Cap, Quant Score, ROE, PER, PBV, RSI.
+- [x] Dynamic ranking and pagination via `POST /api/v1/screener`.
 
 ### Phase 7 — Stock Detail Page (Planned)
 - [ ] Build comprehensive stock view on `/stocks/[symbol]`.
