@@ -16,6 +16,13 @@ class CreateTransactionRequest(BaseModel):
     quantity: float = Field(gt=0)
     price: float = Field(gt=0)
     fee: float = Field(default=0.0, ge=0)
+    transacted_at: datetime | None = None
+
+
+class UpdatePortfolioRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=128)
+    description: str | None = Field(default=None, max_length=255)
+    currency: str | None = Field(default=None, min_length=1, max_length=8)
 
 
 class TransactionResponse(BaseModel):
@@ -44,6 +51,12 @@ class HoldingResponse(BaseModel):
     unrealized_pnl_percent: float | None = None
 
 
+class PortfolioRiskResponse(BaseModel):
+    annualized_volatility_percent: float
+    max_holding_concentration_percent: float
+    observations: int
+
+
 class PortfolioDetailResponse(BaseModel):
     id: int
     name: str
@@ -51,9 +64,11 @@ class PortfolioDetailResponse(BaseModel):
     currency: str
     total_cost: float
     current_value: float
+    total_realized_pnl: float
     total_unrealized_pnl: float
     total_unrealized_pnl_percent: float
     holdings: list[HoldingResponse]
+    risk: PortfolioRiskResponse
     created_at: datetime
     updated_at: datetime
 

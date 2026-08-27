@@ -52,6 +52,9 @@ class ScreenerItem(BaseModel):
     currency: str = "IDR"
     close_price: float | None = None
     quant_score: float | None = None
+    score_version: str | None = None
+    data_source: str | None = None
+    as_of: datetime | None = None
     pe_ratio: float | None = None
     pb_ratio: float | None = None
     roe: float | None = None

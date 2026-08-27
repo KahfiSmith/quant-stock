@@ -35,6 +35,10 @@ class PriceResponse(BaseModel):
     volume: float
     interval: str
     source: str
+    source_record_id: str | None = None
+    retrieved_at: datetime | None = None
+    payload_checksum: str | None = None
+    validation_state: str
 
 
 class StocksResponse(BaseModel):

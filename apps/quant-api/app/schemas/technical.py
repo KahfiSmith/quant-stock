@@ -28,6 +28,7 @@ class IndicatorsSummary(BaseModel):
 class TechnicalAnalysisResponse(BaseModel):
     symbol: str
     interval: str
+    data_source: str | None = None
     as_of: datetime
     trend: str
     rsi: float | None

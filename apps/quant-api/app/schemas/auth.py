@@ -18,12 +18,20 @@ class DeleteAccountRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class UpdateProfileRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=255)
+    theme_preference: str | None = Field(default=None, pattern="^(light|dark|system)$")
+    timezone: str | None = Field(default=None, min_length=1, max_length=64)
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     email: EmailStr
     name: str
+    theme_preference: str
+    timezone: str
     role: str
     is_email_verified: bool
     created_at: datetime | None = None
