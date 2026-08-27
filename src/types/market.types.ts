@@ -42,6 +42,48 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface ScreenerItem {
+  id: number;
+  symbol: string;
+  name: string;
+  sector: string | null;
+  market_cap: number | null;
+  currency: string;
+  close_price: number | null;
+  quant_score: number | null;
+  pe_ratio: number | null;
+  pb_ratio: number | null;
+  roe: number | null;
+  rsi: number | null;
+  trend: string;
+}
+
+export interface ScreenerFilterParams {
+  search?: string;
+  sector?: string;
+  min_market_cap?: number;
+  max_market_cap?: number;
+  min_score?: number;
+  max_score?: number;
+  min_pe?: number;
+  max_pe?: number;
+  min_pb?: number;
+  max_pb?: number;
+  min_roe?: number;
+  min_rsi?: number;
+  max_rsi?: number;
+  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi";
+  sort_order?: "asc" | "desc";
+  page?: number;
+  page_size?: number;
+}
+
+export interface ScreenerResponse {
+  items: ScreenerItem[];
+  pagination: PaginationMeta;
+  as_of: string;
+}
+
 export interface QuantFactors {
   momentum: number;
   quality: number;
