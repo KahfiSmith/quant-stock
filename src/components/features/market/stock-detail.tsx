@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { StateMessage } from "@/components/common";
 import { StockChart } from "@/components/features/market/stock-chart";
 import {
+  useStockAiSummary,
   useStockFundamental,
   useStockPrices,
   useStockScore,
@@ -21,6 +23,8 @@ type RangeOption = {
   label: string;
   days: number;
 };
+
+type ActiveTab = "overview" | "chart" | "fundamentals" | "quant" | "ai";
 
 const RANGE_OPTIONS: RangeOption[] = [
   { label: "1M", days: 30 },
@@ -41,70 +45,114 @@ function rangeFor(days: number): PriceRange {
 
 export function StockDetail({ symbol }: StockDetailProps) {
   const [days, setDays] = useState<number>(0);
+  const [tab, setTab] = useState<ActiveTab>("overview");
+
   const { data, isPending, isError } = useStockPrices(symbol, rangeFor(days));
   const { data: technical } = useStockTechnical(symbol);
   const { data: fundamental } = useStockFundamental(symbol);
   const { data: scoreData } = useStockScore(symbol);
+  const { data: aiData, isPending: isAiPending } = useStockAiSummary(symbol);
+
+  const latestCandle = data?.items && data.items.length > 0 ? data.items[data.items.length - 1] : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
-      <header className="flex items-center justify-between">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
+      {/* Header Banner */}
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-6 shadow-sm">
         <div>
-          <p className="text-sm font-medium text-primary">Market data</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{symbol.toUpperCase()}</h1>
-        </div>
-        <div className="flex flex-wrap gap-2 text-xs">
-          {scoreData ? (
-            <span className="rounded-full bg-primary px-3 py-1 font-semibold text-primary-foreground shadow-sm">
-              Quant Score: {scoreData.total_score} ({scoreData.data_quality})
-            </span>
-          ) : null}
-          {technical ? (
-            <>
-              <span
-                className={`rounded-full px-2.5 py-0.5 font-medium ${
-                  technical.trend === "bullish"
-                    ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                    : technical.trend === "bearish"
-                      ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                      : "bg-muted text-muted-foreground"
-                }`}
-              >
-                Trend: {technical.trend}
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">{symbol.toUpperCase()}</h1>
+            {scoreData ? (
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+                Quant Score: {scoreData.total_score}/100
               </span>
-              {technical.rsi !== null ? (
-                <span className="rounded-full bg-muted px-2.5 py-0.5 font-medium text-foreground">
-                  RSI(14): {technical.rsi}
-                </span>
-              ) : null}
-            </>
-          ) : null}
-          {fundamental?.score !== null && fundamental?.score !== undefined ? (
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-medium text-primary">
-              Fundamental Score: {fundamental.score}/100
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {latestCandle ? `Latest Close: IDR ${Number(latestCandle.close).toLocaleString()} | Volume: ${Number(latestCandle.volume).toLocaleString()}` : "Market Asset"}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href="/backtest"
+            className="rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted"
+          >
+            Backtest Strategy
+          </Link>
+          {technical ? (
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                technical.trend === "bullish"
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                  : technical.trend === "bearish"
+                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                    : "bg-muted text-muted-foreground"
+              }`}
+            >
+              Trend: {technical.trend.toUpperCase()}
             </span>
           ) : null}
         </div>
       </header>
 
-      <div className="flex gap-2" role="group" aria-label="Price range">
-        {RANGE_OPTIONS.map((option) => {
-          const active = option.days === days;
-          return (
-            <button
-              key={option.label}
-              type="button"
-              onClick={() => setDays(option.days)}
-              className={`rounded-md px-3 py-1 text-sm transition-colors ${
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/60"
-              }`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-border text-sm">
+        <button
+          type="button"
+          onClick={() => setTab("overview")}
+          className={`border-b-2 px-4 py-2.5 font-medium transition-colors ${
+            tab === "overview"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("chart")}
+          className={`border-b-2 px-4 py-2.5 font-medium transition-colors ${
+            tab === "chart"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Candlestick Chart
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("fundamentals")}
+          className={`border-b-2 px-4 py-2.5 font-medium transition-colors ${
+            tab === "fundamentals"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Financial Fundamentals
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("quant")}
+          className={`border-b-2 px-4 py-2.5 font-medium transition-colors ${
+            tab === "quant"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Quant Score Breakdown
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("ai")}
+          className={`border-b-2 px-4 py-2.5 font-medium transition-colors ${
+            tab === "ai"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          AI Analyst Insight
+        </button>
       </div>
 
       {isPending ? (
@@ -114,103 +162,280 @@ export function StockDetail({ symbol }: StockDetailProps) {
           Failed to load price history for {symbol.toUpperCase()}.
         </StateMessage>
       ) : (
-        <div className="space-y-4">
-          <StockChart data={toChartCandles(data?.items ?? [])} />
+        <div className="space-y-6">
+          {/* Tab 1: Overview */}
+          {tab === "overview" && (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Technical Highlights</h3>
+                {technical ? (
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">RSI (14)</dt>
+                      <dd className="font-semibold">{technical.rsi ?? "n/a"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">MA Signal</dt>
+                      <dd className="font-semibold">{technical.ma_signal}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">MA20 / MA50</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.ma20 ?? "—"} / {technical.indicators.ma50 ?? "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">ATR (14)</dt>
+                      <dd className="font-semibold">{technical.indicators.atr14 ?? "—"}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No technical summary available.</p>
+                )}
+              </div>
 
-          <dl className="flex flex-wrap gap-4 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Data source</dt>
-              <dd className="font-medium">{data?.data_source ?? "n/a"}</dd>
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Fundamental Snapshot</h3>
+                {fundamental ? (
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">P/E Ratio</dt>
+                      <dd className="font-semibold">{fundamental.ratios.pe_ratio ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">P/B Ratio</dt>
+                      <dd className="font-semibold">{fundamental.ratios.pb_ratio ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">ROE</dt>
+                      <dd className="font-semibold">
+                        {fundamental.ratios.roe !== null ? `${(fundamental.ratios.roe * 100).toFixed(1)}%` : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Revenue Growth</dt>
+                      <dd className="font-semibold">
+                        {fundamental.ratios.revenue_growth !== null ? `${(fundamental.ratios.revenue_growth * 100).toFixed(1)}%` : "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No fundamental ratios available.</p>
+                )}
+              </div>
             </div>
-            <div>
-              <dt className="text-muted-foreground">Candles</dt>
-              <dd className="font-medium">{data?.pagination.total ?? 0}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">As of</dt>
-              <dd className="font-medium">
-                {data ? new Date(data.as_of).toLocaleString() : "n/a"}
-              </dd>
-            </div>
-            {technical ? (
-              <>
+          )}
+
+          {/* Tab 2: Candlestick Chart */}
+          {tab === "chart" && (
+            <div className="space-y-4 rounded-xl border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold">Price History (OHLCV)</h3>
+                <div className="flex gap-1" role="group" aria-label="Price range">
+                  {RANGE_OPTIONS.map((option) => {
+                    const active = option.days === days;
+                    return (
+                      <button
+                        key={option.label}
+                        type="button"
+                        onClick={() => setDays(option.days)}
+                        className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                          active
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <StockChart data={toChartCandles(data?.items ?? [])} />
+
+              <dl className="flex flex-wrap gap-6 border-t pt-3 text-xs text-muted-foreground">
                 <div>
-                  <dt className="text-muted-foreground">MA20</dt>
-                  <dd className="font-medium">{technical.indicators.ma20 ?? "n/a"}</dd>
+                  <dt>Data Source</dt>
+                  <dd className="font-medium text-foreground">{data?.data_source ?? "n/a"}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">MA50</dt>
-                  <dd className="font-medium">{technical.indicators.ma50 ?? "n/a"}</dd>
+                  <dt>Total Candles</dt>
+                  <dd className="font-medium text-foreground">{data?.pagination.total ?? 0}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">MA200</dt>
-                  <dd className="font-medium">{technical.indicators.ma200 ?? "n/a"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">ATR(14)</dt>
-                  <dd className="font-medium">{technical.indicators.atr14 ?? "n/a"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">MACD Line / Signal</dt>
-                  <dd className="font-medium">
-                    {technical.indicators.macd.line ?? "n/a"} / {technical.indicators.macd.signal ?? "n/a"}
+                  <dt>As of</dt>
+                  <dd className="font-medium text-foreground">
+                    {data ? new Date(data.as_of).toLocaleDateString() : "n/a"}
                   </dd>
                 </div>
-              </>
-            ) : null}
-            {fundamental ? (
-              <>
-                <div>
-                  <dt className="text-muted-foreground">P/E Ratio</dt>
-                  <dd className="font-medium">{fundamental.ratios.pe_ratio ?? "n/a"}</dd>
+              </dl>
+            </div>
+          )}
+
+          {/* Tab 3: Financial Fundamentals */}
+          {tab === "fundamentals" && (
+            <div className="rounded-xl border bg-card p-5">
+              <h3 className="mb-4 text-base font-semibold">Comprehensive Financial Health & Valuation</h3>
+              {fundamental ? (
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Price / Earnings (P/E)</p>
+                    <p className="mt-1 text-xl font-bold">{fundamental.ratios.pe_ratio ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Price / Book (P/B)</p>
+                    <p className="mt-1 text-xl font-bold">{fundamental.ratios.pb_ratio ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Return on Equity (ROE)</p>
+                    <p className="mt-1 text-xl font-bold">
+                      {fundamental.ratios.roe !== null ? `${(fundamental.ratios.roe * 100).toFixed(2)}%` : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Return on Assets (ROA)</p>
+                    <p className="mt-1 text-xl font-bold">
+                      {fundamental.ratios.roa !== null ? `${(fundamental.ratios.roa * 100).toFixed(2)}%` : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Debt to Equity (D/E)</p>
+                    <p className="mt-1 text-xl font-bold">{fundamental.ratios.debt_to_equity ?? "—"}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Revenue Growth</p>
+                    <p className="mt-1 text-xl font-bold">
+                      {fundamental.ratios.revenue_growth !== null ? `${(fundamental.ratios.revenue_growth * 100).toFixed(2)}%` : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">EPS Growth</p>
+                    <p className="mt-1 text-xl font-bold">
+                      {fundamental.ratios.eps_growth !== null ? `${(fundamental.ratios.eps_growth * 100).toFixed(2)}%` : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Period Basis</p>
+                    <p className="mt-1 text-xl font-bold">{fundamental.period_type}</p>
+                  </div>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground">P/B Ratio</dt>
-                  <dd className="font-medium">{fundamental.ratios.pb_ratio ?? "n/a"}</dd>
+              ) : (
+                <p className="text-sm text-muted-foreground">No fundamental ratios available for this symbol.</p>
+              )}
+            </div>
+          )}
+
+          {/* Tab 4: Quant Score Breakdown */}
+          {tab === "quant" && (
+            <div className="rounded-xl border bg-card p-5">
+              <h3 className="mb-4 text-base font-semibold">Multi-Factor Quantitative Model</h3>
+              {scoreData ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    <div className="rounded-lg border bg-muted/10 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Momentum (30%)</p>
+                      <p className="mt-1 text-xl font-bold text-primary">{scoreData.factors.momentum}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/10 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Quality (25%)</p>
+                      <p className="mt-1 text-xl font-bold text-primary">{scoreData.factors.quality}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/10 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Value (20%)</p>
+                      <p className="mt-1 text-xl font-bold text-primary">{scoreData.factors.value}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/10 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Risk (15%)</p>
+                      <p className="mt-1 text-xl font-bold text-primary">{scoreData.factors.risk}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/10 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Growth (10%)</p>
+                      <p className="mt-1 text-xl font-bold text-primary">{scoreData.factors.growth}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    Model Version: {scoreData.score_version} | Completeness: {scoreData.data_quality}
+                  </p>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground">ROE</dt>
-                  <dd className="font-medium">
-                    {fundamental.ratios.roe !== null ? `${(fundamental.ratios.roe * 100).toFixed(1)}%` : "n/a"}
-                  </dd>
+              ) : (
+                <p className="text-sm text-muted-foreground">No quantitative score available for this symbol.</p>
+              )}
+            </div>
+          )}
+
+          {/* Tab 5: AI Analyst Insight */}
+          {tab === "ai" && (
+            <div className="space-y-6 rounded-xl border bg-card p-6">
+              <div>
+                <h3 className="text-lg font-bold">AI Analyst Synthesis</h3>
+                <p className="text-xs text-muted-foreground">Automated multi-factor evaluation of {symbol.toUpperCase()}</p>
+              </div>
+
+              {isAiPending ? (
+                <StateMessage variant="loading" />
+              ) : aiData ? (
+                <div className="space-y-6">
+                  {/* Conclusion Card */}
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Executive Synthesis</h4>
+                    <p className="mt-2 text-sm leading-relaxed text-foreground">{aiData.conclusion}</p>
+                  </div>
+
+                  {/* Strengths & Risks Grid */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400">
+                        Key Strengths & Catalysts
+                      </h4>
+                      <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                        {aiData.strengths.map((s, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-green-500">✓</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
+                        Identified Risks & Vulnerabilities
+                      </h4>
+                      <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                        {aiData.risks.map((r, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-red-500">⚠</span>
+                            <span>{r}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Unknowns / Macro Considerations */}
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Unknowns & Macro Factors
+                    </h4>
+                    <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground">
+                      {aiData.unknowns.map((u, idx) => (
+                        <li key={idx}>{u}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Disclaimer */}
+                  <p className="border-t pt-3 text-[11px] italic text-muted-foreground">
+                    {aiData.disclaimer}
+                  </p>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground">D/E</dt>
-                  <dd className="font-medium">{fundamental.ratios.debt_to_equity ?? "n/a"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Rev Growth</dt>
-                  <dd className="font-medium">
-                    {fundamental.ratios.revenue_growth !== null ? `${(fundamental.ratios.revenue_growth * 100).toFixed(1)}%` : "n/a"}
-                  </dd>
-                </div>
-              </>
-            ) : null}
-            {scoreData ? (
-              <>
-                <div>
-                  <dt className="text-muted-foreground">Momentum Factor</dt>
-                  <dd className="font-medium">{scoreData.factors.momentum}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Quality Factor</dt>
-                  <dd className="font-medium">{scoreData.factors.quality}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Value Factor</dt>
-                  <dd className="font-medium">{scoreData.factors.value}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Risk Factor</dt>
-                  <dd className="font-medium">{scoreData.factors.risk}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Growth Factor</dt>
-                  <dd className="font-medium">{scoreData.factors.growth}</dd>
-                </div>
-              </>
-            ) : null}
-          </dl>
+              ) : (
+                <StateMessage variant="error">Unable to synthesize AI report at this time.</StateMessage>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

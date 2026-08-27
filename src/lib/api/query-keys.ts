@@ -18,6 +18,7 @@ export const QUERY_KEYS = {
     TECHNICAL: (symbol: string) => ["market", "technical", symbol] as const,
     FUNDAMENTAL: (symbol: string) => ["market", "fundamental", symbol] as const,
     SCORE: (symbol: string) => ["market", "score", symbol] as const,
+    AI_SUMMARY: (symbol: string) => ["market", "ai_summary", symbol] as const,
     SCREENER: (filters: Record<string, unknown>) => ["market", "screener", filters] as const,
   },
 } as const;

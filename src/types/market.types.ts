@@ -42,6 +42,16 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface AiAnalystResponse {
+  symbol: string;
+  strengths: string[];
+  risks: string[];
+  unknowns: string[];
+  conclusion: string;
+  disclaimer: string;
+  as_of: string;
+}
+
 export interface EquityPoint {
   time: string;
   equity: number;
