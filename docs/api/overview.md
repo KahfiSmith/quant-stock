@@ -40,8 +40,12 @@ The active endpoints implement the current synchronous analytical contracts. Por
 editing is available through `PATCH /api/v1/portfolios/{id}`; portfolio detail includes
 realized/unrealized PnL and deterministic risk metrics. Backtest responses include
 Sortino and reproducibility metadata. AI responses include evidence and data-quality
-metadata. Real provider activation remains BLOCKED until provider, licensing, and
-coverage decisions are recorded.
+metadata.
+
+Market data is sourced via [yfinance](../../apps/quant-api/app/ingestion/yfinance_collector.py)
+(see [ADR-005](../architecture/adr/ADR-005-yfinance-provider.md)): 20 IDX liquid
+stocks, 2-year daily OHLCV + TTM fundamentals, ingested via
+`python -m scripts.backfill_market_data` from `apps/quant-api/`.
 
 Provider-neutral ingestion contracts are internal service modules, not public API
 endpoints.
@@ -51,6 +55,8 @@ endpoints.
 - [QuantLens PRD Specification](../product/quantlens-spec.md) - Full system specification.
 - [Authentication & Errors](./authentication.md) - Auth endpoint details, envelope, and error codes.
 - [Database Schema](../database/schema.md) - PostgreSQL & TimescaleDB schema definition.
+- [Market Data feature](../features/market-data.md) - ingestion pipeline and operational details.
+- [ADR-005](../architecture/adr/ADR-005-yfinance-provider.md) - yfinance provider decision.
 
 ## Axios clients
 

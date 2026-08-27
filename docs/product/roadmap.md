@@ -26,12 +26,13 @@
 - [x] Settings and profile preferences via protected `PATCH /api/v1/auth/me` and `/settings`.
 - [ ] Google OAuth/OIDC, password reset, and email verification (DEFERRED optional workflows).
 
-### Phase 2 — Market Data System (COMPLETE Software Boundary / EXTERNAL BLOCKER for Provider Activation)
+### Phase 2 — Market Data System (IN PROGRESS — yfinance provider live, see ADR-005)
 - [x] Provider-neutral ingestion contracts, validation, provenance, and idempotent persistence boundary (`Price` & `Fundamental`).
 - [x] Setup `stocks` table and `prices` TimescaleDB hypertable (migration `0002_market_data`).
 - [x] Build endpoints: `GET /api/v1/stocks`, `GET /api/v1/stocks/{symbol}/prices`.
 - [x] Integrate TradingView Lightweight Charts in frontend (`/stocks`, `/stocks/[symbol]`).
-- [ ] Real market data provider activation (EXTERNAL BLOCKER on commercial provider, licensing, and credentials).
+- [x] Wire real data provider: yfinance collector (`apps/quant-api/app/ingestion/yfinance_collector.py`) + `scripts/backfill_market_data.py` for 20 IDX liquid stocks over 2 years.
+- [ ] Daily EOD scheduler (cron) to refresh the backfill after IDX close.
 
 ### Phase 3 — Technical Analysis Engine (COMPLETE)
 - [x] Implement `apps/quant-api/app/technical` calculation module without unmaintained pandas-ta.

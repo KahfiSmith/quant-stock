@@ -14,9 +14,13 @@
 | Variable | Public | Default | Notes |
 |---|---|---|---|
 | `NEXT_PUBLIC_BACKEND_API_URL` | yes | `http://localhost:8000` | Backend base URL; read by the Axios clients |
+| `AI_ANALYST_API_KEY` | no | _(unset)_ | Optional API key for the LLM provider. Empty = no LLM call (rule-based). Currently unused for actual LLM calls; the AI Analyst code path is deterministic. |
+| `YFINANCE_PROXY` | no | _(unset)_ | Optional HTTP proxy URL for the yfinance collector. yfinance itself does not require a key, but a proxy may be needed in restricted networks. |
 
-No server-only secrets exist in this repository yet. When one is added, it must
-be a non-prefixed variable and must never appear in client bundles.
+When additional server-only secrets are added, they must be non-prefixed
+variables and must never appear in client bundles. The market data
+provider (yfinance) does not require a key, so no new credential is
+introduced by the yfinance integration (see ADR-005).
 
 ## Security rules and enforcement
 

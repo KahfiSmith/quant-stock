@@ -42,6 +42,30 @@ rules, repository = data access) and update `docs/api/`.
 3. Do not expose sensitive data in client components.
 4. Verify unauthorized and authorized behavior.
 
+### Add a market data provider
+
+The ingestion pipeline is provider-neutral. To add a new collector:
+
+1. Create a new class in `apps/quant-api/app/ingestion/` implementing
+   the `MarketDataCollector` Protocol (must implement
+   `collect_prices` and `collect_fundamentals`).
+2. Yield `CollectedPrice` and `CollectedFundamental` dataclasses; do
+   not write to the database directly.
+3. Reuse `validate_price_batch` / `validate_fundamental` (or build a
+   custom validator) and `ingest_prices` / `ingest_fundamentals` for
+   idempotent persistence.
+4. Add a `<PROVIDER>_*` block in `app/core/config.py` (mirror the
+   `YFINANCE_*` pattern) and update `.env.example` plus
+   `docs/development/setup.md`.
+5. Add a backfill script under `apps/quant-api/scripts/`, parallel to
+   `backfill_market_data.py`. Mirror its CLI shape
+   (`--symbols`, `--period`, `--rate-limit-seconds`).
+6. Add pytest coverage: a unit test mocking the external library and
+   an integration test that runs the script with a stub collector.
+7. Document the decision in `docs/architecture/adr/ADR-NNN-<name>.md`
+   following the ADR-005 template.
+8. Update `docs/features/market-data.md` and `docs/api/overview.md`.
+
 ## Handoff checklist
 
 - [ ] `pnpm lint` passes

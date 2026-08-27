@@ -30,8 +30,14 @@ Migrations `0002_market_data`, `0003_fundamentals`, `0006_fundamental_provenance
   validation state, and `created_at`. Unique on `(stock_id, period_end, period_type)`.
   Legacy sample rows may be flagged when `published_at` is unavailable.
 
-The `prices.source` field carries data provenance (`sample` for seeded
-placeholder rows). Real ingestion is deferred pending a data-provider decision.
+The `prices.source` field carries data provenance:
+- `"yfinance"` for real IDX market data ingested via the
+  [yfinance collector](../../apps/quant-api/app/ingestion/yfinance_collector.py)
+  (see [ADR-005](../architecture/adr/ADR-005-yfinance-provider.md)).
+- `"sample"` for the legacy 15-day synthetic seeder; still queryable for
+  offline development but not the active data source by default.
+
+The `fundamentals.source` column follows the same convention.
 
 ## Portfolio & transaction tables
 

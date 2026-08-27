@@ -21,6 +21,13 @@ browser
            -> Axios clients
               -> FastAPI API (/api/v1)
                  -> PostgreSQL + TimescaleDB
+
+ingestion (off-request):
+  scripts/backfill_market_data
+    -> YFinanceCollector (MarketDataCollector Protocol)
+       -> validate_price_batch / validate_fundamental
+          -> ingest_prices / ingest_fundamentals (idempotent UPSERT)
+             -> PostgreSQL + TimescaleDB
 ```
 
 ## Core stack
@@ -122,6 +129,6 @@ User action
 
 ## Current and planned scope
 
-- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, protected profile/settings UX, market-data listing and chart, technical analysis, fundamental calculation and persistence with provenance, quant scoring metadata, screener, portfolio editing/accounting/risk summary, backtesting with persistent job lifecycle (`backtest_jobs`), provider-neutral ingestion validation for prices and fundamentals, and AI analyst structured facts evidence with configurable LLM boundary.
-- **Blocked/deferred:** Real market-data provider activation remains blocked pending provider and licensing decisions. OAuth/OIDC, password reset, email verification, transaction deletion/update, portfolio deletion, and real-time streaming are not active scope. Backtest execution records persistent lifecycle states (`queued`, `running`, `succeeded`, `failed`) per user.
+- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, protected profile/settings UX, market-data listing and chart, technical analysis, fundamental calculation and persistence with provenance, quant scoring metadata, screener, portfolio editing/accounting/risk summary, backtesting with persistent job lifecycle (`backtest_jobs`), provider-neutral ingestion validation for prices and fundamentals, and AI analyst structured facts evidence with configurable LLM boundary. Real market data via the yfinance collector (see [ADR-005](./adr/ADR-005-yfinance-provider.md)) is wired into the ingestion pipeline and feeds the 20-stock IDX universe.
+- **Blocked/deferred:** OAuth/OIDC, password reset, email verification, transaction deletion/update, portfolio deletion, and real-time streaming are not active scope. Backtest execution records persistent lifecycle states (`queued`, `running`, `succeeded`, `failed`) per user. Ingestion currently uses a manual CLI (`python -m scripts.backfill_market_data`); a daily EOD scheduler and an admin POST endpoint are future work.
 - **Future repository structure:** Additional packages or a moved `apps/web` application require an explicit migration; they are not part of the current runtime layout.

@@ -31,3 +31,28 @@ python3 -m venv .venv
 - Frontend: `pnpm lint`, `pnpm type-check`, `pnpm docs:check`
 - API: `.venv/bin/ruff check .`, `.venv/bin/pytest -q`
 - Service endpoints: `GET /health`, `GET /ready`
+
+## Ingesting real market data
+
+After a fresh stack start, the `stocks` table is empty and the screener will
+show no data. Populate it with real IDX data via the yfinance backfill
+(see [ADR-005](../architecture/adr/ADR-005-yfinance-provider.md) for context):
+
+```bash
+# 1. Make sure the DB is up and migrations applied.
+docker compose up -d db
+cd apps/quant-api
+.venv/bin/alembic upgrade head
+
+# 2. Run the backfill (20 IDX stocks × ~500 daily bars, ~2 minutes with rate limit).
+.venv/bin/python -m scripts.backfill_market_data
+
+# Override the symbol list, period, or skip fundamentals:
+.venv/bin/python -m scripts.backfill_market_data --symbols BBCA,BMRI,TLKM --period 5y
+.venv/bin/python -m scripts.backfill_market_data --skip-fundamentals
+```
+
+To re-run safely (idempotent UPSERT), just invoke the same command again.
+To temporarily fall back to synthetic 15-day data (e.g. for offline
+development), set `MARKET_DATA_PROVIDER=sample` in
+`apps/quant-api/.env` and run `python -m scripts.seed_market_data`.

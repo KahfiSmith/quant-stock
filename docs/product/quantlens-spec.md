@@ -108,8 +108,10 @@ quantlens/
 
 ### Phase 2 — Market Data System
 
-- Status: `TODO`
-- Build data collection, processing, and storage pipelines.
+- Status: `IN PROGRESS` — see [ADR-005](../architecture/adr/ADR-005-yfinance-provider.md)
+- yfinance collector live (`apps/quant-api/app/ingestion/yfinance_collector.py`).
+- 2-year backfill of 20 IDX liquid stocks via `python -m scripts.backfill_market_data`.
+- Outstanding: daily EOD scheduler, admin POST endpoint, universe expansion.
 - **Database tables:**
   - `stocks`: `id`, `symbol`, `name`, `sector`, `market_cap`, `created_at`, `updated_at`
   - `prices` hypertable: `id`, `stock_id`, `date`, `open`, `high`, `low`, `close`, `volume`

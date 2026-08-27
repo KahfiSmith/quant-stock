@@ -6,5 +6,6 @@ Directory housing architectural choices and technical designs.
 - [ADR-002: Single-Flight Token Refresh in the Axios Interceptor](./ADR-002-single-flight-refresh.md) - one shared refresh promise for concurrent 401s.
 - [ADR-003: Client-Side Route Guards over Middleware](./ADR-003-client-side-route-guards.md) - page-level guards; `middleware.ts` is a pass-through.
 - [ADR-004: Frontend Stays at the Repository Root](./ADR-004-repository-layout.md) - the Next.js app remains at the root for the current phase.
+- [ADR-005: yfinance as the Production Market Data Provider](./ADR-005-yfinance-provider.md) - yfinance collector + 2-year backfill for 20 IDX liquid stocks.
 
 New ADRs should record a context, a decision, a consequence, and a status.
