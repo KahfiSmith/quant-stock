@@ -12,13 +12,21 @@ from app.api.errors import ApiError, success
 from app.core.config import Settings
 from app.core.security import create_access_token
 from app.models.user import User
-from app.schemas.auth import AuthPayload, DeleteAccountRequest, LoginRequest, RegisterRequest, UserResponse
+from app.schemas.auth import (
+    AuthPayload,
+    DeleteAccountRequest,
+    LoginRequest,
+    RegisterRequest,
+    UpdateProfileRequest,
+    UserResponse,
+)
 from app.services.auth import (
     authenticate_user,
     create_refresh_session,
     register_user,
     revoke_refresh_session,
     rotate_refresh_session,
+    update_user_profile,
     verify_password,
 )
 
@@ -117,6 +125,16 @@ def logout(
 @router.get("/me")
 def get_me(user: User = Depends(get_current_user)) -> dict[str, object]:
     return success(user_payload(user))
+
+
+@router.patch("/me", dependencies=[Depends(require_trusted_origin)])
+def update_me(
+    payload: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    updated = update_user_profile(db, user, payload)
+    return success(user_payload(updated), "Profile updated")
 
 
 @router.delete("/account", dependencies=[Depends(require_trusted_origin)])

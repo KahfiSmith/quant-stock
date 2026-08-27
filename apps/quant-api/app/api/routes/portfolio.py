@@ -10,12 +10,14 @@ from app.schemas.portfolio import (
     PortfolioDetailResponse,
     PortfolioSummaryResponse,
     TransactionResponse,
+    UpdatePortfolioRequest,
 )
 from app.services.portfolio import (
     add_portfolio_transaction,
     create_user_portfolio,
     get_portfolio_detail,
     list_user_portfolios,
+    update_user_portfolio,
 )
 
 router = APIRouter(prefix="/api/v1/portfolios", tags=["portfolio"])
@@ -38,6 +40,17 @@ def post_portfolio(
 ) -> dict[str, object]:
     result: PortfolioSummaryResponse = create_user_portfolio(db, user.id, body)
     return success(result.model_dump(mode="json"), "Portfolio created")
+
+
+@router.patch("/{portfolio_id}", response_model=None)
+def patch_portfolio(
+    portfolio_id: int,
+    body: UpdatePortfolioRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    result: PortfolioSummaryResponse = update_user_portfolio(db, user.id, portfolio_id, body)
+    return success(result.model_dump(mode="json"), "Portfolio updated")
 
 
 @router.get("/{portfolio_id}", response_model=None)
