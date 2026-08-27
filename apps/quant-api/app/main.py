@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.api.errors import ApiError, api_error_handler, validation_error_handler
-from app.api.routes import auth, health, market_data, portfolio, screener
+from app.api.routes import auth, backtest, health, market_data, portfolio, screener
 from app.core.config import Settings, get_settings
 from app.core.rate_limit import SlidingWindowRateLimiter
 from app.db.session import Database
@@ -52,6 +52,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(market_data.router)
     app.include_router(screener.router)
     app.include_router(portfolio.router)
+    app.include_router(backtest.router)
     return app
 
 

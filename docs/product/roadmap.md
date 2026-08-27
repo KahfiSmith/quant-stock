@@ -69,10 +69,10 @@ Deferred: Google OAuth/OIDC, password reset, email verification, and settings/pr
 - [x] Build CRUD & detail calculation endpoints `/api/v1/portfolios[/{id}/transactions]`.
 - [x] Portfolio tracking page `/portfolio` with PnL, asset allocation, and transaction logs.
 
-### Phase 9 — Backtesting Engine (Planned)
-- [ ] Implement backtest simulation in `apps/quant-api/app/quant/backtest.py`.
-- [ ] Strategy rules execution with CAGR, Sharpe Ratio, Max Drawdown metrics.
-- [ ] Equity curve visualization in frontend.
+### Phase 9 — Backtesting Engine (Done)
+- [x] Implement backtest simulation in `apps/quant-api/app/quant/backtest.py`.
+- [x] Strategy rules execution with CAGR, Sharpe Ratio, Max Drawdown, Annual Volatility, Win Rate metrics.
+- [x] Build endpoint `POST /api/v1/backtest` and `/backtest` simulation UI in frontend.
 
 ### Phase 10 — AI Analyst (Future)
 - [ ] LLM-assisted synthesis for stock reports (Strengths, Risks, Conclusion).

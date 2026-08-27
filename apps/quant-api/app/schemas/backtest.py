@@ -1,0 +1,46 @@
+from datetime import date, datetime
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+StrategyType = Literal["SMA_CROSSOVER", "RSI_MOMENTUM", "BUY_AND_HOLD"]
+
+
+class BacktestRequest(BaseModel):
+    symbol: str = Field(min_length=1, max_length=32)
+    strategy: StrategyType = "SMA_CROSSOVER"
+    initial_capital: float = Field(default=100_000_000.0, gt=0)
+    fast_period: int = Field(default=20, ge=2, le=200)
+    slow_period: int = Field(default=50, ge=5, le=500)
+    rsi_oversold: float = Field(default=30.0, ge=0, le=100)
+    rsi_overbought: float = Field(default=70.0, ge=0, le=100)
+    start_date: date | None = None
+    end_date: date | None = None
+    fee_percent: float = Field(default=0.0015, ge=0, le=0.05)
+
+
+class EquityPoint(BaseModel):
+    time: str
+    equity: float
+    benchmark: float
+    drawdown: float
+
+
+class BacktestSummary(BaseModel):
+    total_return_pct: float
+    cagr_pct: float
+    annualized_volatility_pct: float
+    sharpe_ratio: float
+    max_drawdown_pct: float
+    total_trades: int
+    win_rate_pct: float
+    final_equity: float
+
+
+class BacktestResponse(BaseModel):
+    symbol: str
+    strategy: str
+    initial_capital: float
+    summary: BacktestSummary
+    equity_curve: list[EquityPoint]
+    as_of: datetime
