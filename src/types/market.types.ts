@@ -42,6 +42,44 @@ export interface PricesResponse {
   as_of: string;
 }
 
+export interface EquityPoint {
+  time: string;
+  equity: number;
+  benchmark: number;
+  drawdown: number;
+}
+
+export interface BacktestSummary {
+  total_return_pct: number;
+  cagr_pct: number;
+  annualized_volatility_pct: number;
+  sharpe_ratio: number;
+  max_drawdown_pct: number;
+  total_trades: number;
+  win_rate_pct: number;
+  final_equity: number;
+}
+
+export interface BacktestResponse {
+  symbol: string;
+  strategy: string;
+  initial_capital: number;
+  summary: BacktestSummary;
+  equity_curve: EquityPoint[];
+  as_of: string;
+}
+
+export interface BacktestParams {
+  symbol: string;
+  strategy: "SMA_CROSSOVER" | "RSI_MOMENTUM" | "BUY_AND_HOLD";
+  initial_capital?: number;
+  fast_period?: number;
+  slow_period?: number;
+  rsi_oversold?: number;
+  rsi_overbought?: number;
+  fee_percent?: number;
+}
+
 export interface PortfolioSummary {
   id: number;
   name: string;

@@ -7,6 +7,9 @@ export const API_ENDPOINTS = {
     DELETE_ACCOUNT: "/api/v1/auth/account",
     ME: "/api/v1/auth/me",
   },
+  BACKTEST: {
+    RUN: "/api/v1/backtest",
+  },
   PORTFOLIO: {
     LIST: "/api/v1/portfolios",
     CREATE: "/api/v1/portfolios",

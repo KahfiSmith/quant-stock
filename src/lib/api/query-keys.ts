@@ -5,6 +5,9 @@ export const QUERY_KEYS = {
   USER: {
     PROFILE: ["user", "profile"] as const,
   },
+  BACKTEST: {
+    RUN: (params: Record<string, unknown>) => ["backtest", "run", params] as const,
+  },
   PORTFOLIO: {
     LIST: ["portfolio", "list"] as const,
     DETAIL: (id: number | string) => ["portfolio", "detail", String(id)] as const,

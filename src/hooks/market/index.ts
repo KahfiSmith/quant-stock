@@ -1,3 +1,4 @@
+export { useRunBacktest } from "@/hooks/market/use-backtest";
 export {
   useAddTransaction,
   useCreatePortfolio,
