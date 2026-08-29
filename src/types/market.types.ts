@@ -256,6 +256,15 @@ export interface QuantFactors {
   growth: number;
 }
 
+export interface QuantUniverse {
+  identifier: string;
+  size: number;
+  sector?: string | null;
+  sector_rank?: number | null;
+  sector_total?: number | null;
+  percentile?: number | null;
+}
+
 export interface QuantMetadata {
   model_version: string;
   methodology_version: string;
@@ -264,11 +273,12 @@ export interface QuantMetadata {
   weights: Record<string, number>;
   normalization: Record<string, string>;
   reason_codes: string[];
-  comparison_universe: { identifier: string; size: number };
+  comparison_universe: QuantUniverse;
   technical_as_of: string | null;
   fundamental_period_end: string | null;
   fundamental_published_at: string | null;
   price_as_of: string | null;
+  sector_relative?: Record<string, number | null> | null;
 }
 
 export interface QuantScoreResponse {

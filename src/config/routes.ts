@@ -5,6 +5,8 @@ export const ROUTES = {
   PROFILE: "/profile",
   SETTINGS: "/settings",
   STOCKS: "/stocks",
+  PORTFOLIO: "/portfolio",
+  BACKTEST: "/backtest",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

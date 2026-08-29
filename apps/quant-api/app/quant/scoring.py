@@ -2,7 +2,7 @@
 
 Formula:
 Total Score = 0.30 * Momentum + 0.25 * Quality + 0.20 * Value + 0.15 * Risk + 0.10 * Growth
-All factor scores normalized to a 0-100 scale.
+Supports both cross-sectional sector normalization and absolute bounded factors.
 """
 
 from __future__ import annotations
@@ -20,19 +20,32 @@ class FactorScores(NamedTuple):
     data_quality: str
 
 
-def calculate_momentum_score(rsi_val: float | None, trend: str) -> float:
+def calculate_momentum_score(rsi_val: float | None, trend: str, momentum_12m: float | None = None) -> float:
     if rsi_val is None:
-        return 50.0
-    # Center RSI around 50, trend boost
-    base = min(max(rsi_val, 0.0), 100.0)
+        base = 50.0
+    else:
+        base = min(max(rsi_val, 0.0), 100.0)
+
     if trend == "bullish":
         base = min(100.0, base + 10.0)
     elif trend == "bearish":
         base = max(0.0, base - 10.0)
+
+    # If 12-month historical price return is provided, blend into momentum factor
+    if momentum_12m is not None:
+        # Scale: +30% return -> 80 score, -30% return -> 20 score
+        m12_score = min(100.0, max(0.0, 50.0 + (momentum_12m * 100.0)))
+        base = 0.6 * base + 0.4 * m12_score
+
     return round(base, 2)
 
 
-def calculate_quality_score(roe: float | None, roa: float | None, debt_to_equity: float | None) -> float:
+def calculate_quality_score(
+    roe: float | None,
+    roa: float | None,
+    debt_to_equity: float | None,
+    piotroski_estimate: int | None = None,
+) -> float:
     scores: list[float] = []
     if roe is not None:
         scores.append(min(100.0, max(0.0, (roe / 0.20) * 100.0)))
@@ -42,6 +55,10 @@ def calculate_quality_score(roe: float | None, roa: float | None, debt_to_equity
         # Lower debt is higher quality
         de_score = max(0.0, 100.0 - (debt_to_equity * 50.0))
         scores.append(de_score)
+    if piotroski_estimate is not None:
+        # 0 to 9 scale -> 0 to 100
+        scores.append(min(100.0, max(0.0, (piotroski_estimate / 9.0) * 100.0)))
+
     return round(sum(scores) / len(scores), 2) if scores else 50.0
 
 
@@ -94,11 +111,11 @@ def calculate_quant_score(
     atr_ratio: float | None,
     revenue_growth: float | None,
     eps_growth: float | None,
+    momentum_12m: float | None = None,
+    piotroski_estimate: int | None = None,
 ) -> FactorScores:
-    # ponytail: fixed multi-factor weights v1; upgrade to dynamic universe percentile
-    # ranking when universe is populated.
-    m_score = calculate_momentum_score(rsi_val, trend)
-    q_score = calculate_quality_score(roe, roa, debt_to_equity)
+    m_score = calculate_momentum_score(rsi_val, trend, momentum_12m)
+    q_score = calculate_quality_score(roe, roa, debt_to_equity, piotroski_estimate)
     v_score = calculate_value_score(pe_ratio, pb_ratio)
     r_score = calculate_risk_score(atr_ratio)
     g_score = calculate_growth_score(revenue_growth, eps_growth)

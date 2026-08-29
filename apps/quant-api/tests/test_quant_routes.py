@@ -86,7 +86,8 @@ def test_get_stock_quant_score_success(client: TestClient) -> None:
     assert 0 <= data["factors"]["growth"] <= 100
     metadata = data["metadata"]
     assert metadata["model_version"] == "v1"
-    assert metadata["comparison_universe"] == {"identifier": "all_stocks", "size": 1}
+    assert metadata["comparison_universe"]["identifier"] == "all_stocks"
+    assert metadata["comparison_universe"]["size"] == 1
     assert metadata["missing_inputs"] == []
     assert metadata["raw_inputs"]["rsi"] is not None
     assert metadata["weights"] == {

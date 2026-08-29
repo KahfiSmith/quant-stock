@@ -14,6 +14,10 @@ class QuantFactors(BaseModel):
 class QuantUniverse(BaseModel):
     identifier: str
     size: int
+    sector: str | None = None
+    sector_rank: int | None = None
+    sector_total: int | None = None
+    percentile: float | None = None
 
 
 class QuantMetadata(BaseModel):
@@ -29,6 +33,7 @@ class QuantMetadata(BaseModel):
     fundamental_period_end: date | None = None
     fundamental_published_at: datetime | None = None
     price_as_of: datetime | None = None
+    sector_relative: dict[str, float | None] | None = None
 
 
 class QuantScoreResponse(BaseModel):

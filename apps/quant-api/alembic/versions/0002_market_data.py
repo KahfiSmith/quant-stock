@@ -65,7 +65,7 @@ def upgrade() -> None:
     op.create_index("ix_prices_stock_id", "prices", ["stock_id"])
 
     if _is_postgres():
-        op.execute("SELECT create_hypertable('prices', by_range('time'))")
+        op.execute("SELECT create_hypertable('prices', by_range('time'), migrate_data => true)")
 
 
 def downgrade() -> None:

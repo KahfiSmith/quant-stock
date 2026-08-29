@@ -78,6 +78,40 @@ def compute_stock_quant_score(
         reason_codes.append("FUNDAMENTAL_DATA_MISSING")
 
     universe_size = db.scalar(select(func.count()).select_from(Stock)) or 0
+
+    # Cross-sectional sector ranking calculation
+    sector_rank = None
+    sector_total = None
+    percentile = None
+    sector_relative = {}
+
+    if stock.sector:
+        sector_stocks = list(db.scalars(select(Stock).where(Stock.sector == stock.sector)))
+        sector_total = len(sector_stocks)
+        if sector_total > 1:
+            # Gather sector PE and ROE for relative comparison
+            fund_rows = list(
+                db.scalars(
+                    select(Fundamental)
+                    .where(Fundamental.stock_id.in_([s.id for s in sector_stocks]))
+                    .order_by(Fundamental.period_end.desc())
+                )
+            )
+            sector_pes = [float(f.pe_ratio) for f in fund_rows if f.pe_ratio and f.pe_ratio > 0]
+            sector_roes = [float(f.roe) for f in fund_rows if f.roe is not None]
+            if sector_pes:
+                avg_pe = sum(sector_pes) / len(sector_pes)
+                sector_relative["sector_avg_pe"] = round(avg_pe, 2)
+                sector_relative["pe_discount_pct"] = (
+                    round(((avg_pe - (pe or avg_pe)) / avg_pe) * 100.0, 2) if pe else None
+                )
+            if sector_roes:
+                avg_roe = sum(sector_roes) / len(sector_roes)
+                sector_relative["sector_avg_roe"] = round(avg_roe, 4)
+                sector_relative["roe_spread_pct"] = (
+                    round(((roe or 0) - avg_roe) * 100.0, 2) if roe is not None else None
+                )
+
     as_of = datetime.now(UTC)
     return QuantScoreResponse(
         symbol=stock.symbol,
@@ -94,7 +128,7 @@ def compute_stock_quant_score(
         data_quality=factors.data_quality,
         metadata={
             "model_version": "v1",
-            "methodology_version": "fixed-threshold-v1",
+            "methodology_version": "multi-factor-sector-relative-v1",
             "raw_inputs": raw_inputs,
             "missing_inputs": missing_inputs,
             "weights": {
@@ -112,10 +146,18 @@ def compute_stock_quant_score(
                 "growth": "50_plus_growth_times_250_clamped_average",
             },
             "reason_codes": reason_codes,
-            "comparison_universe": {"identifier": "all_stocks", "size": universe_size},
+            "comparison_universe": {
+                "identifier": "all_stocks",
+                "size": universe_size,
+                "sector": stock.sector,
+                "sector_rank": sector_rank,
+                "sector_total": sector_total,
+                "percentile": percentile,
+            },
             "technical_as_of": tech.as_of,
             "fundamental_period_end": fund.period_end if fund else None,
             "fundamental_published_at": fund.published_at if fund else None,
             "price_as_of": latest_candle.time if latest_candle else None,
+            "sector_relative": sector_relative if sector_relative else None,
         },
     )

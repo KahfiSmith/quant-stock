@@ -355,6 +355,40 @@ export function StockDetail({ symbol }: StockDetailProps) {
                     </div>
                   </div>
 
+                  {/* Sector Relative Comparison */}
+                  {scoreData.metadata.sector_relative ? (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-xs space-y-2">
+                      <p className="font-semibold text-primary">Sector Context ({scoreData.metadata.comparison_universe.sector ?? "General"})</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        {scoreData.metadata.sector_relative.sector_avg_pe !== undefined ? (
+                          <div>
+                            <span className="text-muted-foreground">Sector Avg P/E: </span>
+                            <span className="font-medium text-foreground">{scoreData.metadata.sector_relative.sector_avg_pe}</span>
+                            {scoreData.metadata.sector_relative.pe_discount_pct !== null && (
+                              <span className="ml-1 text-emerald-600 dark:text-emerald-400">
+                                ({scoreData.metadata.sector_relative.pe_discount_pct}% discount)
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                        {scoreData.metadata.sector_relative.sector_avg_roe !== undefined ? (
+                          <div>
+                            <span className="text-muted-foreground">Sector Avg ROE: </span>
+                            <span className="font-medium text-foreground">
+                              {((scoreData.metadata.sector_relative.sector_avg_roe ?? 0) * 100).toFixed(2)}%
+                            </span>
+                            {scoreData.metadata.sector_relative.roe_spread_pct !== null && (
+                              <span className="ml-1 text-emerald-600 dark:text-emerald-400">
+                                ({scoreData.metadata.sector_relative.roe_spread_pct > 0 ? "+" : ""}
+                                {scoreData.metadata.sector_relative.roe_spread_pct}%)
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <p>
                       Model Version: {scoreData.score_version} | Completeness: {scoreData.data_quality} | Universe: {scoreData.metadata.comparison_universe.identifier} ({scoreData.metadata.comparison_universe.size})

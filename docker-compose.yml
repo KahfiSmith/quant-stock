@@ -26,7 +26,7 @@ services:
         condition: service_healthy
     environment:
       APP_ENV: development
-      DATABASE_URL: postgresql+psycopg://$${POSTGRES_USER:-quantlens}:$${POSTGRES_PASSWORD:-quantlens}@db:5432/$${POSTGRES_DB:-quantlens}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-quantlens}:${POSTGRES_PASSWORD:-quantlens}@db:5432/${POSTGRES_DB:-quantlens}
       FRONTEND_ORIGIN: http://localhost:3000
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-32-character-development-secret}
       REFRESH_TOKEN_HMAC_KEY: ${REFRESH_TOKEN_HMAC_KEY:-replace-with-a-separate-32-character-development-secret}
