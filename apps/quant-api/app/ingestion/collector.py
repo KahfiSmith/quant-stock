@@ -101,10 +101,6 @@ class LiveEodCollector:
         if not chart:
             return None
 
-        res = chart[0]
-        meta = res.get("meta", {})
-        regular_price = meta.get("regularMarketPrice")
-
         # Industry standard valuation benchmarks for bluechips
         pe_defaults: dict[str, tuple[float, float, float, float, float, float, float]] = {
             "BBCA": (17.5, 4.1, 0.21, 0.035, 0.65, 0.12, 0.14),

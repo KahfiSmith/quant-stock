@@ -113,6 +113,7 @@ def calculate_quant_score(
     eps_growth: float | None,
     momentum_12m: float | None = None,
     piotroski_estimate: int | None = None,
+    custom_weights: dict[str, float] | None = None,
 ) -> FactorScores:
     m_score = calculate_momentum_score(rsi_val, trend, momentum_12m)
     q_score = calculate_quality_score(roe, roa, debt_to_equity, piotroski_estimate)
@@ -120,7 +121,28 @@ def calculate_quant_score(
     r_score = calculate_risk_score(atr_ratio)
     g_score = calculate_growth_score(revenue_growth, eps_growth)
 
-    total = 0.30 * m_score + 0.25 * q_score + 0.20 * v_score + 0.15 * r_score + 0.10 * g_score
+    # Base or custom factor weights
+    w_m = 0.30
+    w_q = 0.25
+    w_v = 0.20
+    w_r = 0.15
+    w_g = 0.10
+
+    if custom_weights:
+        w_m = float(custom_weights.get("momentum", w_m))
+        w_q = float(custom_weights.get("quality", w_q))
+        w_v = float(custom_weights.get("value", w_v))
+        w_r = float(custom_weights.get("risk", w_r))
+        w_g = float(custom_weights.get("growth", w_g))
+        total_w = w_m + w_q + w_v + w_r + w_g
+        if total_w > 0:
+            w_m /= total_w
+            w_q /= total_w
+            w_v /= total_w
+            w_r /= total_w
+            w_g /= total_w
+
+    total = w_m * m_score + w_q * q_score + w_v * v_score + w_r * r_score + w_g * g_score
 
     missing_count = sum(
         1

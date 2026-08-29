@@ -58,6 +58,18 @@ Migration `0010_backtest_jobs` adds persistent backtest execution tracking:
 
 - `backtest_jobs`: string primary key `id` (UUID), `user_id` (FK to `users`), `symbol`, `strategy`, `status` (`queued`, `running`, `succeeded`, `failed`), `initial_capital`, `parameters` (JSON), `start_date`, `end_date`, `summary` (JSON), `equity_curve` (JSON), `metadata` (JSON), `error_message`, `retry_count`, `created_at`, `started_at`, and `finished_at`.
 
+## IDX Specialized Architecture Tables
+
+Migration `0011_idx_platform_architecture` adds specialized data structures for Indonesian listed equities (Bursa Efek Indonesia):
+
+- `stocks` (extended): adds `sub_sector` (IDX-IC), `listing_date`, `liquidity_status` (`liquid`, `watchlist`, `illiquid`), `is_active` (`bool`), `board` (`MAIN`, `DEVELOPMENT`, `ACCELERATION`, `WATCHLIST`), `avg_daily_turnover_20d`, `avg_daily_frequency_20d`.
+- `financial_statements_pit`: Point-in-Time financial statements strictly indexed by `filing_date` (release date to public) to prevent look-ahead bias in historical simulations. Stores quarterly `revenue`, `net_income`, `eps`, `bvps`, `roe`, `roa`, `debt_to_equity`, `net_profit_margin`, `dividend_per_share`, and `is_audited`.
+- `market_flows_idx`: Daily Indonesian foreign fund flow & broker summary tracking (`foreign_buy_value`, `foreign_sell_value`, `net_foreign_value`, `top3_buyer_broker_val`, `top3_seller_broker_val`).
+- `corporate_actions_idx`: Corporate actions on IDX (`DIVIDEND`, `STOCK_SPLIT`, `RIGHT_ISSUE`) with `cum_date`, `ex_date`, `ratio_from`, `ratio_to`, `cash_amount`, `exercise_price`.
+- `benchmark_prices`: Historical daily prices for Indonesian benchmark indices (`^JKSE` / IHSG, IDX Sectoral Indices).
+- `strategy_definitions`: Quantitative factor strategy catalog & preset weighting definitions.
+- `idx_factor_rotation_backtests`: Historical simulation results for multi-asset monthly/periodic factor rotation across BEI universe.
+
 1. Change SQLAlchemy models in `apps/quant-api/app/models`.
 2. Create and review an Alembic migration.
 3. Update Pydantic schemas and frontend types when the API contract changes.

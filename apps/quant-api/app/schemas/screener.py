@@ -5,8 +5,28 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.market_data import PaginationMeta
 
-SortByField = Literal["score", "symbol", "market_cap", "pe_ratio", "pb_ratio", "roe", "rsi"]
+SortByField = Literal[
+    "score",
+    "symbol",
+    "market_cap",
+    "pe_ratio",
+    "pb_ratio",
+    "roe",
+    "rsi",
+    "value_score",
+    "quality_score",
+    "momentum_score",
+    "composite_rank",
+]
 SortOrder = Literal["asc", "desc"]
+
+
+class CustomWeightsInput(BaseModel):
+    momentum: float = 0.30
+    quality: float = 0.25
+    value: float = 0.20
+    risk: float = 0.15
+    growth: float = 0.10
 
 
 class ScreenerRequest(BaseModel):
@@ -23,6 +43,8 @@ class ScreenerRequest(BaseModel):
     min_roe: float | None = None
     min_rsi: float | None = Field(default=None, ge=0, le=100)
     max_rsi: float | None = Field(default=None, ge=0, le=100)
+    strategy_preset: Literal["none", "quality_momentum", "deep_value", "garp", "defensive_income"] = "none"
+    custom_weights: CustomWeightsInput | None = None
     sort_by: SortByField = "score"
     sort_order: SortOrder = "desc"
     page: int = Field(default=1, ge=1)
@@ -63,6 +85,18 @@ class ScreenerItem(BaseModel):
     roe: float | None = None
     rsi: float | None = None
     trend: str = "neutral"
+    # Quantitative Decision and Cross-Sectional Ranking Fields
+    signal: Literal["STRONG_BUY", "BUY", "HOLD", "SELL", "STRONG_SELL"] = "HOLD"
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = "MEDIUM"
+    signal_confidence_pct: float | None = None
+    signal_reasons: list[str] = Field(default_factory=list)
+    value_score: float | None = None
+    quality_score: float | None = None
+    momentum_score: float | None = None
+    growth_score: float | None = None
+    risk_score: float | None = None
+    composite_rank: int | None = None
+    percentile: float | None = None
 
 
 class ScreenerResponse(BaseModel):

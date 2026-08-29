@@ -122,13 +122,14 @@ User action
 | `/register` | `(auth)` | Registration form | Public |
 | `/profile` | `(dashboard)` | Profile page and logout action | Client guard for UX; FastAPI authorizes protected API calls |
 | `/settings` | `(dashboard)` | Profile preferences (name, theme, timezone) | Client guard for UX; FastAPI authorizes protected API calls |
-| `/stocks` | `(dashboard)` | Stock universe listing and search | Client guard for UX; protected market data |
-| `/stocks/[symbol]` | `(dashboard)` | Stock detail with chart, fundamentals, quant score, and AI analyst | Client guard for UX; protected market data |
+| `/quant-ranking` | `(dashboard)` | Cross-sectional multi-factor ranking leaderboard across IDX | Public/Protected |
+| `/stocks` | `(dashboard)` | IDX stock universe listing and search | Client guard for UX; protected market data |
+| `/stocks/[symbol]` | `(dashboard)` | IDX stock detail with chart, PIT fundamentals, quant score, Foreign Flow/Broker summary, and AI analyst | Client guard for UX; protected market data |
 | `/portfolio` | `(dashboard)` | Portfolio holdings, transactions, and PnL | Client guard for UX; protected portfolio API |
-| `/backtest` | `(dashboard)` | Historical strategy simulation and metrics | Client guard for UX; protected backtest API |
+| `/backtest` | `(dashboard)` | IDX Factor Rotation Backtesting engine benchmarked against IHSG (^JKSE) | Client guard for UX; protected backtest API |
 
 ## Current and planned scope
 
-- **Implemented:** FastAPI authentication, numeric user IDs, refresh-token rotation and reuse detection, frontend session bootstrap, protected profile/settings UX, market-data listing and chart, technical analysis, fundamental calculation and persistence with provenance, quant scoring metadata, screener, portfolio editing/accounting/risk summary, backtesting with persistent job lifecycle (`backtest_jobs`), provider-neutral ingestion validation for prices and fundamentals, and AI analyst structured facts evidence with configurable LLM boundary. Real market data via the yfinance collector (see [ADR-005](./adr/ADR-005-yfinance-provider.md)) is wired into the ingestion pipeline and feeds the 20-stock IDX universe.
+- **Implemented:** Dedicated IDX Quant Research Platform for Bursa Efek Indonesia (BEI), complete with IDX-IC sector classifications, Point-in-Time (PIT) financial statement tracking (zero look-ahead bias), pre-ranking liquidity filters (market cap, 20D turnover, trading frequency), IDX foreign flow & broker concentration, corporate actions (dividends, splits, right issues), and multi-asset IDX Factor Rotation Backtesting benchmarked against IHSG (^JKSE). Real market data ingestion via the yfinance collector feeds active IDX stocks.
 - **Blocked/deferred:** OAuth/OIDC, password reset, email verification, transaction deletion/update, portfolio deletion, and real-time streaming are not active scope. Backtest execution records persistent lifecycle states (`queued`, `running`, `succeeded`, `failed`) per user. Ingestion currently uses a manual CLI (`python -m scripts.backfill_market_data`); a daily EOD scheduler and an admin POST endpoint are future work.
 - **Future repository structure:** Additional packages or a moved `apps/web` application require an explicit migration; they are not part of the current runtime layout.

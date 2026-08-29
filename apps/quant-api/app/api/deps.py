@@ -47,3 +47,22 @@ def get_current_user(
     if user is None or not user.is_active:
         raise ApiError(401, "UNAUTHORIZED", "Authentication is required")
     return user
+
+
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings_from_request),
+) -> User | None:
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        return None
+
+    try:
+        user_id = decode_access_token(credentials.credentials, settings)
+    except ValueError:
+        return None
+
+    user = db.get(User, user_id)
+    if user is None or not user.is_active:
+        return None
+    return user
