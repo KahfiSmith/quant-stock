@@ -11,6 +11,11 @@ export const API_ENDPOINTS = {
   BACKTEST: {
     RUN: "/api/v1/backtest",
   },
+  IDX: {
+    UNIVERSE: "/api/v1/idx/universe",
+    STOCK_DETAIL: (symbol: string) => `/api/v1/idx/stocks/${symbol}`,
+    FACTOR_ROTATION: "/api/v1/idx/factor-rotation/backtest",
+  },
   PORTFOLIO: {
     LIST: "/api/v1/portfolios",
     CREATE: "/api/v1/portfolios",

@@ -1,5 +1,11 @@
 export { useRunBacktest } from "@/hooks/market/use-backtest";
 export {
+  useIDXFactorRotation,
+  useIDXStockDetail,
+  useIDXUniverse,
+  type IDXUniverseResponse,
+} from "@/hooks/market/use-idx";
+export {
   useAddTransaction,
   useCreatePortfolio,
   usePortfolioDetail,

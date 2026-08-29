@@ -2,12 +2,113 @@ export interface Stock {
   id: number;
   symbol: string;
   name: string;
-  sector: string | null;
+  sector: string | null; // IDX-IC Sector
+  sub_sector?: string | null; // IDX-IC Sub-Sector
+  listing_date?: string | null;
+  liquidity_status?: "liquid" | "watchlist" | "illiquid" | string;
+  is_active?: boolean;
+  board?: string | null;
+  avg_daily_turnover_20d?: number | null;
+  avg_daily_frequency_20d?: number | null;
   exchange: string | null;
   currency: string;
   timezone: string | null;
   market_cap: number | null;
   updated_at: string | null;
+  close_price?: number | null;
+  pe_ratio?: number | null;
+  pb_ratio?: number | null;
+  roe?: number | null;
+  roa?: number | null;
+  quant_score?: number | null;
+  composite_rank?: number | null;
+  percentile?: number | null;
+}
+
+export interface IDXMarketFlow {
+  date: string;
+  foreign_buy_value: number;
+  foreign_sell_value: number;
+  net_foreign_value: number;
+  foreign_buy_volume: number;
+  foreign_sell_volume: number;
+  top3_buyer_broker_val?: number | null;
+  top3_seller_broker_val?: number | null;
+}
+
+export interface IDXCorporateAction {
+  action_type: "DIVIDEND" | "STOCK_SPLIT" | "RIGHT_ISSUE" | string;
+  cum_date?: string | null;
+  ex_date: string;
+  recording_date?: string | null;
+  payment_date?: string | null;
+  ratio_from?: number | null;
+  ratio_to?: number | null;
+  cash_amount?: number | null;
+  exercise_price?: number | null;
+}
+
+export interface IDXStockDetailResponse {
+  stock: Stock;
+  market_flows: IDXMarketFlow[];
+  corporate_actions: IDXCorporateAction[];
+  as_of: string;
+}
+
+export interface IDXRotationEquityPoint {
+  date: string;
+  equity: number;
+  benchmark: number; // IHSG (^JKSE)
+  drawdown: number;
+}
+
+export interface IDXRotationRebalanceEvent {
+  date: string;
+  selected_symbols: string[];
+  portfolio_value: number;
+  cash_reserve: number;
+}
+
+export interface IDXRotationSummary {
+  total_return_pct: number;
+  cagr_pct: number;
+  benchmark_return_pct: number;
+  alpha_pct: number;
+  beta: number;
+  sharpe_ratio: number;
+  max_drawdown_pct: number;
+  annualized_volatility_pct: number;
+  final_equity: number;
+  rebalance_count: number;
+}
+
+export interface IDXFactorRotationResponse {
+  run_id: string;
+  strategy_name: string;
+  initial_capital: number;
+  start_date: string;
+  end_date: string;
+  summary: IDXRotationSummary;
+  equity_curve: IDXRotationEquityPoint[];
+  rebalance_history: IDXRotationRebalanceEvent[];
+  benchmark_name: string;
+  as_of: string;
+}
+
+export interface IDXFactorRotationParams {
+  strategy_name: string;
+  initial_capital: number;
+  top_n: number;
+  rebalance_frequency: "monthly" | "quarterly";
+  start_date?: string | null;
+  end_date?: string | null;
+  min_market_cap?: number;
+  min_adv_turnover?: number;
+  min_frequency?: number;
+  sector_filter?: string | null;
+  factor_weights?: CustomFactorWeights;
+  fee_percent?: number;
+  slippage_percent?: number;
 }
 
 export interface PriceCandle {
@@ -214,12 +315,32 @@ export interface ScreenerItem {
   quant_score: number | null;
   score_version: string | null;
   data_source: string | null;
+  price_as_of?: string | null;
   as_of: string | null;
   pe_ratio: number | null;
   pb_ratio: number | null;
   roe: number | null;
   rsi: number | null;
   trend: string;
+  signal?: "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL";
+  risk_level?: "LOW" | "MEDIUM" | "HIGH";
+  signal_confidence_pct?: number | null;
+  signal_reasons?: string[];
+  value_score?: number | null;
+  quality_score?: number | null;
+  momentum_score?: number | null;
+  growth_score?: number | null;
+  risk_score?: number | null;
+  composite_rank?: number | null;
+  percentile?: number | null;
+}
+
+export interface CustomFactorWeights {
+  momentum: number;
+  quality: number;
+  value: number;
+  risk: number;
+  growth: number;
 }
 
 export interface ScreenerFilterParams {
@@ -236,7 +357,9 @@ export interface ScreenerFilterParams {
   min_roe?: number;
   min_rsi?: number;
   max_rsi?: number;
-  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi";
+  strategy_preset?: "none" | "quality_momentum" | "deep_value" | "garp" | "defensive_income";
+  custom_weights?: CustomFactorWeights;
+  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
   sort_order?: "asc" | "desc";
   page?: number;
   page_size?: number;
