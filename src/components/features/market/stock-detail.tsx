@@ -6,6 +6,7 @@ import { useState } from "react";
 import { StateMessage } from "@/components/common";
 import { StockChart } from "@/components/features/market/stock-chart";
 import {
+  useIDXStockDetail,
   useStockAiSummary,
   useStockFundamental,
   useStockPrices,
@@ -24,7 +25,7 @@ type RangeOption = {
   days: number;
 };
 
-type ActiveTab = "overview" | "chart" | "fundamentals" | "quant" | "ai";
+type ActiveTab = "overview" | "chart" | "fundamentals" | "quant" | "flows" | "ai";
 
 const RANGE_OPTIONS: RangeOption[] = [
   { label: "1M", days: 30 },
@@ -48,6 +49,7 @@ export function StockDetail({ symbol }: StockDetailProps) {
   const [tab, setTab] = useState<ActiveTab>("overview");
 
   const { data, isPending, isError } = useStockPrices(symbol, rangeFor(days));
+  const { data: idxDetail } = useIDXStockDetail(symbol);
   const { data: technical } = useStockTechnical(symbol);
   const { data: fundamental } = useStockFundamental(symbol);
   const { data: scoreData } = useStockScore(symbol);
@@ -141,6 +143,17 @@ export function StockDetail({ symbol }: StockDetailProps) {
           }`}
         >
           Quant Score Breakdown
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("flows")}
+          className={`border-b-2 px-4 py-2.5 font-medium transition-colors ${
+            tab === "flows"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          IDX Foreign Flow & Actions
         </button>
         <button
           type="button"
@@ -401,6 +414,82 @@ export function StockDetail({ symbol }: StockDetailProps) {
               ) : (
                 <p className="text-sm text-muted-foreground">No quantitative score available for this symbol.</p>
               )}
+            </div>
+          )}
+
+          {/* Tab 4.5: IDX Foreign Flow & Corporate Actions */}
+          {tab === "flows" && (
+            <div className="flex flex-col gap-6">
+              {/* Foreign Flow History */}
+              <div className="rounded-xl border bg-card overflow-hidden">
+                <div className="border-b bg-muted/20 px-4 py-3">
+                  <h3 className="text-sm font-semibold">Foreign Flow & Broker Concentration</h3>
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b bg-muted/40 text-left text-muted-foreground">
+                        <th className="px-4 py-2 font-medium">Date</th>
+                        <th className="px-4 py-2 font-medium text-right">Foreign Buy (IDR)</th>
+                        <th className="px-4 py-2 font-medium text-right">Foreign Sell (IDR)</th>
+                        <th className="px-4 py-2 font-medium text-right">Net Foreign Flow</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {idxDetail?.market_flows?.map((flow) => (
+                        <tr key={flow.date} className="border-b last:border-0 hover:bg-muted/10">
+                          <td className="px-4 py-2 font-medium">{flow.date}</td>
+                          <td className="px-4 py-2 text-right text-muted-foreground">
+                            Rp {flow.foreign_buy_value.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-2 text-right text-muted-foreground">
+                            Rp {flow.foreign_sell_value.toLocaleString()}
+                          </td>
+                          <td
+                            className={`px-4 py-2 text-right font-bold ${
+                              flow.net_foreign_value >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                            }`}
+                          >
+                            {flow.net_foreign_value > 0 ? "+" : ""}
+                            Rp {flow.net_foreign_value.toLocaleString()}
+                          </td>
+                        </tr>
+                      )) || (
+                        <tr>
+                          <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                            No market flow history available.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Corporate Actions */}
+              <div className="rounded-xl border bg-card p-5">
+                <h3 className="mb-3 text-sm font-semibold">Corporate Actions (Dividends, Splits, Right Issues)</h3>
+                {idxDetail?.corporate_actions && idxDetail.corporate_actions.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {idxDetail.corporate_actions.map((ca, idx) => (
+                      <div key={idx} className="rounded-lg border bg-muted/20 p-3 text-xs">
+                        <div className="flex items-center justify-between font-semibold">
+                          <span className="text-primary">{ca.action_type}</span>
+                          <span className="text-muted-foreground">Ex-Date: {ca.ex_date}</span>
+                        </div>
+                        {ca.cash_amount && (
+                          <p className="mt-1 text-foreground">Cash Dividend: Rp {ca.cash_amount} / share</p>
+                        )}
+                        {ca.ratio_from && ca.ratio_to && (
+                          <p className="mt-1 text-foreground">Ratio: {ca.ratio_from} : {ca.ratio_to}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No recent corporate actions recorded.</p>
+                )}
+              </div>
             </div>
           )}
 

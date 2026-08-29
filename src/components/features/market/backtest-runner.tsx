@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 
 import { StateMessage } from "@/components/common";
-import { useRunBacktest } from "@/hooks/market";
+import { useRunBacktest, useStocks } from "@/hooks/market";
 import type { BacktestParams, BacktestResponse } from "@/types";
 
 export function BacktestRunner() {
@@ -15,8 +16,30 @@ export function BacktestRunner() {
     slow_period: 50,
   });
 
+  const [searchTerm, setSearchTerm] = useState("");
   const [result, setResult] = useState<BacktestResponse | null>(null);
   const runBacktest = useRunBacktest();
+  const { data: stocksData } = useStocks();
+
+  const stockOptions = useMemo(() => {
+    const list = stocksData?.items ?? [
+      { id: 1, symbol: "BBCA", name: "Bank Central Asia Tbk" },
+      { id: 2, symbol: "BBRI", name: "Bank Rakyat Indonesia Tbk" },
+      { id: 3, symbol: "BMRI", name: "Bank Mandiri Tbk" },
+      { id: 4, symbol: "BBNI", name: "Bank Negara Indonesia Tbk" },
+      { id: 5, symbol: "TLKM", name: "Telkom Indonesia Tbk" },
+      { id: 6, symbol: "ASII", name: "Astra International Tbk" },
+      { id: 7, symbol: "UNVR", name: "Unilever Indonesia Tbk" },
+      { id: 8, symbol: "ICBP", name: "Indofood CBP Sukses Makmur Tbk" },
+      { id: 9, symbol: "AAPL", name: "Apple Inc." },
+      { id: 10, symbol: "NVDA", name: "NVIDIA Corporation" },
+      { id: 11, symbol: "MSFT", name: "Microsoft Corporation" },
+    ];
+
+    if (!searchTerm.trim()) return list;
+    const q = searchTerm.toLowerCase();
+    return list.filter((s) => s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+  }, [stocksData, searchTerm]);
 
   const handleRun = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,16 +52,31 @@ export function BacktestRunner() {
     <div className="flex flex-col gap-6">
       {/* Parameter Form */}
       <form onSubmit={handleRun} className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
-        <input
-          type="text"
-          placeholder="Ticker (e.g. BBCA)"
-          className="w-28 rounded-md border bg-background px-3 py-1.5 text-sm"
-          value={params.symbol}
-          onChange={(e) => setParams((p) => ({ ...p, symbol: e.target.value.toUpperCase() }))}
-        />
+        {/* Searchable Stock Selector */}
+        <div className="flex items-center gap-2 rounded-md border bg-background px-2 py-1">
+          <Search className="h-3.5 w-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search ticker..."
+            className="w-24 bg-transparent text-xs outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select
+            className="bg-transparent text-xs font-semibold text-primary outline-none cursor-pointer"
+            value={params.symbol}
+            onChange={(e) => setParams((p) => ({ ...p, symbol: e.target.value }))}
+          >
+            {stockOptions.map((stock) => (
+              <option key={stock.symbol} value={stock.symbol} className="bg-popover text-foreground text-xs">
+                {stock.symbol} — {stock.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <select
-          className="rounded-md border bg-background px-3 py-1.5 text-sm"
+          className="rounded-md border bg-background px-3 py-1.5 text-xs font-medium"
           value={params.strategy}
           onChange={(e) =>
             setParams((p) => ({ ...p, strategy: e.target.value as BacktestParams["strategy"] }))
@@ -51,38 +89,47 @@ export function BacktestRunner() {
 
         {params.strategy === "SMA_CROSSOVER" && (
           <>
-            <input
-              type="number"
-              placeholder="Fast"
-              className="w-20 rounded-md border bg-background px-3 py-1.5 text-sm"
-              value={params.fast_period}
-              onChange={(e) => setParams((p) => ({ ...p, fast_period: parseInt(e.target.value) || 20 }))}
-            />
-            <input
-              type="number"
-              placeholder="Slow"
-              className="w-20 rounded-md border bg-background px-3 py-1.5 text-sm"
-              value={params.slow_period}
-              onChange={(e) => setParams((p) => ({ ...p, slow_period: parseInt(e.target.value) || 50 }))}
-            />
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>Fast:</span>
+              <input
+                type="number"
+                placeholder="20"
+                className="w-16 rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                value={params.fast_period}
+                onChange={(e) => setParams((p) => ({ ...p, fast_period: parseInt(e.target.value) || 20 }))}
+              />
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>Slow:</span>
+              <input
+                type="number"
+                placeholder="50"
+                className="w-16 rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                value={params.slow_period}
+                onChange={(e) => setParams((p) => ({ ...p, slow_period: parseInt(e.target.value) || 50 }))}
+              />
+            </div>
           </>
         )}
 
-        <input
-         type="number"
-         min="0"
-         max="5"
-         step="0.01"
-         placeholder="Slippage %"
-         className="w-24 rounded-md border bg-background px-3 py-1.5 text-sm"
-         value={params.slippage_percent ?? 0}
-         onChange={(e) => setParams((p) => ({ ...p, slippage_percent: Number(e.target.value) || 0 }))}
-        />
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span>Slippage %:</span>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            step="0.01"
+            placeholder="0"
+            className="w-16 rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+            value={params.slippage_percent ?? 0}
+            onChange={(e) => setParams((p) => ({ ...p, slippage_percent: Number(e.target.value) || 0 }))}
+          />
+        </div>
 
         <button
           type="submit"
           disabled={runBacktest.isPending || !params.symbol}
-          className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition-colors ml-auto"
         >
           {runBacktest.isPending ? "Simulating..." : "Run Backtest"}
         </button>
