@@ -111,7 +111,8 @@ User action
 - `apiClient` attaches the in-memory Bearer access token to protected business requests and coordinates a single-flight refresh after `401 ACCESS_TOKEN_EXPIRED`.
 - `apiClient` unwraps successful API envelopes to `response.data.data`.
 - Access tokens exist only in the non-persisted Zustand store; FastAPI manages the refresh token as an `HttpOnly` cookie.
-- The root provider mounts `AppProvider` → `QueryProvider` → `SessionProvider`. On mount, `SessionProvider` calls `POST /api/v1/auth/refresh` to restore the in-memory session.
+- The root provider mounts `AppProvider` → `QueryProvider` → `SessionProvider` → `ThemeProvider`. On mount, `SessionProvider` calls `POST /api/v1/auth/refresh` to restore the in-memory session. `ThemeProvider` syncs the blocking theme script with the Zustand theme store and listens for OS color-scheme changes.
+- A blocking inline `<script>` in the root `<head>` (via `ThemeScript`) reads the theme from `localStorage` and applies the resolved class (`light` or `dark`) and `color-scheme` style to `<html>` before the browser paints, preventing any flash of incorrect theme colors on page load.
 
 ## Implemented routes
 

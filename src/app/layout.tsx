@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import "@/app/globals.css";
 
+import { ThemeScript } from "@/components/common/theme-script";
 import { siteConfig } from "@/config/site";
 import { AppProvider } from "@/providers/app-provider";
 
@@ -28,6 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+        <ThemeScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

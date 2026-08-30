@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 
 import { QueryProvider } from "@/providers/query-provider";
 import { SessionProvider } from "@/providers/session-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 
 export function AppProvider({
   children,
@@ -13,8 +14,10 @@ export function AppProvider({
   return (
     <QueryProvider>
       <SessionProvider>
-        {children}
-        <Toaster position="top-right" richColors />
+        <ThemeProvider>
+          {children}
+          <Toaster position="top-right" richColors />
+        </ThemeProvider>
       </SessionProvider>
     </QueryProvider>
   );

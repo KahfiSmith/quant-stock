@@ -33,12 +33,15 @@ function applyThemeClass(theme: Theme) {
   const root = document.documentElement;
   root.classList.remove("light", "dark");
 
+  let resolved: "light" | "dark";
   if (theme === "system") {
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+    resolved = window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
-    root.classList.add(systemTheme);
   } else {
-    root.classList.add(theme);
+    resolved = theme;
   }
+
+  root.classList.add(resolved);
+  root.style.colorScheme = resolved;
 }

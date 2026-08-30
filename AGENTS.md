@@ -52,6 +52,12 @@ If any conflict appears, follow the current runtime behavior and active routes i
 - For placeholder directories, use minimal `index.ts` placeholder modules.
 - Never commit secrets or credentials.
 - Do not modify global build or lint config unless the task explicitly requires it.
+- No unnecessary comments in code. Code must be self-documenting. Do not generate JSDoc blocks
+  that restate function signatures, inline comments that describe *what* code does, placeholder
+  comments, section dividers, or commented-out code. The only acceptable comments are:
+  directive JSDoc that explains *why* a module exists or its non-obvious constraints,
+  short *why* inline notes for genuinely non-obvious workarounds, and lint/type directives
+  (`eslint-disable`). Full policy: `docs/conventions/coding.md` → Comments.
 
 ## Engineering Principles (Principal Engineer Mindset)
 - Correctness over speed: small correct changes over fast risky patches.

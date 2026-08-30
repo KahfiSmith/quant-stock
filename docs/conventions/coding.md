@@ -51,3 +51,28 @@
 
 - Named exports preferred over default exports.
 - Barrel `index.ts` re-exports the module's public surface.
+
+## Comments
+
+Code should be self-documenting. Comments are noise unless they add
+information the code itself cannot express.
+
+### Forbidden
+
+- JSDoc blocks that restate what the function signature already says.
+- Inline comments that describe *what* the next line does (`// set the theme`).
+- Placeholder comments (`/* config options here */`, `// TODO: implement`).
+- Section dividers or decorative comments (`// ---- helpers ----`).
+- Commented-out code — delete it; version control keeps history.
+
+### Allowed
+
+- **Directive JSDoc** — concise doc blocks that explain *why* a module exists,
+  its key constraints, or its contract with other modules. Keep them short and
+  focused on information not obvious from the code
+  (e.g. "must render in `<head>` to prevent FOUC", "reads localStorage key X").
+- **Why-comments** — short inline comments for genuinely non-obvious decisions
+  (e.g. `// Intentionally no async/defer — must block rendering`).
+- **Lint/type directives** — pragmas that suppress a justified rule
+  (`// eslint-disable-next-line`).
+- **Legal or license headers** when required by a dependency.
