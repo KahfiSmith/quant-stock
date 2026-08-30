@@ -2,8 +2,8 @@ export interface Stock {
   id: number;
   symbol: string;
   name: string;
-  sector: string | null; // IDX-IC Sector
-  sub_sector?: string | null; // IDX-IC Sub-Sector
+  sector: string | null;
+  sub_sector?: string | null;
   listing_date?: string | null;
   liquidity_status?: "liquid" | "watchlist" | "illiquid" | string;
   is_active?: boolean;
@@ -58,7 +58,7 @@ export interface IDXStockDetailResponse {
 export interface IDXRotationEquityPoint {
   date: string;
   equity: number;
-  benchmark: number; // IHSG (^JKSE)
+  benchmark: number;
   drawdown: number;
 }
 
@@ -474,7 +474,7 @@ export interface TechnicalAnalysisResponse {
   indicators: IndicatorsSummary;
 }
 
-/** Candle shape consumed by TradingView Lightweight Charts. */
+
 export interface ChartCandle {
   time: string;
   open: number;
@@ -483,11 +483,7 @@ export interface ChartCandle {
   close: number;
 }
 
-/**
- * Maps backend price candles to chart-ready candles, converting the ISO
- * timestamp to a `YYYY-MM-DD` date string (a native Lightweight Charts `Time`)
- * and ensuring numeric price fields.
- */
+
 export function toChartCandles(candles: PriceCandle[]): ChartCandle[] {
   return candles.map((candle) => ({
     time: candle.time.slice(0, 10),

@@ -94,12 +94,12 @@ def test_ai_engine_label_is_deterministic_no_llm_claim(client) -> None:
 
             analysis = generate_ai_analysis(db, stock)
 
-            # Engine must be deterministic (no LLM was called)
+
             assert analysis.analysis_engine == "deterministic"
-            # Provider/model must be None
+
             assert analysis.provider is None
             assert analysis.model is None
-            # Version must not claim an LLM model
+
             assert not analysis.analysis_version.startswith("llm-")
             assert analysis.analysis_version == "deterministic-v1"
         finally:
@@ -120,7 +120,7 @@ def test_ai_engine_label_persistent_across_env_configs(client) -> None:
     original_provider = settings.ai_analyst_provider
     original_key = settings.ai_analyst_api_key
     try:
-        # Simulate env that points to Gemini
+
         settings.ai_analyst_provider = "openai_compatible"
         settings.ai_analyst_api_key = "test-key"
 
@@ -128,7 +128,7 @@ def test_ai_engine_label_persistent_across_env_configs(client) -> None:
             collector = YFinanceCollector()
             db = client.app.state.database.session()
             try:
-                # Ensure stock exists and is populated
+
                 stock = db.scalar(select(Stock).where(Stock.symbol == "BBCA"))
                 if stock is None:
                     meta = collector.collect_metadata("BBCA")
@@ -155,10 +155,10 @@ def test_ai_engine_label_persistent_across_env_configs(client) -> None:
                 if fund_records:
                     ingest_fundamentals(db, fund_records)
 
-                # Call the function directly
+
                 analysis = generate_ai_analysis(db, stock)
-                # Engine must STILL be deterministic — provider config doesn't
-                # change engine semantics.
+
+
                 assert analysis.analysis_engine == "deterministic", (
                     f"Engine should be deterministic regardless of provider config, "
                     f"got {analysis.analysis_engine}"

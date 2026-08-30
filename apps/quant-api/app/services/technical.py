@@ -19,7 +19,7 @@ def calculate_technical_analysis(
     interval: str = "1d",
     limit: int = 250,
 ) -> TechnicalAnalysisResponse:
-    # Fetch price history ordered by time ASC
+
     prices = list(
         db.scalars(
             select(Price)
@@ -75,7 +75,7 @@ def calculate_technical_analysis(
     latest_bb_upper = bb_upper[-1]
     latest_bb_lower = bb_lower[-1]
 
-    # Trend logic
+
     if latest_ma50 is not None and latest_ma200 is not None:
         trend = "bullish" if latest_ma50 > latest_ma200 else "bearish"
     elif latest_ma20 is not None and latest_close is not None:
@@ -83,7 +83,7 @@ def calculate_technical_analysis(
     else:
         trend = "neutral"
 
-    # MA Signal logic
+
     if latest_ma20 is not None and latest_close > latest_ma20:
         ma_signal = "positive"
     elif latest_ma20 is not None and latest_close < latest_ma20:

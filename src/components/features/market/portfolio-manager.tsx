@@ -84,7 +84,7 @@ export function PortfolioManager() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Portfolio Selector & Creation */}
+      {}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-4">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium text-muted-foreground">Portfolio:</label>
@@ -146,7 +146,7 @@ export function PortfolioManager() {
 
       {activeId && detail ? (
         <div className="flex flex-col gap-6">
-          {/* Summary Metric Cards */}
+          {}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
             <div className="rounded-xl border bg-card p-4">
               <p className="text-xs text-muted-foreground">Total Cost</p>

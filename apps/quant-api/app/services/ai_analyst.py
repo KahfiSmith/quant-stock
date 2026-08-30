@@ -39,7 +39,7 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
     risks: list[str] = []
     unknowns: list[str] = []
 
-    # 1. Evaluate Technical Insights
+
     has_long_term_trend = (
         tech.indicators.ma50 is not None and tech.indicators.ma200 is not None
     )
@@ -68,7 +68,7 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
                 f"RSI(14) is elevated at {tech.rsi}, indicating overbought momentum and short-term pullback risk."
             )
 
-    # 2. Evaluate Fundamental Insights
+
     if fund:
         r = fund.ratios
         if r.roe is not None:
@@ -92,7 +92,7 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
     else:
         unknowns.append("Financial statement filings and balance sheet fundamentals are currently unrecorded.")
 
-    # 3. Quant Score Synthesis
+
     if quant.total_score >= 75:
         strengths.append(f"Strong overall quantitative profile with a composite score of {quant.total_score}/100.")
     elif quant.total_score < 45:
@@ -107,7 +107,7 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
 
     unknowns.append("Future regulatory shifts, macroeconomic interest rate adjustments, and management changes.")
 
-    # 4. Formulate Conclusion
+
     if quant.total_score >= 70 and tech.trend == "bullish":
         support = "constructive price momentum"
         if fund:
@@ -127,18 +127,18 @@ def generate_ai_analysis(db: Session, stock: Stock) -> AiAnalystResponse:
             f"Look for catalyst developments in quarterly earnings or trend continuation."
         )
 
-    # Analysis engine / version determination.
-    # The current implementation ALWAYS uses rule-based synthesis (no LLM call).
-    # Therefore analysis_engine="deterministic" regardless of configured provider.
-    # When an actual LLM call is wired in (separate task), this branch must be
-    # gated on whether the call succeeded. Until then, do NOT claim an LLM was used.
+
+
+
+
+
     analysis_engine = "deterministic"
     provider_used: str | None = None
     model_used: str | None = None
     analysis_version = "deterministic-v1"
-    # The legacy `llm-{model}` version string is intentionally NOT emitted
-    # because the current code does not perform LLM calls. This avoids the
-    # misleading "AI Analyst is LLM-backed" claim that the audit flagged.
+
+
+
 
     evidence = [
         AiEvidence(

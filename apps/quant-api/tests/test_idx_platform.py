@@ -17,8 +17,8 @@ from app.models.market_data import Price, Stock
 def _setup_idx_test_data(db: Session) -> list[Stock]:
     today = date.today()
     stocks = []
-    
-    # 1. Add IHSG Benchmark
+
+
     for offset in range(30, -1, -1):
         day = today - timedelta(days=offset)
         t_dt = datetime.combine(day, datetime.min.time(), tzinfo=UTC)
@@ -34,7 +34,7 @@ def _setup_idx_test_data(db: Session) -> list[Stock]:
             )
         )
 
-    # 2. Add sample IDX stocks
+
     specs = [
         {"symbol": "BBCA", "name": "Bank Central Asia", "sector": "Financials", "sub": "Banks", "cap": 1_200_000_000_000_000.0, "price": 9500.0, "roe": 0.21, "eps": 450.0, "bvps": 2200.0},
         {"symbol": "TLKM", "name": "Telkom Indonesia", "sector": "Infrastructures", "sub": "Telecom", "cap": 280_000_000_000_000.0, "price": 3000.0, "roe": 0.16, "eps": 220.0, "bvps": 1200.0},
@@ -61,7 +61,7 @@ def _setup_idx_test_data(db: Session) -> list[Stock]:
         db.flush()
         stocks.append(st)
 
-        # Add price candles (30 days)
+
         for offset in range(30, -1, -1):
             day = today - timedelta(days=offset)
             t_dt = datetime.combine(day, datetime.min.time(), tzinfo=UTC)
@@ -78,7 +78,7 @@ def _setup_idx_test_data(db: Session) -> list[Stock]:
                     source="idx_feed",
                 )
             )
-            # Add Market Flow
+
             db.add(
                 MarketFlowIDX(
                     stock_id=st.id,
@@ -91,7 +91,7 @@ def _setup_idx_test_data(db: Session) -> list[Stock]:
                 )
             )
 
-        # Add PIT Fundamental Statement
+
         db.add(
             FinancialStatementPIT(
                 stock_id=st.id,
@@ -110,7 +110,7 @@ def _setup_idx_test_data(db: Session) -> list[Stock]:
             )
         )
 
-        # Add Corporate Action
+
         db.add(
             CorporateActionIDX(
                 stock_id=st.id,

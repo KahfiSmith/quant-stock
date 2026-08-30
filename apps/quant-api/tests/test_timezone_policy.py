@@ -32,11 +32,11 @@ def test_ensure_utc_keeps_utc_untouched() -> None:
 
 
 def test_ensure_utc_converts_other_timezones_to_utc() -> None:
-    # Asia/Jakarta = UTC+7
+
     jakarta = timezone(timedelta(hours=7))
-    aware_jakarta = datetime(2026, 1, 15, 16, 0, 0, tzinfo=jakarta)  # 16:00 WIB
+    aware_jakarta = datetime(2026, 1, 15, 16, 0, 0, tzinfo=jakarta)
     result = ensure_utc(aware_jakarta)
-    # 16:00 WIB == 09:00 UTC
+
     assert result.hour == 9
     assert result.tzinfo == UTC
 
@@ -92,7 +92,7 @@ def test_persisted_prices_have_utc_tagged_times_after_roundtrip(client) -> None:
             )
             records = list(collector.collect_prices(req))
             assert len(records) > 0
-            # All records must be UTC-tagged at write time.
+
             for r in records:
                 assert r.time.tzinfo is not None, (
                     f"Record time must be UTC-tagged at write, got naive: {r.time}"
@@ -100,12 +100,12 @@ def test_persisted_prices_have_utc_tagged_times_after_roundtrip(client) -> None:
                 assert r.time.tzinfo == UTC
             ingest_prices(db, records)
 
-            # Read back from DB. SQLite may strip tzinfo.
+
             stored = db.query(Price).filter(Price.stock_id == stock.id).all()
             assert len(stored) == len(records)
             for p in stored:
-                # ensure_utc normalizes; on PostgreSQL it's a no-op,
-                # on SQLite it re-attaches UTC.
+
+
                 normalized = ensure_utc(p.time)
                 assert normalized.tzinfo == UTC
         finally:

@@ -101,7 +101,7 @@ def test_ensure_stocks_creates_rows_with_real_metadata(client, fake_ticker_facto
 def test_ensure_stocks_updates_existing_rows(client, fake_ticker_factory) -> None:
     db = client.app.state.database.session()
     try:
-        # Pre-seed a stock with placeholder data.
+
         existing = Stock(
             symbol="BBCA",
             name="Placeholder",
@@ -117,7 +117,7 @@ def test_ensure_stocks_updates_existing_rows(client, fake_ticker_factory) -> Non
         _ensure_stocks(db, collector, ["BBCA"])
 
         refreshed = db.scalar(select(Stock).where(Stock.symbol == "BBCA"))
-        assert refreshed.name == "Bank Central Asia Tbk"  # was overwritten
+        assert refreshed.name == "Bank Central Asia Tbk"
         assert refreshed.sector == "Financial Services"
     finally:
         db.close()
@@ -127,10 +127,10 @@ def test_run_end_to_end_ingests_prices_and_fundamentals(client, fake_ticker_fact
     """Full backfill run with mocked yfinance; assert rows land in the DB."""
     monkeypatch_symbols = ["BBCA", "TLKM"]
 
-    # Reuse the test app's settings (SQLite in-memory) for the run.
+
     test_settings = client.app.state.settings
 
-    # Pre-seed Stock rows so ingest_prices/fundamentals pass the UNKNOWN_SYMBOL gate.
+
     db = client.app.state.database.session()
     try:
         for sym in monkeypatch_symbols:
@@ -145,17 +145,17 @@ def test_run_end_to_end_ingests_prices_and_fundamentals(client, fake_ticker_fact
         assert exit_code == 0
 
         prices = db.query(Price).filter(Price.source == "yfinance").all()
-        # 2 stocks × 3 rows = 6 price rows
+
         assert len(prices) == 6
-        # All have payload checksum
+
         assert all(p.payload_checksum is not None for p in prices)
 
         funds = db.query(Fundamental).filter(Fundamental.source == "yfinance").all()
         assert len(funds) == 2
-        # Fund score is computed by ingest_fundamentals
+
         assert all(f.score is not None for f in funds)
 
-        # Stock metadata was updated to real yfinance values
+
         bbca = db.scalar(select(Stock).where(Stock.symbol == "BBCA"))
         assert bbca.sector == "Financial Services"
         assert bbca.exchange == "IDX"
@@ -185,7 +185,7 @@ def test_run_is_idempotent_on_rerun(client, fake_ticker_factory) -> None:
         )
 
         prices = db.query(Price).filter(Price.source == "yfinance").all()
-        # Still 6 rows after two runs (idempotent UPSERT)
+
         assert len(prices) == 6
     finally:
         db.close()

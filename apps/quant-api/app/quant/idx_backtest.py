@@ -40,37 +40,37 @@ from app.schemas.idx_quant import (
 def filter_idx_universe(
     db: Session,
     as_of_date: date,
-    min_market_cap: float = 1_000_000_000_000.0,  # Min Rp 1 Triliun
-    min_adv_turnover: float = 5_000_000_000.0,    # Min Rp 5 Miliar / hari
-    min_frequency: float = 1_000.0,               # Min 1.000 transaksi / hari
+    min_market_cap: float = 1_000_000_000_000.0,
+    min_adv_turnover: float = 5_000_000_000.0,
+    min_frequency: float = 1_000.0,
     sector_filter: str | None = None,
 ) -> list[Stock]:
     """Filters active IDX universe for liquid and tradeable stocks as of date."""
     stmt = select(Stock).where(Stock.is_active.is_(True))
-    
+
     if sector_filter:
         stmt = stmt.where(Stock.sector.ilike(f"%{sector_filter.strip()}%"))
-        
+
     stocks = list(db.scalars(stmt))
     liquid_stocks: list[Stock] = []
-    
+
     for s in stocks:
-        # Check listing date
+
         if s.listing_date and s.listing_date > as_of_date:
             continue
-            
-        # Check liquidity constraints
+
+
         m_cap = float(s.market_cap) if s.market_cap is not None else 0.0
         adv = float(s.avg_daily_turnover_20d) if s.avg_daily_turnover_20d is not None else 0.0
         freq = float(s.avg_daily_frequency_20d) if s.avg_daily_frequency_20d is not None else 0.0
-        
-        # If explicitly illiquid or watchlist board, filter out unless relaxed
+
+
         if s.liquidity_status == "illiquid" or s.board == "WATCHLIST":
             continue
-            
+
         if m_cap >= min_market_cap or adv >= min_adv_turnover or freq >= min_frequency:
             liquid_stocks.append(s)
-            
+
     return liquid_stocks if liquid_stocks else stocks
 
 
@@ -95,29 +95,29 @@ def run_idx_factor_rotation_backtest(
     run_id = str(uuid4())
     now_utc = datetime.now(UTC)
 
-    # 1. Gather IHSG Benchmark Prices
+
     ihsg_stmt = select(BenchmarkPrice).where(BenchmarkPrice.symbol == "^JKSE").order_by(BenchmarkPrice.time.asc())
     if req.start_date:
         ihsg_stmt = ihsg_stmt.where(BenchmarkPrice.time >= datetime.combine(req.start_date, time.min, tzinfo=UTC))
     if req.end_date:
         ihsg_stmt = ihsg_stmt.where(BenchmarkPrice.time <= datetime.combine(req.end_date, time.max, tzinfo=UTC))
-        
+
     ihsg_prices = list(db.scalars(ihsg_stmt))
     if not ihsg_prices:
-        # Fallback if no benchmark table seeded
+
         ihsg_initial = 7200.0
     else:
         ihsg_initial = float(ihsg_prices[0].close)
 
     ihsg_map = {p.time.date(): float(p.close) for p in ihsg_prices}
 
-    # 2. Setup Backtest Period
+
     all_dates_query = select(Price.time).order_by(Price.time.asc()).distinct()
     if req.start_date:
         all_dates_query = all_dates_query.where(Price.time >= datetime.combine(req.start_date, time.min, tzinfo=UTC))
     if req.end_date:
         all_dates_query = all_dates_query.where(Price.time <= datetime.combine(req.end_date, time.max, tzinfo=UTC))
-        
+
     distinct_times = list(db.scalars(all_dates_query))
     if len(distinct_times) < 5:
         raise ApiError(400, "INSUFFICIENT_DATA", "Not enough trading days for IDX Factor Rotation backtest.")
@@ -126,7 +126,7 @@ def run_idx_factor_rotation_backtest(
     start_dt = trading_dates[0]
     end_dt = trading_dates[-1]
 
-    # Pre-fetch all daily prices in range for efficiency
+
     all_prices = list(
         db.scalars(
             select(Price)
@@ -137,24 +137,24 @@ def run_idx_factor_rotation_backtest(
             )
         )
     )
-    # price_map: (stock_id, date) -> close
+
     price_map: dict[tuple[int, date], float] = {
         (p.stock_id, p.time.date()): float(p.close) for p in all_prices
     }
 
-    # 3. Portfolio Simulation State
+
     cash = req.initial_capital
-    portfolio_holdings: dict[str, dict[str, float]] = {}  # symbol -> {stock_id, shares, cost_basis}
+    portfolio_holdings: dict[str, dict[str, float]] = {}
     equity_curve: list[IDXRotationEquityPoint] = []
     rebalance_history: list[IDXRotationRebalanceEvent] = []
     daily_returns: list[float] = []
     peak_equity = req.initial_capital
-    
+
     last_rebalance_month = -1
     rebalance_step_days = 20 if req.rebalance_frequency == "monthly" else 60
 
     for idx, current_date in enumerate(trading_dates):
-        # Determine if rebalance day (First trading day of month or periodic interval)
+
         is_rebalance = False
         if req.rebalance_frequency == "monthly":
             if current_date.month != last_rebalance_month:
@@ -163,9 +163,9 @@ def run_idx_factor_rotation_backtest(
         elif idx % rebalance_step_days == 0:
             is_rebalance = True
 
-        # Rebalancing Execution
+
         if is_rebalance:
-            # Step A: Filter Liquid Universe
+
             universe_stocks = filter_idx_universe(
                 db=db,
                 as_of_date=current_date,
@@ -175,14 +175,14 @@ def run_idx_factor_rotation_backtest(
                 sector_filter=req.sector_filter,
             )
 
-            # Step B: Point-in-Time Factor Scoring & Ranking
-            scored_stocks: list[tuple[Stock, float, float]] = []  # (Stock, total_score, latest_close)
+
+            scored_stocks: list[tuple[Stock, float, float]] = []
             for stock in universe_stocks:
                 close = price_map.get((stock.id, current_date))
                 if not close or close <= 0:
                     continue
 
-                # Point-in-time fundamental
+
                 fund_pit = get_pit_fundamentals_for_stock(db, stock.id, current_date)
                 roe = float(fund_pit.roe) if fund_pit and fund_pit.roe is not None else None
                 roa = float(fund_pit.roa) if fund_pit and fund_pit.roa is not None else None
@@ -190,9 +190,9 @@ def run_idx_factor_rotation_backtest(
                 pe = (close / float(fund_pit.eps)) if (fund_pit and fund_pit.eps and fund_pit.eps > 0) else None
                 pb = (close / float(fund_pit.bvps)) if (fund_pit and fund_pit.bvps and fund_pit.bvps > 0) else None
 
-                # Calculate Multi-Factor Score with PIT inputs
+
                 scores = calculate_quant_score(
-                    rsi_val=55.0,  # Standard neutral prior
+                    rsi_val=55.0,
                     trend="bullish" if close > (stock.avg_daily_turnover_20d or 0) else "neutral",
                     roe=roe,
                     roa=roa,
@@ -206,12 +206,12 @@ def run_idx_factor_rotation_backtest(
                 )
                 scored_stocks.append((stock, scores.total_score, close))
 
-            # Rank and Select Top N (e.g. Top 10)
+
             scored_stocks.sort(key=lambda x: x[1], reverse=True)
             top_selected = scored_stocks[: req.top_n]
             selected_symbols = [s[0].symbol for s in top_selected]
 
-            # Liquidate stocks no longer in Top N
+
             liquidated_val = 0.0
             stocks_to_remove = [sym for sym in portfolio_holdings if sym not in selected_symbols]
             for sym in stocks_to_remove:
@@ -222,13 +222,13 @@ def run_idx_factor_rotation_backtest(
                 cash += (gross - fee)
                 liquidated_val += gross
 
-            # Compute current total portfolio value
+
             current_portfolio_val = cash
             for sym, h in portfolio_holdings.items():
                 c_price = price_map.get((int(h["stock_id"]), current_date), h["cost_basis"])
                 current_portfolio_val += h["shares"] * c_price
 
-            # Target Equal Weight per selected stock
+
             if top_selected:
                 target_weight = 1.0 / len(top_selected)
                 allocated_per_stock = current_portfolio_val * target_weight
@@ -236,16 +236,16 @@ def run_idx_factor_rotation_backtest(
                 for stock, score, close_p in top_selected:
                     exec_price = close_p * (1.0 + req.slippage_percent)
                     if stock.symbol in portfolio_holdings:
-                        # Existing holding
+
                         continue
-                    
-                    # Buy new holding in Indonesian Lots (1 lot = 100 shares)
+
+
                     invest_budget = min(cash, allocated_per_stock)
                     if invest_budget > 100_000:
                         fee = invest_budget * req.fee_percent
                         net_budget = invest_budget - fee
                         raw_shares = net_budget / exec_price
-                        # Round to nearest 100 shares (1 lot)
+
                         lots = math.floor(raw_shares / 100.0)
                         if lots > 0:
                             actual_shares = lots * 100
@@ -259,7 +259,7 @@ def run_idx_factor_rotation_backtest(
                                     "score": score,
                                 }
 
-            # Record Rebalance Event
+
             rebalance_history.append(
                 IDXRotationRebalanceEvent(
                     date=current_date.isoformat(),
@@ -269,7 +269,7 @@ def run_idx_factor_rotation_backtest(
                 )
             )
 
-        # Compute Daily Total Portfolio Equity
+
         daily_equity = cash
         for sym, h in portfolio_holdings.items():
             c_price = price_map.get((int(h["stock_id"]), current_date), h["cost_basis"])
@@ -279,8 +279,8 @@ def run_idx_factor_rotation_backtest(
             peak_equity = daily_equity
 
         dd = ((daily_equity - peak_equity) / peak_equity * 100.0) if peak_equity > 0 else 0.0
-        
-        # Benchmark IHSG progression
+
+
         curr_ihsg = ihsg_map.get(current_date, ihsg_initial)
         bench_equity = (curr_ihsg / ihsg_initial) * req.initial_capital
 
@@ -299,19 +299,19 @@ def run_idx_factor_rotation_backtest(
 
     final_equity = equity_curve[-1].equity if equity_curve else req.initial_capital
     total_return_pct = ((final_equity - req.initial_capital) / req.initial_capital) * 100.0
-    
+
     ihsg_final = ihsg_map.get(end_dt, ihsg_initial)
     ihsg_return_pct = ((ihsg_final - ihsg_initial) / ihsg_initial) * 100.0
     alpha_pct = total_return_pct - ihsg_return_pct
 
-    # CAGR & Risk Metrics
+
     days = max(1, len(trading_dates))
     years = days / 252.0
     cagr = (((final_equity / req.initial_capital) ** (1.0 / years) - 1.0) * 100.0) if years > 0 and final_equity > 0 else 0.0
-    
-    rf_annual = 0.06  # BI-Rate / 6% Indonesian risk-free benchmark
+
+    rf_annual = 0.06
     rf_daily = rf_annual / 252.0
-    
+
     if len(daily_returns) > 1:
         mean_r = sum(daily_returns) / len(daily_returns)
         var = sum((r - mean_r) ** 2 for r in daily_returns) / (len(daily_returns) - 1)
@@ -337,7 +337,7 @@ def run_idx_factor_rotation_backtest(
         rebalance_count=len(rebalance_history),
     )
 
-    # Persist backtest if user logged in
+
     if user is not None:
         db.add(
             IDXFactorRotationBacktest(

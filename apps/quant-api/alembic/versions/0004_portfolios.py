@@ -38,7 +38,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("portfolio_id", sa.Integer(), nullable=False),
         sa.Column("stock_id", sa.Integer(), nullable=False),
-        sa.Column("transaction_type", sa.String(length=8), nullable=False),  # BUY or SELL
+        sa.Column("transaction_type", sa.String(length=8), nullable=False),
         sa.Column("quantity", sa.Numeric(precision=18, scale=4), nullable=False),
         sa.Column("price", sa.Numeric(precision=18, scale=4), nullable=False),
         sa.Column("fee", sa.Numeric(precision=18, scale=4), nullable=False, server_default="0"),

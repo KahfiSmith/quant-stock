@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * verify:cross-repo — validates frontend endpoint constants against the active
- * FastAPI authentication routes in apps/quant-api.
- */
+
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 

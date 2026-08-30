@@ -78,8 +78,8 @@ def get_stock_prices(
         page=page,
         page_size=page_size,
     )
-    # price_as_of = market observation time of the latest row actually returned.
-    # data_lag = semantic staleness label (eod_1d for yfinance free-tier IDX).
+
+
     price_as_of = rows[-1].time if rows else None
     data_lag = "eod_1d" if data_source == "yfinance" else None
     return success(

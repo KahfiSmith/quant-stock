@@ -55,14 +55,14 @@ def test_normalize_debt_to_equity_passthrough_for_small_values() -> None:
 
 
 def test_normalize_debt_to_equity_divides_by_100_for_large_values() -> None:
-    # yfinance occasionally returns percentages (e.g. 80.5 = 0.805)
+
     result = _normalize_debt_to_equity(Decimal("80.5"))
     assert result == Decimal("0.8050")
 
 
 def test_collect_prices_sorts_ascending_and_uses_yfinance_source(monkeypatch) -> None:
     base = datetime(2024, 1, 1, tzinfo=UTC)
-    # yfinance returns DESCENDING; collector must sort ascending.
+
     rows_desc = [
         (base + timedelta(days=4), 110, 115, 105, 112, 1000),
         (base + timedelta(days=3), 105, 110, 100, 108, 900),
@@ -79,18 +79,18 @@ def test_collect_prices_sorts_ascending_and_uses_yfinance_source(monkeypatch) ->
     records = list(collector.collect_prices(request))
 
     assert len(records) == 5
-    # Ascending order
+
     for prev, curr in zip(records, records[1:]):
         assert curr.time > prev.time
-    # yfinance source + suffix
+
     assert all(r.source == "yfinance" for r in records)
     assert all(r.source_record_id == "BBCA.JK" for r in records)
-    # Symbol is uppercased, OHLCV is Decimal
+
     assert all(r.symbol == "BBCA" for r in records)
     assert all(isinstance(r.open, Decimal) for r in records)
-    # All timestamps are tz-aware UTC
+
     assert all(r.time.tzinfo is not None for r in records)
-    # Payload checksum is stable
+
     assert all(r.payload_checksum is not None for r in records)
     assert len(set(r.payload_checksum for r in records)) == 1
 
@@ -99,7 +99,7 @@ def test_collect_prices_drops_nan_rows(monkeypatch) -> None:
     base = datetime(2024, 1, 1, tzinfo=UTC)
     rows = [
         (base + timedelta(days=2), 110, 115, 105, 112, 1000),
-        (base + timedelta(days=1), float("nan"), 100, 90, 95, 700),  # NaN open
+        (base + timedelta(days=1), float("nan"), 100, 90, 95, 700),
         (base + timedelta(days=0), 90, 95, 85, 93, 600),
     ]
     df = _build_history_df(rows)
@@ -122,7 +122,7 @@ def test_collect_prices_appends_suffix_when_missing(monkeypatch) -> None:
     monkeypatch.setattr("app.ingestion.yfinance_collector.yfinance.Ticker", lambda *_a, **_k: fake)
 
     collector = YFinanceCollector()
-    # Lowercase input — collector should still produce the right yfinance symbol.
+
     request = CollectionRequest(symbols=["bbca"], start_date=None, end_date=None, interval="1d")
     records = list(collector.collect_prices(request))
     assert records[0].source_record_id == "BBCA.JK"
@@ -160,7 +160,7 @@ def test_collect_fundamentals_maps_info_to_metrics(monkeypatch) -> None:
         "priceToBook": 1.8,
         "returnOnEquity": 0.18,
         "returnOnAssets": 0.05,
-        "debtToEquity": 0.8,  # already a ratio
+        "debtToEquity": 0.8,
         "revenueGrowth": 0.10,
         "earningsGrowth": 0.12,
     }
@@ -179,7 +179,7 @@ def test_collect_fundamentals_maps_info_to_metrics(monkeypatch) -> None:
     assert rec.metrics["pe_ratio"] == Decimal("12.5")
     assert rec.metrics["pb_ratio"] == Decimal("1.8")
     assert rec.metrics["roe"] == Decimal("0.18")
-    assert rec.metrics["debt_to_equity"] == Decimal("0.8")  # not divided
+    assert rec.metrics["debt_to_equity"] == Decimal("0.8")
 
 
 def test_collect_fundamentals_normalizes_large_debt_to_equity(monkeypatch) -> None:
@@ -189,7 +189,7 @@ def test_collect_fundamentals_normalizes_large_debt_to_equity(monkeypatch) -> No
         "priceToBook": 1.0,
         "returnOnEquity": 0.10,
         "returnOnAssets": 0.04,
-        "debtToEquity": 80.0,  # percent, will be divided by 100
+        "debtToEquity": 80.0,
         "revenueGrowth": 0.05,
         "earningsGrowth": 0.07,
     }
@@ -203,7 +203,7 @@ def test_collect_fundamentals_normalizes_large_debt_to_equity(monkeypatch) -> No
 
 
 def test_collect_fundamentals_skips_when_no_metrics(monkeypatch) -> None:
-    info = {"currency": "IDR", "longName": "Foo"}  # no ratio fields
+    info = {"currency": "IDR", "longName": "Foo"}
     fake = FakeTicker(history_df=None, info=info)
     monkeypatch.setattr("app.ingestion.yfinance_collector.yfinance.Ticker", lambda *_a, **_k: fake)
 
@@ -228,7 +228,7 @@ def test_collect_metadata_returns_expected_fields(monkeypatch) -> None:
     meta = collector.collect_metadata("BBCA")
     assert meta.name == "Bank Central Asia Tbk"
     assert meta.sector == "Financial Services"
-    assert meta.exchange == "JKT"
+    assert meta.exchange == "IDX"
     assert meta.market_cap == 1_200_000_000_000_000.0
     assert meta.currency == "IDR"
     assert meta.timezone == "Asia/Jakarta"

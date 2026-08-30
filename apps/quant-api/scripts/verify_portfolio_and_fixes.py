@@ -83,7 +83,7 @@ def get_db():
     return app.state.database.session()
 
 
-# 1) Ingest yfinance data
+
 with patch("app.ingestion.yfinance_collector.yfinance.Ticker", FakeTicker):
     collector = YFinanceCollector(timeout=15.0, symbol_suffix=".JK")
     db = get_db()
@@ -101,7 +101,7 @@ with patch("app.ingestion.yfinance_collector.yfinance.Ticker", FakeTicker):
     finally:
         db.close()
 
-# 2) Create test user + portfolio + 3 transactions
+
 db = get_db()
 try:
     user = User(email="test@example.com", name="Test User", password_hash=hash_password("Test1234!"), theme_preference="system", timezone="Asia/Jakarta")
@@ -111,7 +111,7 @@ try:
     db.add(portfolio)
     db.flush()
 
-    # BUY transactions
+
     buys = [
         ("BBCA", 100, 8000.0, datetime.now(UTC) - timedelta(days=60)),
         ("TLKM", 200, 3500.0, datetime.now(UTC) - timedelta(days=50)),
@@ -125,7 +125,7 @@ try:
 finally:
     db.close()
 
-# 3) Verify portfolio valuation end-to-end
+
 print("=" * 80)
 print("PORTFOLIO VALUATION VERIFICATION")
 print("=" * 80)
@@ -147,7 +147,7 @@ try:
     print(f"\n{'Symbol':<8} {'Quantity':>10} {'AvgCost':>12} {'LatestPrice':>14} {'PriceSource':<14} {'MarketValue':>16} {'UnrealizedPnL':>16}")
     print("-" * 110)
     for h in detail.holdings:
-        # Verify latest price came from Price table (yfinance)
+
         stock = db.scalar(select(Stock).where(Stock.symbol == h.symbol))
         latest_price_row = db.scalar(
             select(Price)
@@ -156,16 +156,16 @@ try:
             .limit(1)
         )
         price_source = latest_price_row.source if latest_price_row else "NONE"
-        # Get the freshness metadata if present
+
         price_as_of = getattr(h, "price_as_of", None)
         data_source_field = getattr(h, "data_source", None)
         freshness_str = f"{price_as_of}" if price_as_of else "N/A"
         print(f"{h.symbol:<8} {h.quantity:>10.4f} {h.avg_buy_price:>12.2f} {h.current_price:>14.2f} {price_source:<14} {h.current_value or 0:>16,.2f} {h.unrealized_pnl or 0:>16,.2f}  freshness={freshness_str} data_source_field={data_source_field}")
 
-    # Sanity: total_cost should equal avg-cost * qty (Decimal math)
+
     print("\n--- Arithmetic verification ---")
     for h in detail.holdings:
-        # Recompute using Decimal
+
         expected_avg = None
         if h.symbol == "BBCA":
             expected_avg = 8000.0
@@ -176,11 +176,11 @@ try:
         match_avg = abs(h.avg_buy_price - expected_avg) < 0.01
         print(f"  {h.symbol}: avg_cost={h.avg_buy_price:.2f} expected={expected_avg:.2f} match={match_avg}")
 
-    # Sanity: current_price should NOT be the buy price
+
     print("\n--- 'No fallback to transaction price' check ---")
     for h in detail.holdings:
-        # The buy prices were 8000/3500/1500. Latest yfinance prices are random walks
-        # around 9500/4000/1800. They should not be identical to buy prices.
+
+
         buy_prices = {"BBCA": 8000.0, "TLKM": 3500.0, "BRPT": 1500.0}
         same_as_buy = abs(h.current_price - buy_prices[h.symbol]) < 0.01 if h.current_price else False
         print(f"  {h.symbol}: current_price={h.current_price} (buy was {buy_prices[h.symbol]}) fallback_to_buy={same_as_buy}")

@@ -87,7 +87,7 @@ def test_screener_filters_and_sorts(client: TestClient) -> None:
     finally:
         db.close()
 
-    # 1. Test sector filter
+
     resp = client.post(
         "/api/v1/screener",
         json={"sector": "Financials", "sort_by": "score", "sort_order": "desc"},
@@ -98,7 +98,7 @@ def test_screener_filters_and_sorts(client: TestClient) -> None:
     assert len(data["items"]) == 1
     assert data["items"][0]["symbol"] == "BBCA"
 
-    # 2. Test min_roe filter
+
     resp2 = client.post(
         "/api/v1/screener",
         json={"min_roe": 0.20},

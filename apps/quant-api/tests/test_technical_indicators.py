@@ -14,21 +14,21 @@ def test_ema_calculation():
     res = ema(values, 3)
     assert res[0] is None
     assert res[1] is None
-    assert res[2] == 20.0  # Seeded with SMA
-    # alpha = 2 / (3 + 1) = 0.5
-    # 40 * 0.5 + 20 * 0.5 = 30.0
+    assert res[2] == 20.0
+
+
     assert res[3] == 30.0
-    # 50 * 0.5 + 30 * 0.5 = 40.0
+
     assert res[4] == 40.0
 
 
 def test_rsi_calculation():
-    # 15 closes needed for 14-period RSI
+
     closes = [44.0 + i for i in range(15)]
     res = rsi(closes, period=14)
     assert len(res) == 15
     assert all(r is None for r in res[:14])
-    # Monotonically increasing prices -> RSI should be 100.0
+
     assert res[14] == 100.0
 
 

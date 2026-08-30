@@ -1,23 +1,12 @@
 #!/usr/bin/env node
-/**
- * verify:risk — classify a change by path heuristics.
- *
- * Usage:
- *   node scripts/harness/check-risk.mjs            # compares HEAD..worktree
- *   node scripts/harness/check-risk.mjs --base <rev> --head <rev>
- *
- * Prints the maximum risk level across all changed paths:
- *   low | medium | high
- *
- * Exit code is 0 always (informational); CI/docs use the printed level.
- */
+
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
 
-// Parse --base/--head
+
 const args = process.argv.slice(2);
 const baseIdx = args.indexOf("--base");
 const headIdx = args.indexOf("--head");

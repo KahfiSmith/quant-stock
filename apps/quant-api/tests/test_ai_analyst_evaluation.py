@@ -31,7 +31,7 @@ def test_ai_output_evaluation_contract_is_structured_and_safe() -> None:
     )
 
     assert set(("strengths", "risks", "unknowns", "conclusion")) <= set(AiAnalystResponse.model_fields)
-    # New required fields
+
     assert "analysis_engine" in AiAnalystResponse.model_fields
     assert "provider" in AiAnalystResponse.model_fields
     assert "model" in AiAnalystResponse.model_fields
@@ -76,7 +76,7 @@ def test_ai_analysis_engine_is_deterministic_even_with_provider_configured(clien
     """
     from app.core.config import get_settings
 
-    # Override settings to simulate configured LLM provider
+
     monkeypatch.setattr(get_settings(), "ai_analyst_provider", "openai_compatible")
     monkeypatch.setattr(get_settings(), "ai_analyst_api_key", "sk-test-key-1234")
     monkeypatch.setattr(get_settings(), "ai_analyst_model", "gpt-4o-mini")
@@ -91,7 +91,7 @@ def test_ai_analysis_engine_is_deterministic_even_with_provider_configured(clien
         db.commit()
 
         analysis = generate_ai_analysis(db, stock)
-        # The implementation does not call any LLM. Engine must reflect reality.
+
         assert analysis.analysis_engine == "deterministic"
         assert analysis.provider is None
         assert analysis.model is None

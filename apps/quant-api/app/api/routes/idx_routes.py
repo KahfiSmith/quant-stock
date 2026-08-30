@@ -103,7 +103,7 @@ def get_idx_universe(
             )
         )
 
-    # Cross-sectional ranking
+
     items.sort(key=lambda x: x.quant_score or 0.0, reverse=True)
     total_u = len(items)
     for rank_idx, item in enumerate(items, start=1):
@@ -133,7 +133,7 @@ def get_idx_stock_detail(
     )
     c_price = float(latest_p.close) if latest_p else None
 
-    # Fetch recent Market Flows (Foreign flow & broker summary)
+
     flows = list(
         db.scalars(
             select(MarketFlowIDX)
@@ -156,7 +156,7 @@ def get_idx_stock_detail(
         for f in flows
     ]
 
-    # Fetch Corporate Actions
+
     actions = list(
         db.scalars(
             select(CorporateActionIDX)

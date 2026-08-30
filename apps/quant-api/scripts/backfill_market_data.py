@@ -156,8 +156,8 @@ def run(argv: Sequence[str] | None = None, settings=None, db=None) -> int:
     if db is None:
         db = Database(settings).session()
     try:
-        # Parse period into a start_date (yfinance accepts start/end OR period,
-        # not both; we map "2y" → today - 2y to give callers explicit control).
+
+
         start_date = None
         if args.period.endswith("y") and args.period[:-1].isdigit():
             years = int(args.period[:-1])
@@ -168,10 +168,10 @@ def run(argv: Sequence[str] | None = None, settings=None, db=None) -> int:
                 datetime.now(UTC) - timedelta(days=30 * months)
             ).date()
 
-        # Phase 1: ensure Stock rows exist with real metadata.
+
         _ensure_stocks(db, collector, symbols)
 
-        # Phase 2: collect & ingest prices.
+
         price_count = 0
         if not args.skip_prices:
             for i, symbol in enumerate(symbols):
@@ -194,7 +194,7 @@ def run(argv: Sequence[str] | None = None, settings=None, db=None) -> int:
                 except Exception as exc:  # noqa: BLE001
                     logger.exception("Price ingestion failed for %s: %s", symbol, exc)
 
-        # Phase 3: collect & ingest fundamentals.
+
         fund_count = 0
         if not args.skip_fundamentals:
             for i, symbol in enumerate(symbols):

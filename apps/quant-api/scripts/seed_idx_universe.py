@@ -15,7 +15,7 @@ from app.models.idx_models import (
 )
 from app.models.market_data import Price, Stock
 
-# 11 IDX-IC (IDX Industrial Classification) Sectors
+
 IDX_IC_SECTORS = [
     "Financials",
     "Energy",
@@ -30,7 +30,7 @@ IDX_IC_SECTORS = [
     "Transportation & Logistics",
 ]
 
-# Comprehensive Active IDX Universe Master with IDX-IC Sectors & Sub-sectors
+
 IDX_STOCK_UNIVERSE = [
     {
         "symbol": "BBCA",
@@ -248,14 +248,14 @@ def seed_idx_universe() -> None:
     db = Database(settings).session()
     today = date.today()
     try:
-        # 1. Seed Benchmark IHSG (^JKSE) Historical Prices (120 days)
+
         ihsg_base = 7200.0
         for offset in range(120, -1, -1):
             day = today - timedelta(days=offset)
             drift = (120 - offset) * 4.5 + ((offset % 7) - 3) * 15.0
             close_val = ihsg_base + drift
             t_dt = datetime.combine(day, datetime.min.time(), tzinfo=UTC)
-            
+
             existing_ihsg = db.query(BenchmarkPrice).filter(
                 BenchmarkPrice.symbol == "^JKSE", BenchmarkPrice.time == t_dt
             ).first()
@@ -272,8 +272,8 @@ def seed_idx_universe() -> None:
                     )
                 )
 
-        # 2. Seed Stocks and Point-in-Time Data
-        # First ensure all comprehensive tickers exist in Stock universe master
+
+
         existing_symbols = {s.symbol for s in db.query(Stock).all()}
         detailed_specs = {s["symbol"]: s for s in IDX_STOCK_UNIVERSE}
 
@@ -320,14 +320,14 @@ def seed_idx_universe() -> None:
                     stock.sub_sector = stock_spec["sub_sector"]
                 db.flush()
 
-            # Seed 90 Daily Price Candles
+
             base_p = stock_spec.get("base_price", 1000.0)
             for offset in range(90, -1, -1):
                 day = today - timedelta(days=offset)
                 drift = (90 - offset) * (base_p * 0.001) + ((offset % 5) - 2) * (base_p * 0.008)
                 c_val = max(50.0, base_p + drift)
                 t_dt = datetime.combine(day, datetime.min.time(), tzinfo=UTC)
-                
+
                 existing_p = db.query(Price).filter(
                     Price.stock_id == stock.id, Price.time == t_dt, Price.interval == "1d"
                 ).first()
@@ -348,7 +348,7 @@ def seed_idx_universe() -> None:
                         )
                     )
 
-                # Seed Daily Foreign Flow & Broker Summary
+
                 existing_flow = db.query(MarketFlowIDX).filter(
                     MarketFlowIDX.stock_id == stock.id, MarketFlowIDX.date == day
                 ).first()
@@ -370,7 +370,7 @@ def seed_idx_universe() -> None:
                         )
                     )
 
-            # Seed Point-in-Time Financial Statements (4 Quarters)
+
             pit_quarters = [
                 {"year": 2024, "q": "FY", "period_end": date(2024, 12, 31), "filing": date(2025, 3, 28), "roe": 0.185, "roa": 0.038, "eps": base_p * 0.08, "bvps": base_p * 0.42},
                 {"year": 2025, "q": "Q1", "period_end": date(2025, 3, 31), "filing": date(2025, 4, 30), "roe": 0.192, "roa": 0.039, "eps": base_p * 0.022, "bvps": base_p * 0.44},
@@ -405,7 +405,7 @@ def seed_idx_universe() -> None:
                         )
                     )
 
-            # Seed Corporate Action (Dividend & Split)
+
             existing_ca = db.query(CorporateActionIDX).filter(
                 CorporateActionIDX.stock_id == stock.id,
                 CorporateActionIDX.ex_date == date(2025, 4, 15),

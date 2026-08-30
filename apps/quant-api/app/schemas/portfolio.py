@@ -49,7 +49,7 @@ class HoldingResponse(BaseModel):
     current_value: float | None = None
     unrealized_pnl: float | None = None
     unrealized_pnl_percent: float | None = None
-    # Freshness metadata: when was the current_price observed?
+
     price_as_of: datetime | None = None
     data_source: str | None = None
     data_lag: str | None = None
@@ -73,12 +73,12 @@ class PortfolioDetailResponse(BaseModel):
     total_unrealized_pnl_percent: float
     holdings: list[HoldingResponse]
     risk: PortfolioRiskResponse
-    # as_of: response wall-clock time. NOT the freshness of the underlying prices.
+
     as_of: datetime = Field(
         description="Wall-clock time of the response. NOT data freshness.",
     )
-    # Earliest price_as_of across holdings (most stale price determines portfolio freshness).
-    # None if at least one holding has no current price.
+
+
     price_as_of: datetime | None = None
     data_lag: str | None = None
     created_at: datetime

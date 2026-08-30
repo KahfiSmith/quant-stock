@@ -47,9 +47,9 @@ export function BacktestRunner() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Parameter Form */}
+      {}
       <form onSubmit={handleRun} className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
-        {/* Searchable Stock Selector */}
+        {}
         <div className="flex items-center gap-2 rounded-md border bg-background px-2 py-1">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
           <input
@@ -138,7 +138,7 @@ export function BacktestRunner() {
         </StateMessage>
       ) : result ? (
         <div className="flex flex-col gap-6">
-          {/* Summary Metric Cards */}
+          {}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <div className="rounded-xl border bg-card p-3">
               <p className="text-xs text-muted-foreground">Total Return</p>

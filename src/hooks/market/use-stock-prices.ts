@@ -27,7 +27,7 @@ export const useStockPrices = (symbol: string, range: PriceRange = {}) => {
       if (range.end) {
         params.end_date = range.end;
       }
-      // apiClient's response interceptor unwraps the envelope to the payload.
+
       const response = await apiClient.get<PricesResponse>(API_ENDPOINTS.MARKET.PRICES(symbol), {
         params,
       });

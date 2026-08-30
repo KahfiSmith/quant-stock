@@ -13,7 +13,7 @@ from app.services.technical import calculate_technical_analysis
 
 
 def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
-    # 1. Fetch eligible stocks base query
+
     stmt = select(Stock)
     if req.search:
         pattern = f"%{req.search.strip()}%"
@@ -29,7 +29,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
 
     stocks = list(db.scalars(stmt))
 
-    # Apply Strategy Presets overrides if selected
+
     min_roe = req.min_roe
     min_score = req.min_score
     min_rsi = req.min_rsi
@@ -53,13 +53,13 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         max_pe = max_pe or 16.0
         custom_weights = {"quality": 0.35, "risk": 0.35, "value": 0.20, "growth": 0.05, "momentum": 0.05}
 
-    # 2. Enrich with technical, fundamental, quant scores & signals
+
     enriched: list[ScreenerItem] = []
     for stock in stocks:
         tech = calculate_technical_analysis(db, stock, interval="1d")
         fund = get_latest_fundamental(db, stock)
 
-        # Get latest candle for ATR ratio
+
         latest_price = db.scalar(
             select(Price)
             .where(Price.stock_id == stock.id, Price.interval == "1d")
@@ -93,7 +93,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             custom_weights=custom_weights,
         )
 
-        # Filter criteria
+
         if min_score is not None and factors.total_score < min_score:
             continue
         if req.max_score is not None and factors.total_score > req.max_score:
@@ -115,7 +115,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         if max_rsi is not None and (rsi_val is None or rsi_val > max_rsi):
             continue
 
-        # Generate Quantitative Decision & Signal
+
         decision = generate_quant_signal(
             total_score=factors.total_score,
             momentum_score=factors.momentum,
@@ -160,7 +160,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             )
         )
 
-    # 3. Calculate Cross-Sectional Ranking and Percentile
+
     enriched.sort(key=lambda x: x.quant_score or 0.0, reverse=True)
     total_universe = len(enriched)
     for rank_idx, item in enumerate(enriched, start=1):
@@ -169,7 +169,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             round(((total_universe - rank_idx + 1) / total_universe) * 100.0, 1) if total_universe > 0 else 100.0
         )
 
-    # 4. Sort per requested field
+
     reverse = req.sort_order == "desc"
 
     def sort_key(item: ScreenerItem):

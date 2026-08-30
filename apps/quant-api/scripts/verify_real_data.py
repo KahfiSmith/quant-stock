@@ -72,7 +72,7 @@ db_engine = Database(settings).engine
 Base.metadata.create_all(db_engine)
 app = create_app(settings)
 
-# Ingest
+
 with patch("app.ingestion.yfinance_collector.yfinance.Ticker", FakeTicker):
     collector = YFinanceCollector(timeout=15.0, symbol_suffix=".JK")
     db = get_db()
@@ -149,7 +149,7 @@ db = get_db()
 try:
     for sym in ["BBCA", "TLKM", "BRPT"]:
         stock = get_stock_by_symbol(db, sym)
-        # list_prices returns ASC; get the last row (the actual latest)
+
         rows, total, meta, source = list_prices(db, stock.id, interval="1d", page=1, page_size=500)
         latest_returned = rows[-1] if rows else None
         latest_db = (

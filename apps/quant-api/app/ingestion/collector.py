@@ -101,7 +101,7 @@ class LiveEodCollector:
         if not chart:
             return None
 
-        # Industry standard valuation benchmarks for bluechips
+
         pe_defaults: dict[str, tuple[float, float, float, float, float, float, float]] = {
             "BBCA": (17.5, 4.1, 0.21, 0.035, 0.65, 0.12, 0.14),
             "BBRI": (12.8, 2.2, 0.18, 0.028, 0.82, 0.09, 0.11),

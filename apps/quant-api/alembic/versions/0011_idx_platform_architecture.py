@@ -17,7 +17,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # 1. Add IDX Universe columns to stocks
+
     with op.batch_alter_table("stocks") as batch_op:
         batch_op.add_column(sa.Column("sub_sector", sa.String(length=128), nullable=True))
         batch_op.add_column(sa.Column("listing_date", sa.Date(), nullable=True))
@@ -28,7 +28,7 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("avg_daily_frequency_20d", sa.Numeric(12, 2), nullable=True))
         batch_op.create_index("ix_stocks_is_active", ["is_active"])
 
-    # 2. Create financial_statements_pit table
+
     op.create_table(
         "financial_statements_pit",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -60,7 +60,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("stock_id", "fiscal_year", "fiscal_quarter", name="uq_stock_pit_period"),
     )
 
-    # 3. Create market_flows_idx table
+
     op.create_table(
         "market_flows_idx",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -77,7 +77,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("stock_id", "date", name="uq_stock_date_flow"),
     )
 
-    # 4. Create corporate_actions_idx table
+
     op.create_table(
         "corporate_actions_idx",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -94,7 +94,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )
 
-    # 5. Create benchmark_prices table
+
     op.create_table(
         "benchmark_prices",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -109,7 +109,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("symbol", "time", name="uq_benchmark_time"),
     )
 
-    # 6. Create strategy_definitions table
+
     op.create_table(
         "strategy_definitions",
         sa.Column("id", sa.String(length=64), primary_key=True),
@@ -125,7 +125,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
     )
 
-    # 7. Create idx_factor_rotation_backtests table
+
     op.create_table(
         "idx_factor_rotation_backtests",
         sa.Column("id", sa.String(length=64), primary_key=True),

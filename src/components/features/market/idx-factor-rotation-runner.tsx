@@ -28,8 +28,8 @@ export function IDXFactorRotationRunner() {
     initial_capital: 500_000_000,
     top_n: 10,
     rebalance_frequency: "monthly",
-    min_market_cap: 1_000_000_000_000, // Rp 1T
-    min_adv_turnover: 5_000_000_000, // Rp 5B
+    min_market_cap: 1_000_000_000_000,
+    min_adv_turnover: 5_000_000_000,
     min_frequency: 1000,
     sector_filter: null,
     factor_weights: {
@@ -70,7 +70,7 @@ export function IDXFactorRotationRunner() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Strategy & Universe Filter Configuration Form */}
+      {}
       <form onSubmit={handleRun} className="flex flex-col gap-4 rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between border-b pb-3">
           <div className="flex items-center gap-2">
@@ -82,7 +82,7 @@ export function IDXFactorRotationRunner() {
           </span>
         </div>
 
-        {/* Top Controls */}
+        {}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">Strategy Name</label>
@@ -135,7 +135,7 @@ export function IDXFactorRotationRunner() {
           </div>
         </div>
 
-        {/* IDX Liquidity Filters */}
+        {}
         <div className="rounded-lg border bg-muted/20 p-3">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <Filter className="h-3.5 w-3.5" />
@@ -184,7 +184,7 @@ export function IDXFactorRotationRunner() {
           </div>
         </div>
 
-        {/* Factor Weight Sliders */}
+        {}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {(["momentum", "quality", "value", "risk", "growth"] as (keyof CustomFactorWeights)[]).map((f) => (
             <div key={f} className="flex flex-col gap-1 rounded-md border bg-background p-2">
@@ -207,7 +207,7 @@ export function IDXFactorRotationRunner() {
           ))}
         </div>
 
-        {/* Action Button */}
+        {}
         <div className="flex justify-end pt-2">
           <button
             type="submit"
@@ -235,7 +235,7 @@ export function IDXFactorRotationRunner() {
         </StateMessage>
       ) : result ? (
         <div className="flex flex-col gap-6">
-          {/* Key Metrics */}
+          {}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <div className="rounded-xl border bg-card p-4">
               <p className="text-xs text-muted-foreground">Total Return (Strategy)</p>

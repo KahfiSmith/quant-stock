@@ -40,9 +40,9 @@ class FinancialStatementPIT(Base):
         ForeignKey("stocks.id", ondelete="CASCADE"), nullable=False, index=True
     )
     fiscal_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    fiscal_quarter: Mapped[str] = mapped_column(String(8), nullable=False)  # 'Q1', 'Q2', 'Q3', 'FY'
+    fiscal_quarter: Mapped[str] = mapped_column(String(8), nullable=False)
     period_end: Mapped[date] = mapped_column(Date, nullable=False)
-    filing_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)  # Tanggal rilis ke publik BEI
+    filing_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     currency: Mapped[str] = mapped_column(String(8), nullable=False, default="IDR")
 
     revenue: Mapped[float | None] = mapped_column(Numeric(20, 2), nullable=True)
@@ -108,7 +108,7 @@ class CorporateActionIDX(Base):
     stock_id: Mapped[int] = mapped_column(
         ForeignKey("stocks.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    action_type: Mapped[str] = mapped_column(String(32), nullable=False)  # 'DIVIDEND', 'STOCK_SPLIT', 'RIGHT_ISSUE'
+    action_type: Mapped[str] = mapped_column(String(32), nullable=False)
     cum_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     ex_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     recording_date: Mapped[date | None] = mapped_column(Date, nullable=True)

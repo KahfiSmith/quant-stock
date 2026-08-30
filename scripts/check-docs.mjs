@@ -1,15 +1,5 @@
 #!/usr/bin/env node
-/**
- * docs:check — validates that docs/ stays in sync with the repository.
- *
- * Checks:
- *  1. Every markdown link inside docs/ resolves to an existing file.
- *  2. Every `src/...` path referenced in docs/ exists in the repo.
- *  3. Every `/api/v1/...` endpoint listed in docs/api/authentication.md
- *     matches an endpoint defined in src/lib/api/endpoints.ts.
- *
- * Exit code is non-zero when any check fails.
- */
+
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname, relative, resolve } from "node:path";
 
@@ -24,7 +14,7 @@ function exists(path) {
 const errors = [];
 const warnings = [];
 
-// --- collect all markdown files -------------------------------------------
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -41,12 +31,12 @@ function walk(dir) {
 
 const markdownFiles = walk(DOCS_DIR);
 
-// --- 1. markdown links resolve ---------------------------------------------
+
 const LINK_RE = /\]\(([^)]+\.md)(?:[^)]*)\)/g;
 
-// A target is "external" if it resolves outside the repo root (e.g. a sibling
-// repository like ../Backend/fiber-boilerplate). External links are skipped:
-// they document cross-repo relationships and are not part of this repo.
+
+
+
 function isExternal(targetPath) {
   const rel = relative(ROOT, targetPath);
   return rel.startsWith("..") || (rel !== "" && !rel.startsWith("."));

@@ -55,7 +55,7 @@ def test_portfolio_lifecycle_and_holdings_pnl(client: TestClient) -> None:
     finally:
         db.close()
 
-    # 1. Create Portfolio
+
     res = client.post(
         "/api/v1/portfolios",
         json={"name": "Main Growth", "description": "Long term growth holdings"},
@@ -64,7 +64,7 @@ def test_portfolio_lifecycle_and_holdings_pnl(client: TestClient) -> None:
     assert res.status_code == 200
     portfolio_id = res.json()["data"]["id"]
 
-    # 2. Add BUY transaction
+
     tx_res = client.post(
         f"/api/v1/portfolios/{portfolio_id}/transactions",
         json={"symbol": "BBCA", "transaction_type": "BUY", "quantity": 100, "price": 9000, "fee": 1500},
@@ -72,7 +72,7 @@ def test_portfolio_lifecycle_and_holdings_pnl(client: TestClient) -> None:
     )
     assert tx_res.status_code == 200
 
-    # 3. Get portfolio detail and check holdings PnL
+
     detail_res = client.get(f"/api/v1/portfolios/{portfolio_id}", headers=headers)
     assert detail_res.status_code == 200
     data = detail_res.json()["data"]

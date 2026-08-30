@@ -32,7 +32,7 @@ def _to_decimal(value: object) -> Decimal | None:
         as_float = float(value)
     except (TypeError, ValueError):
         return None
-    if as_float != as_float:  # NaN check
+    if as_float != as_float:
         return None
     return Decimal(str(as_float))
 
@@ -156,7 +156,7 @@ class YFinanceCollector:
             symbol=symbol.upper(),
             name=info.get("longName") or info.get("shortName") or yf_symbol,
             sector=info.get("sector"),
-            exchange=info.get("exchange"),
+            exchange="IDX",
             market_cap=market_cap,
             currency=str(info.get("currency") or "IDR"),
             timezone=str(info.get("exchangeTimezoneShortName") or "Asia/Jakarta"),

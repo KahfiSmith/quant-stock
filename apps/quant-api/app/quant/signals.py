@@ -38,31 +38,31 @@ def generate_quant_signal(
 ) -> QuantDecision:
     reasons: list[str] = []
 
-    # 1. Evaluate Quality
+
     if quality_score >= 80 or (roe is not None and roe >= 0.18):
         reasons.append("High capital efficiency & profitability (High Quality)")
     elif quality_score < 45 or (roe is not None and roe < 0.08):
         reasons.append("Subdued operational profitability")
 
-    # 2. Evaluate Momentum
+
     if momentum_score >= 75 or trend == "bullish":
         reasons.append("Constructive price momentum & bullish technical posture")
     elif momentum_score < 40 or trend == "bearish":
         reasons.append("Downward price momentum & bearish trend pressure")
 
-    # 3. Evaluate Valuation
+
     if value_score >= 75 or (pe_ratio is not None and 0 < pe_ratio <= 15):
         reasons.append("Conservative valuation multiple trading at attractive discount")
     elif value_score < 40 or (pe_ratio is not None and pe_ratio > 35):
         reasons.append("Elevated valuation multiple requiring sustained high earnings growth")
 
-    # 4. Evaluate Financial Health / Debt
+
     if debt_to_equity is not None and debt_to_equity > 1.5:
         reasons.append("Elevated debt leverage structure")
     elif debt_to_equity is not None and debt_to_equity <= 0.6:
         reasons.append("Robust balance sheet with conservative leverage")
 
-    # 5. Risk Assessment
+
     if risk_score >= 70:
         risk_level: RiskLevelType = "LOW"
     elif risk_score >= 45:
@@ -71,7 +71,7 @@ def generate_quant_signal(
         risk_level = "HIGH"
         reasons.append("Elevated historical price volatility")
 
-    # 6. Synthesize Signal Decision
+
     if total_score >= 82 and momentum_score >= 60 and quality_score >= 70:
         signal: QuantSignalType = "STRONG_BUY"
         confidence = min(98.0, 75.0 + (total_score - 80) * 1.1)

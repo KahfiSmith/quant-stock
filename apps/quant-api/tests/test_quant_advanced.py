@@ -6,13 +6,13 @@ from app.quant.scoring import calculate_momentum_score, calculate_quality_score,
 
 
 def test_calculate_momentum_score_with_12m_return() -> None:
-    # Bullish trend + 25% 12M return
+
     score = calculate_momentum_score(rsi_val=60.0, trend="bullish", momentum_12m=0.25)
     assert score > 70.0
 
 
 def test_calculate_quality_score_with_piotroski() -> None:
-    # High ROE, ROA, Low Debt + Piotroski 8/9
+
     score = calculate_quality_score(roe=0.22, roa=0.08, debt_to_equity=0.3, piotroski_estimate=8)
     assert score > 85.0
 

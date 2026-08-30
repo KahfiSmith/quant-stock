@@ -57,6 +57,10 @@ export default function QuantRankingPage() {
   }), [sectorFilter, sortBy, sortOrder, weights, preset]);
 
   const { data, isPending, isError, refetch } = useStockScreener(filterParams);
+  const rankingItems = useMemo(
+    () => (data?.items ?? []).filter((item) => item.currency === "IDR"),
+    [data?.items]
+  );
 
   const handlePresetChange = (presetId: string) => {
     setPreset(presetId);
@@ -99,7 +103,7 @@ export default function QuantRankingPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
-      {/* Header Banner */}
+      {}
       <div className="flex flex-col gap-2 rounded-2xl border bg-gradient-to-r from-primary/10 via-background to-background p-6">
         <div className="flex items-center gap-2 text-primary">
           <span className="text-xs font-bold uppercase tracking-wider">BEI / IDX Quantitative Decision Engine</span>
@@ -110,7 +114,7 @@ export default function QuantRankingPage() {
         </p>
       </div>
 
-      {/* Factor Presets & Custom Weighting Panel */}
+      {}
       <div className="rounded-xl border bg-card p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
           <div className="flex items-center gap-2">
@@ -133,7 +137,7 @@ export default function QuantRankingPage() {
           </div>
         </div>
 
-        {/* Dynamic Weight Sliders */}
+        {}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 text-xs">
           <div>
             <div className="flex justify-between font-medium mb-1">
@@ -208,14 +212,14 @@ export default function QuantRankingPage() {
         </div>
       </div>
 
-      {/* Leaderboard Table Container */}
+      {}
       <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-b bg-muted/20">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Universe Ranking Table</h3>
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary font-mono font-bold">
-              {data?.pagination.total ?? 0} Assets
+              {rankingItems.length} IDX Assets shown
             </span>
           </div>
 
@@ -247,7 +251,7 @@ export default function QuantRankingPage() {
               Retry
             </Button>
           </div>
-        ) : !data?.items.length ? (
+        ) : !rankingItems.length ? (
           <div className="p-8">
             <StateMessage variant="empty">
               No assets matching the selected criteria.
@@ -271,7 +275,7 @@ export default function QuantRankingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {data.items.map((item: ScreenerItem) => (
+                {rankingItems.map((item: ScreenerItem) => (
                   <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                     <td className="py-3 px-4 font-mono font-bold text-foreground">
                       #{item.composite_rank ?? "—"}

@@ -25,8 +25,7 @@ function SessionLoading() {
   return <Loading />;
 }
 
-/** Protects a route: renders children only for authenticated users and
- *  redirects unauthenticated users to the login page. */
+
 export function RequireAuth({ children }: RouteGuardProps) {
   const { router, status } = useSessionStatus();
 
@@ -43,7 +42,7 @@ export function RequireAuth({ children }: RouteGuardProps) {
   return <>{children}</>;
 }
 
-/** Keeps auth-only routes away from authenticated users. */
+
 export function RedirectAuthenticated({ children }: RouteGuardProps) {
   const { router, status } = useSessionStatus();
 

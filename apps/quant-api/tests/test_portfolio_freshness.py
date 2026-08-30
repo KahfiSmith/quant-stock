@@ -64,7 +64,7 @@ def test_portfolio_valuation_uses_yfinance_price_not_buy_price(client) -> None:
         collector = YFinanceCollector()
         db = client.app.state.database.session()
         try:
-            # Set up stock
+
             stock = db.scalar(select(Stock).where(Stock.symbol == "BBCA"))
             if stock is None:
                 meta = collector.collect_metadata("BBCA")
@@ -82,13 +82,13 @@ def test_portfolio_valuation_uses_yfinance_price_not_buy_price(client) -> None:
                 db.commit()
                 stock = db.scalar(select(Stock).where(Stock.symbol == "BBCA"))
 
-            # Ingest prices
+
             req = CollectionRequest(
                 symbols=["BBCA"], start_date=None, end_date=None, interval="1d"
             )
             ingest_prices(db, list(collector.collect_prices(req)))
 
-            # Set up user + portfolio + BUY at $8000 (much lower than market)
+
             user = db.scalar(select(User).where(User.email == "port@example.com"))
             if user is None:
                 user = User(
@@ -113,7 +113,7 @@ def test_portfolio_valuation_uses_yfinance_price_not_buy_price(client) -> None:
                     select(Portfolio).where(Portfolio.user_id == user.id)
                 )
 
-            # BUY at 8000 (intentionally different from any yfinance value)
+
             tx = Transaction(
                 portfolio_id=portfolio.id,
                 stock_id=stock.id,
@@ -131,19 +131,19 @@ def test_portfolio_valuation_uses_yfinance_price_not_buy_price(client) -> None:
             assert len(detail.holdings) == 1
             h = detail.holdings[0]
             assert h.symbol == "BBCA"
-            # The avg_buy_price comes from the transaction
+
             assert abs(h.avg_buy_price - 8000.0) < 0.01
-            # The current_price should NOT be 8000 (the buy price)
+
             assert h.current_price is not None
             assert abs(h.current_price - 8000.0) > 0.01, (
                 f"current_price={h.current_price} should not match buy price 8000"
             )
-            # Freshness metadata must be present
+
             assert h.price_as_of is not None
             assert h.data_source == "yfinance"
             assert h.data_lag == "eod_1d"
 
-            # Portfolio-level metadata
+
             assert detail.price_as_of is not None
             assert detail.data_lag == "eod_1d"
         finally:
@@ -210,7 +210,7 @@ def test_portfolio_unrealized_pnl_uses_correct_formula(client) -> None:
                     select(Portfolio).where(Portfolio.user_id == user.id)
                 )
 
-            # BUY 100 @ 3500 IDR
+
             tx = Transaction(
                 portfolio_id=portfolio.id,
                 stock_id=stock.id,
@@ -225,12 +225,12 @@ def test_portfolio_unrealized_pnl_uses_correct_formula(client) -> None:
 
             detail = get_portfolio_detail(db, user_id=user.id, portfolio_id=portfolio.id)
             h = detail.holdings[0]
-            # Cost basis = 100 * 3500 = 350,000
+
             assert abs(detail.total_cost - 350_000.0) < 0.01
-            # current_value is computed as qty * market_price and rounded to cents.
-            # The displayed current_price is also rounded to cents. The displayed
-            # current_value will not in general equal qty * displayed_current_price
-            # (different rounding). We verify against the unrounded DB price.
+
+
+
+
             from decimal import Decimal
 
             from sqlalchemy import select as sa_select
@@ -246,10 +246,10 @@ def test_portfolio_unrealized_pnl_uses_correct_formula(client) -> None:
             unrounded_value = Decimal(100) * Decimal(price_obj.close)
             expected_value = float(unrounded_value.quantize(Decimal("0.01")))
             assert abs(h.current_value - expected_value) < 0.01
-            # unrealized_pnl = current_value - cost_basis (both already rounded to cents)
+
             expected_pnl = round(expected_value - 350_000.0, 2)
             assert abs(h.unrealized_pnl - expected_pnl) < 0.01
-            # Decimal math preserved (no floating-point drift over 100+ rows)
+
             assert isinstance(h.current_value, float)
         finally:
             db.close()
@@ -268,7 +268,7 @@ def test_portfolio_with_no_prices_reports_unavailable(client) -> None:
 
     db = client.app.state.database.session()
     try:
-        # Create stock with NO price rows
+
         stock = db.scalar(select(Stock).where(Stock.symbol == "NOPR"))
         if stock is None:
             stock = Stock(symbol="NOPR", name="No Price", currency="IDR")
@@ -311,14 +311,14 @@ def test_portfolio_with_no_prices_reports_unavailable(client) -> None:
 
         detail = get_portfolio_detail(db, user_id=user.id, portfolio_id=portfolio.id)
         h = detail.holdings[0]
-        # No current price available
+
         assert h.current_price is None
         assert h.current_value is None
         assert h.unrealized_pnl is None
         assert h.price_as_of is None
         assert h.data_source is None
         assert h.data_lag is None
-        # Portfolio-level: total_cost is still set, but no current_value
+
         assert detail.total_cost > 0
     finally:
         db.close()

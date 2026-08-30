@@ -61,7 +61,7 @@ def test_prices_response_exposes_distinct_as_of_and_price_as_of(client) -> None:
     from app.ingestion.contracts import CollectionRequest
     from app.models.market_data import Stock
 
-    # Set up: stock + yfinance rows + auth user
+
     with patch("app.ingestion.yfinance_collector.yfinance.Ticker", FakeTicker):
         collector = YFinanceCollector()
         db = client.app.state.database.session()
@@ -88,7 +88,7 @@ def test_prices_response_exposes_distinct_as_of_and_price_as_of(client) -> None:
         finally:
             db.close()
 
-    # Register + login via the test client (client IS the TestClient)
+
     client.post(
         "/api/v1/auth/register",
         json={
@@ -103,7 +103,7 @@ def test_prices_response_exposes_distinct_as_of_and_price_as_of(client) -> None:
     )
     token = login.json()["data"]["access_token"]
 
-    # Call the prices endpoint
+
     res = client.get(
         "/api/v1/stocks/BBCA/prices",
         headers={"Authorization": f"Bearer {token}"},
@@ -111,22 +111,22 @@ def test_prices_response_exposes_distinct_as_of_and_price_as_of(client) -> None:
     assert res.status_code == 200
     body = res.json()["data"]
 
-    # Both fields must exist
+
     assert "as_of" in body, "PricesResponse must include as_of"
     assert "price_as_of" in body, "PricesResponse must include price_as_of"
     assert "data_lag" in body, "PricesResponse must include data_lag"
 
-    # price_as_of must equal the last item's time (market observation time)
+
     items = body["items"]
     assert len(items) > 0
     last_item_time = items[-1]["time"]
     assert body["price_as_of"] is not None
-    # Compare date (not exact time, may differ by timezone serialization)
+
     assert body["price_as_of"][:10] == last_item_time[:10], (
         f"price_as_of ({body['price_as_of']}) should match last item time ({last_item_time})"
     )
 
-    # data_lag should be eod_1d for yfinance source
+
     assert body["data_lag"] == "eod_1d", (
         f"data_lag should be 'eod_1d' for yfinance data, got {body['data_lag']}"
     )

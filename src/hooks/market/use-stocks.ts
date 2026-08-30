@@ -11,7 +11,7 @@ export const useStocks = () => {
   return useQuery({
     queryKey: QUERY_KEYS.MARKET.STOCKS,
     queryFn: async () => {
-      // apiClient's response interceptor unwraps the envelope to the payload.
+
       const response = await apiClient.get<StocksPage>(API_ENDPOINTS.MARKET.STOCKS);
       return response as unknown as StocksPage;
     },

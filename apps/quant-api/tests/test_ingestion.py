@@ -130,7 +130,7 @@ def test_ingest_fundamentals_is_idempotent_and_calculates_score(client) -> None:
         assert rows[0].validation_state == "valid"
         assert rows[0].source_record_id == "filing-2025-q4"
 
-        # Ingest update idempotently
+
         updated_record = CollectedFundamental(
             symbol="BBCA",
             period_end=date(2025, 12, 31),

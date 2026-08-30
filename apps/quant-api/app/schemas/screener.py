@@ -77,16 +77,16 @@ class ScreenerItem(BaseModel):
     quant_score: float | None = None
     score_version: str | None = None
     data_source: str | None = None
-    # price_as_of: market observation time of the latest price for THIS item.
+
     price_as_of: datetime | None = None
-    # as_of: kept for backward compat. New code should use price_as_of.
+
     as_of: datetime | None = None
     pe_ratio: float | None = None
     pb_ratio: float | None = None
     roe: float | None = None
     rsi: float | None = None
     trend: str = "neutral"
-    # Quantitative Decision and Cross-Sectional Ranking Fields
+
     signal: Literal["STRONG_BUY", "BUY", "HOLD", "SELL", "STRONG_SELL"] = "HOLD"
     risk_level: Literal["LOW", "MEDIUM", "HIGH"] = "MEDIUM"
     signal_confidence_pct: float | None = None
@@ -103,7 +103,7 @@ class ScreenerItem(BaseModel):
 class ScreenerResponse(BaseModel):
     items: list[ScreenerItem]
     pagination: PaginationMeta
-    # as_of: response wall-clock time. NOT the freshness of underlying data.
+
     as_of: datetime = Field(
         description="Wall-clock time of the response. NOT data freshness.",
     )

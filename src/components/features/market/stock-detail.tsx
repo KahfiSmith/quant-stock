@@ -59,7 +59,7 @@ export function StockDetail({ symbol }: StockDetailProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
-      {/* Header Banner */}
+      {}
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-6 shadow-sm">
         <div>
           <div className="flex items-center gap-3">

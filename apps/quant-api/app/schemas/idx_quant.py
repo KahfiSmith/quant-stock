@@ -12,11 +12,11 @@ class IDXStockUniverseItem(BaseModel):
     id: int
     symbol: str
     name: str
-    sector: str | None = None  # IDX-IC Sector
-    sub_sector: str | None = None  # IDX-IC Sub-Sector
+    sector: str | None = None
+    sub_sector: str | None = None
     listing_date: date | None = None
     market_cap: float | None = None
-    liquidity_status: str = "liquid"  # liquid, watchlist, illiquid
+    liquidity_status: str = "liquid"
     is_active: bool = True
     board: str | None = "MAIN"
     avg_daily_turnover_20d: float | None = None
@@ -45,7 +45,7 @@ class IDXMarketFlowItem(BaseModel):
 
 
 class IDXCorporateActionItem(BaseModel):
-    action_type: str  # DIVIDEND, STOCK_SPLIT, RIGHT_ISSUE
+    action_type: str
     cum_date: date | None = None
     ex_date: date
     recording_date: date | None = None
@@ -65,14 +65,14 @@ class IDXStockDetailResponse(BaseModel):
 
 class IDXFactorRotationRequest(BaseModel):
     strategy_name: str = Field(default="IDX Top 10 Multi-Factor Rotation", min_length=2, max_length=128)
-    initial_capital: float = Field(default=500_000_000.0, gt=1_000_000.0)  # Rp 500 Juta
+    initial_capital: float = Field(default=500_000_000.0, gt=1_000_000.0)
     top_n: int = Field(default=10, ge=1, le=50)
     rebalance_frequency: Literal["monthly", "quarterly"] = "monthly"
     start_date: date | None = None
     end_date: date | None = None
-    min_market_cap: float = Field(default=1_000_000_000_000.0, ge=0.0)  # Rp 1 Triliun
-    min_adv_turnover: float = Field(default=5_000_000_000.0, ge=0.0)    # Rp 5 Miliar
-    min_frequency: float = Field(default=1_000.0, ge=0.0)               # 1.000 transaksi/hari
+    min_market_cap: float = Field(default=1_000_000_000_000.0, ge=0.0)
+    min_adv_turnover: float = Field(default=5_000_000_000.0, ge=0.0)
+    min_frequency: float = Field(default=1_000.0, ge=0.0)
     sector_filter: str | None = None
     factor_weights: dict[str, float] = Field(
         default_factory=lambda: {
@@ -90,7 +90,7 @@ class IDXFactorRotationRequest(BaseModel):
 class IDXRotationEquityPoint(BaseModel):
     date: str
     equity: float
-    benchmark: float  # IHSG
+    benchmark: float
     drawdown: float
 
 

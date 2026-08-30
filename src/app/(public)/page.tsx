@@ -14,7 +14,7 @@ export default function HomePage() {
       <Header />
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-12 px-6 py-16">
-        {/* Hero Section */}
+        {}
         <section className="space-y-6 text-center sm:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
             <Sparkles className="h-3.5 w-3.5" />
@@ -42,7 +42,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Feature Cards Grid */}
+        {}
         <section className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">

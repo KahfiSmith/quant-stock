@@ -256,7 +256,7 @@ def test_backtest_slippage_changes_execution_result(client: TestClient) -> None:
 
 
 def test_backtest_job_lifecycle_persistence_and_unauthorized_isolation(client: TestClient) -> None:
-    # 1. Register User 1 and User 2
+
     client.post(
         "/api/v1/auth/register",
         json={"email": "u1@example.com", "name": "U1", "password": "password123"},
@@ -285,7 +285,7 @@ def test_backtest_job_lifecycle_persistence_and_unauthorized_isolation(client: T
     finally:
         db.close()
 
-    # User 1 runs backtest
+
     res = client.post(
         "/api/v1/backtest",
         json={"symbol": "TLKM", "strategy": "BUY_AND_HOLD"},
@@ -295,7 +295,7 @@ def test_backtest_job_lifecycle_persistence_and_unauthorized_isolation(client: T
     job_id = res.json()["data"]["job_id"]
     assert job_id is not None
 
-    # User 1 lists jobs
+
     jobs_res = client.get("/api/v1/backtest/jobs", headers=h1)
     assert jobs_res.status_code == 200
     jobs_data = jobs_res.json()["data"]
@@ -306,13 +306,13 @@ def test_backtest_job_lifecycle_persistence_and_unauthorized_isolation(client: T
     assert target_job["symbol"] == "TLKM"
     assert target_job["summary"]["total_trades"] == 1
 
-    # User 1 gets specific job
+
     single_res = client.get(f"/api/v1/backtest/jobs/{job_id}", headers=h1)
     assert single_res.status_code == 200
     assert single_res.json()["data"]["id"] == job_id
     assert len(single_res.json()["data"]["equity_curve"]) > 50
 
-    # User 2 cannot access User 1's job
+
     u2_single = client.get(f"/api/v1/backtest/jobs/{job_id}", headers=h2)
     assert u2_single.status_code == 404
     assert u2_single.json()["code"] == "JOB_NOT_FOUND"
@@ -333,7 +333,7 @@ def test_backtest_job_records_failure_lifecycle(client: TestClient) -> None:
     ).json()["data"]["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Request backtest for unknown symbol
+
     res = client.post(
         "/api/v1/backtest",
         json={"symbol": "NONEXISTENT", "strategy": "BUY_AND_HOLD"},
@@ -341,7 +341,7 @@ def test_backtest_job_records_failure_lifecycle(client: TestClient) -> None:
     )
     assert res.status_code == 404
 
-    # Check job history recorded the failure
+
     jobs_res = client.get("/api/v1/backtest/jobs", headers=headers)
     assert jobs_res.status_code == 200
     items = jobs_res.json()["data"]["items"]

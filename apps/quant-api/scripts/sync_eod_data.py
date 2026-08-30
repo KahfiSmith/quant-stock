@@ -17,7 +17,7 @@ from app.ingestion.persistence import ingest_fundamentals, ingest_prices
 from app.models.market_data import Stock
 
 DEFAULT_UNIVERSE = [
-    # Top IDX Bluechips
+
     ("BBCA", "Bank Central Asia Tbk", "Financials", "IDR"),
     ("BBRI", "Bank Rakyat Indonesia Tbk", "Financials", "IDR"),
     ("BMRI", "Bank Mandiri Tbk", "Financials", "IDR"),
@@ -26,7 +26,7 @@ DEFAULT_UNIVERSE = [
     ("ASII", "Astra International Tbk", "Industrials", "IDR"),
     ("UNVR", "Unilever Indonesia Tbk", "Consumer Non-Cyclicals", "IDR"),
     ("ICBP", "Indofood CBP Sukses Makmur Tbk", "Consumer Non-Cyclicals", "IDR"),
-    # Global Giants
+
     ("AAPL", "Apple Inc.", "Technology", "USD"),
     ("NVDA", "NVIDIA Corporation", "Technology", "USD"),
     ("MSFT", "Microsoft Corporation", "Technology", "USD"),
@@ -49,7 +49,7 @@ def sync_market_data(symbols: list[str] | None = None, range_str: str = "1y") ->
         for sym, name, sector, currency in universe:
             clean_sym = sym.strip().upper()
 
-            # 1. Upsert Stock Metadata
+
             stock = session.scalar(select(Stock).where(Stock.symbol == clean_sym))
             if not stock:
                 stock = Stock(
@@ -66,7 +66,7 @@ def sync_market_data(symbols: list[str] | None = None, range_str: str = "1y") ->
                 stock.sector = sector
                 session.commit()
 
-            # 2. Ingest Live Historical Prices
+
             try:
                 records = collector.fetch_stock_prices(clean_sym, range_str=range_str)
                 if records:
@@ -77,7 +77,7 @@ def sync_market_data(symbols: list[str] | None = None, range_str: str = "1y") ->
             except Exception as err:
                 print(f"✗ {clean_sym} Price sync failed: {err}")
 
-            # 3. Ingest Live Fundamental Ratios
+
             try:
                 fund_record = collector.fetch_fundamental_data(clean_sym)
                 if fund_record:

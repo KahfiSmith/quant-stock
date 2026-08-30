@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     cookie_same_site: Literal["lax", "strict", "none"] = "lax"
     auth_rate_limit_per_minute: int = Field(default=20, ge=1, le=1000)
 
-    # LLM / AI Analyst provider configuration
+
     ai_analyst_provider: Literal[
         "deterministic", "mock_llm", "openai_compatible", "anthropic_compatible"
     ] = "deterministic"
@@ -38,19 +38,19 @@ class Settings(BaseSettings):
     ai_analyst_model: str = "gpt-4o-mini"
     ai_analyst_timeout_seconds: float = Field(default=10.0, ge=1.0, le=60.0)
 
-    # Market data provider configuration (see ADR-005-yfinance-provider.md).
-    # The yfinance collector is the production data source. Set
-    # `market_data_provider=sample` to fall back to the synthetic seeder.
+
+
+
     market_data_provider: Literal["sample", "yfinance"] = "yfinance"
     yfinance_enabled: bool = True
     yfinance_request_timeout_seconds: float = Field(default=15.0, ge=1.0, le=60.0)
     yfinance_default_period: str = "2y"
     yfinance_symbol_suffix: str = ".JK"
     yfinance_proxy: str | None = None
-    # Universe themed around the Bakrie Group, Happy Hapsoro (Pamapersada),
-    # and Prajogo Pangestu (Barito Pacific), with 10 IDX liquid blue chips as
-    # market baseline and ~65 small/mid caps that retail traders actively
-    # speculate on.
+
+
+
+
     yfinance_symbols: str = (
         "BBCA,BMRI,BBRI,TLKM,ASII,UNVR,INDF,ICBP,KLBF,SMGR,"
         "BNBR,BUMI,UNSP,ELTY,ENRG,BTEL,DEWA,BRMS,VIVA,MDIA,JGLE,ALII,"

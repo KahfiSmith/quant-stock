@@ -19,13 +19,13 @@ class Stock(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     symbol: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    sector: Mapped[str | None] = mapped_column(String(128), nullable=True)  # IDX-IC Sector
-    sub_sector: Mapped[str | None] = mapped_column(String(128), nullable=True)  # IDX-IC Sub-Sector
+    sector: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    sub_sector: Mapped[str | None] = mapped_column(String(128), nullable=True)
     listing_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     market_cap: Mapped[float | None] = mapped_column(Numeric(18, 2), nullable=True)
-    liquidity_status: Mapped[str] = mapped_column(String(32), nullable=False, default="liquid")  # liquid, watchlist, illiquid
+    liquidity_status: Mapped[str] = mapped_column(String(32), nullable=False, default="liquid")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
-    board: Mapped[str | None] = mapped_column(String(32), nullable=True, default="MAIN")  # MAIN, DEVELOPMENT, ACCELERATION, WATCHLIST
+    board: Mapped[str | None] = mapped_column(String(32), nullable=True, default="MAIN")
     avg_daily_turnover_20d: Mapped[float | None] = mapped_column(Numeric(18, 2), nullable=True)
     avg_daily_frequency_20d: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
     exchange: Mapped[str | None] = mapped_column(String(64), nullable=True, default="IDX")

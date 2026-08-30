@@ -29,7 +29,7 @@ def run_strategy_backtest(
     run_id = str(uuid4())
     created_at = datetime.now(UTC)
 
-    # 1. Create or initialize persistent job if user provided
+
     job: BacktestJob | None = None
     if user is not None:
         job = BacktestJob(
@@ -101,7 +101,7 @@ def run_strategy_backtest(
     dates = [p.time.strftime("%Y-%m-%d") for p in prices]
     closes = [float(p.close) for p in prices]
 
-    # Calculate indicators
+
     fast_ma = sma(closes, req.fast_period)
     slow_ma = sma(closes, req.slow_period)
     rsi_vals = rsi(closes, 14)
@@ -122,8 +122,8 @@ def run_strategy_backtest(
         close = closes[i]
         date_str = dates[i]
 
-        # Generate signals
-        signal = 0  # 1 = BUY, -1 = SELL, 0 = HOLD
+
+        signal = 0
 
         if req.strategy == "BUY_AND_HOLD":
             if i == evaluation_start:
@@ -147,7 +147,7 @@ def run_strategy_backtest(
                 elif rsi_vals[i] > req.rsi_overbought and rsi_vals[i - 1] <= req.rsi_overbought:
                     signal = -1
 
-        # Execute signals
+
         if signal == 1 and cash > 0:
             execution_price = close * (1.0 + req.slippage_percent)
             fee = cash * req.fee_percent
@@ -190,7 +190,7 @@ def run_strategy_backtest(
     final_equity = equity_curve[-1].equity
     total_return_pct = (final_equity - req.initial_capital) / req.initial_capital * 100.0
 
-    # CAGR calculation
+
     days = max(1, len(prices) - evaluation_start)
     years = days / 252.0
     cagr_pct = (
@@ -199,7 +199,7 @@ def run_strategy_backtest(
         else 0.0
     )
 
-    # Volatility, Sharpe, and Sortino use the same daily return series.
+
     rf_annual = 0.05
     rf_daily = rf_annual / 252.0
     if len(daily_returns) > 1:

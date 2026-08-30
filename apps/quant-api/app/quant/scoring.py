@@ -31,9 +31,9 @@ def calculate_momentum_score(rsi_val: float | None, trend: str, momentum_12m: fl
     elif trend == "bearish":
         base = max(0.0, base - 10.0)
 
-    # If 12-month historical price return is provided, blend into momentum factor
+
     if momentum_12m is not None:
-        # Scale: +30% return -> 80 score, -30% return -> 20 score
+
         m12_score = min(100.0, max(0.0, 50.0 + (momentum_12m * 100.0)))
         base = 0.6 * base + 0.4 * m12_score
 
@@ -52,11 +52,11 @@ def calculate_quality_score(
     if roa is not None:
         scores.append(min(100.0, max(0.0, (roa / 0.10) * 100.0)))
     if debt_to_equity is not None:
-        # Lower debt is higher quality
+
         de_score = max(0.0, 100.0 - (debt_to_equity * 50.0))
         scores.append(de_score)
     if piotroski_estimate is not None:
-        # 0 to 9 scale -> 0 to 100
+
         scores.append(min(100.0, max(0.0, (piotroski_estimate / 9.0) * 100.0)))
 
     return round(sum(scores) / len(scores), 2) if scores else 50.0
@@ -82,10 +82,10 @@ def calculate_value_score(pe_ratio: float | None, pb_ratio: float | None) -> flo
 
 
 def calculate_risk_score(atr_ratio: float | None) -> float:
-    # Lower ATR/volatility gives higher safety score
+
     if atr_ratio is None:
         return 50.0
-    # atr_ratio is ATR / Close. Ideal < 2% (0.02)
+
     score = max(0.0, 100.0 - (atr_ratio * 2000.0))
     return round(min(100.0, score), 2)
 
@@ -121,7 +121,7 @@ def calculate_quant_score(
     r_score = calculate_risk_score(atr_ratio)
     g_score = calculate_growth_score(revenue_growth, eps_growth)
 
-    # Base or custom factor weights
+
     w_m = 0.30
     w_q = 0.25
     w_v = 0.20

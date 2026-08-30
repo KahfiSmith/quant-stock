@@ -17,7 +17,7 @@ from app.core.config import get_settings
 from app.db.session import Database
 from app.models.market_data import Price, Stock
 
-# name, symbol, sector — clearly sample universe for chart development.
+
 SAMPLE_STOCKS: list[dict[str, str]] = [
     {"symbol": "BBCA", "name": "Sample Bank Central Asia", "sector": "Financials"},
     {"symbol": "TLKM", "name": "Sample Telkom Indonesia", "sector": "Telecom"},

@@ -16,7 +16,7 @@ def compute_stock_quant_score(
 ) -> QuantScoreResponse:
     tech = technical or calculate_technical_analysis(db, stock, interval="1d")
 
-    # Get latest candle for ATR ratio
+
     latest_candle = db.scalar(
         select(Price)
         .where(Price.stock_id == stock.id, Price.interval == "1d")
@@ -28,7 +28,7 @@ def compute_stock_quant_score(
     if latest_candle and tech.indicators.atr14 and latest_candle.close > 0:
         atr_ratio = tech.indicators.atr14 / float(latest_candle.close)
 
-    # Get latest fundamental data
+
     fund = db.scalar(
         select(Fundamental)
         .where(Fundamental.stock_id == stock.id)
@@ -79,7 +79,7 @@ def compute_stock_quant_score(
 
     universe_size = db.scalar(select(func.count()).select_from(Stock)) or 0
 
-    # Cross-sectional sector ranking calculation
+
     sector_rank = None
     sector_total = None
     percentile = None
@@ -89,7 +89,7 @@ def compute_stock_quant_score(
         sector_stocks = list(db.scalars(select(Stock).where(Stock.sector == stock.sector)))
         sector_total = len(sector_stocks)
         if sector_total > 1:
-            # Gather sector PE and ROE for relative comparison
+
             fund_rows = list(
                 db.scalars(
                     select(Fundamental)
