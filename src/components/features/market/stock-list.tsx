@@ -1,68 +1,100 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { StateMessage } from "@/components/common";
-import { useStockScreener } from "@/hooks/market";
-import type { ScreenerFilterParams } from "@/types";
+import { useIDXUniverse } from "@/hooks/market";
+import type { Stock } from "@/types";
+
+type SortBy = "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe";
+type SortOrder = "asc" | "desc";
+
+const formatIdr = (value: number | null) =>
+  value === null
+    ? "—"
+    : new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0,
+      }).format(value);
 
 export function StockList() {
-  const [filters, setFilters] = useState<ScreenerFilterParams>({
-    sort_by: "score",
-    sort_order: "desc",
-    page: 1,
-    page_size: 20,
-  });
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("score");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const { data, isPending, isError } = useIDXUniverse();
 
-  const { data, isPending, isError } = useStockScreener(filters);
+  const stocks = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const filteredStocks = (data?.items ?? []).filter(
+      (stock) =>
+        !query ||
+        stock.symbol.toLowerCase().includes(query) ||
+        stock.name.toLowerCase().includes(query)
+    );
+
+    return [...filteredStocks].sort((left, right) => {
+      if (sortBy === "symbol") {
+        return sortOrder === "asc"
+          ? left.symbol.localeCompare(right.symbol)
+          : right.symbol.localeCompare(left.symbol);
+      }
+
+      const getSortValue = (stock: Stock) => {
+        switch (sortBy) {
+          case "score":
+            return stock.quant_score ?? Number.NEGATIVE_INFINITY;
+          case "market_cap":
+            return stock.market_cap ?? Number.NEGATIVE_INFINITY;
+          case "pe_ratio":
+            return stock.pe_ratio ?? Number.NEGATIVE_INFINITY;
+          case "pb_ratio":
+            return stock.pb_ratio ?? Number.NEGATIVE_INFINITY;
+          case "roe":
+            return stock.roe ?? Number.NEGATIVE_INFINITY;
+        }
+      };
+      const leftValue = getSortValue(left);
+      const rightValue = getSortValue(right);
+      return sortOrder === "asc" ? leftValue - rightValue : rightValue - leftValue;
+    });
+  }, [data?.items, search, sortBy, sortOrder]);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Screener filter toolbar */}
       <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4 text-sm">
+        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+          BEI / IDX — Indonesia
+        </span>
         <input
           type="text"
-          placeholder="Search ticker or name..."
+          placeholder="Cari kode atau nama saham..."
           className="rounded-md border bg-background px-3 py-1.5 text-sm"
-          value={filters.search ?? ""}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, search: e.target.value || undefined, page: 1 }))
-          }
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
         />
 
         <select
           className="rounded-md border bg-background px-3 py-1.5 text-sm"
-          value={filters.sort_by ?? "score"}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              sort_by: e.target.value as ScreenerFilterParams["sort_by"],
-              page: 1,
-            }))
-          }
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value as SortBy)}
         >
-          <option value="score">Sort by: Quant Score</option>
-          <option value="symbol">Sort by: Symbol</option>
-          <option value="pe_ratio">Sort by: P/E</option>
-          <option value="pb_ratio">Sort by: P/B</option>
-          <option value="roe">Sort by: ROE</option>
-          <option value="rsi">Sort by: RSI</option>
+          <option value="score">Urutkan: Quant Score</option>
+          <option value="symbol">Urutkan: Kode Saham</option>
+          <option value="market_cap">Urutkan: Market Cap</option>
+          <option value="pe_ratio">Urutkan: P/E</option>
+          <option value="pb_ratio">Urutkan: P/B</option>
+          <option value="roe">Urutkan: ROE</option>
         </select>
 
         <select
           className="rounded-md border bg-background px-3 py-1.5 text-sm"
-          value={filters.sort_order ?? "desc"}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              sort_order: e.target.value as ScreenerFilterParams["sort_order"],
-              page: 1,
-            }))
-          }
+          value={sortOrder}
+          onChange={(event) => setSortOrder(event.target.value as SortOrder)}
         >
-          <option value="desc">Order: High to Low (Desc)</option>
-          <option value="asc">Order: Low to High (Asc)</option>
+          <option value="desc">Tertinggi ke Terendah</option>
+          <option value="asc">Terendah ke Tertinggi</option>
         </select>
       </div>
 
@@ -70,27 +102,27 @@ export function StockList() {
         <StateMessage variant="loading" />
       ) : isError ? (
         <StateMessage variant="error">
-          Failed to load the stock universe. Please try again.
+          Gagal memuat universe saham BEI. Silakan coba lagi.
         </StateMessage>
-      ) : (data?.items ?? []).length === 0 ? (
-        <StateMessage variant="empty">No stocks match your filter criteria.</StateMessage>
+      ) : stocks.length === 0 ? (
+        <StateMessage variant="empty">Tidak ada saham BEI yang sesuai dengan pencarian Anda.</StateMessage>
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40 text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Symbol</th>
-                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Kode</th>
+                <th className="px-4 py-3 font-medium">Nama</th>
+                <th className="px-4 py-3 font-medium">Sektor IDX-IC</th>
                 <th className="px-4 py-3 font-medium">Quant Score</th>
+                <th className="px-4 py-3 font-medium">Market Cap</th>
                 <th className="px-4 py-3 font-medium">P/E</th>
                 <th className="px-4 py-3 font-medium">P/B</th>
                 <th className="px-4 py-3 font-medium">ROE</th>
-                <th className="px-4 py-3 font-medium">RSI(14)</th>
-                <th className="px-4 py-3 font-medium">Trend</th>
               </tr>
             </thead>
             <tbody>
-              {data?.items.map((stock) => (
+              {stocks.map((stock: Stock) => (
                 <tr key={stock.id} className="border-b last:border-0 hover:bg-muted/20">
                   <td className="px-4 py-3">
                     <Link
@@ -101,33 +133,17 @@ export function StockList() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">{stock.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{stock.sector ?? "—"}</td>
                   <td className="px-4 py-3 font-semibold text-primary">
-                    {stock.quant_score !== null ? stock.quant_score : "—"}
+                    {stock.quant_score ?? "—"}
                   </td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatIdr(stock.market_cap)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{stock.pe_ratio ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{stock.pb_ratio ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {stock.pe_ratio !== null ? stock.pe_ratio : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {stock.pb_ratio !== null ? stock.pb_ratio : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {stock.roe !== null ? `${(stock.roe * 100).toFixed(1)}%` : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {stock.rsi !== null ? stock.rsi : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        stock.trend === "bullish"
-                          ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                          : stock.trend === "bearish"
-                            ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                            : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {stock.trend}
-                    </span>
+                    {stock.roe !== null && stock.roe !== undefined
+                      ? `${(stock.roe * 100).toFixed(1)}%`
+                      : "—"}
                   </td>
                 </tr>
               ))}

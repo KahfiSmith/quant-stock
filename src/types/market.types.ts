@@ -345,6 +345,7 @@ export interface CustomFactorWeights {
 
 export interface ScreenerFilterParams {
   search?: string;
+  exchange?: string;
   sector?: string;
   min_market_cap?: number;
   max_market_cap?: number;

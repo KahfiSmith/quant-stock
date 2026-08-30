@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { StateMessage } from "@/components/common";
-import { useRunBacktest, useStocks } from "@/hooks/market";
+import { useIDXUniverse, useRunBacktest } from "@/hooks/market";
 import type { BacktestParams, BacktestResponse } from "@/types";
 
 export function BacktestRunner() {
@@ -19,7 +19,7 @@ export function BacktestRunner() {
   const [searchTerm, setSearchTerm] = useState("");
   const [result, setResult] = useState<BacktestResponse | null>(null);
   const runBacktest = useRunBacktest();
-  const { data: stocksData } = useStocks();
+  const { data: stocksData } = useIDXUniverse();
 
   const stockOptions = useMemo(() => {
     const list = stocksData?.items ?? [
@@ -31,9 +31,6 @@ export function BacktestRunner() {
       { id: 6, symbol: "ASII", name: "Astra International Tbk" },
       { id: 7, symbol: "UNVR", name: "Unilever Indonesia Tbk" },
       { id: 8, symbol: "ICBP", name: "Indofood CBP Sukses Makmur Tbk" },
-      { id: 9, symbol: "AAPL", name: "Apple Inc." },
-      { id: 10, symbol: "NVDA", name: "NVIDIA Corporation" },
-      { id: 11, symbol: "MSFT", name: "Microsoft Corporation" },
     ];
 
     if (!searchTerm.trim()) return list;

@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { SlidersHorizontal, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { SlidersHorizontal, Sparkles, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { StateMessage } from "@/components/common";
+import { Button } from "@/components/ui/button";
 import { useStockScreener } from "@/hooks/market";
 import type { CustomFactorWeights, ScreenerFilterParams, ScreenerItem } from "@/types";
 
@@ -46,6 +46,7 @@ export default function QuantRankingPage() {
   const [sortOrder] = useState<"asc" | "desc">("desc");
 
   const filterParams: ScreenerFilterParams = useMemo(() => ({
+    exchange: "IDX",
     sector: sectorFilter || undefined,
     sort_by: sortBy,
     sort_order: sortOrder,
@@ -101,7 +102,6 @@ export default function QuantRankingPage() {
       {/* Header Banner */}
       <div className="flex flex-col gap-2 rounded-2xl border bg-gradient-to-r from-primary/10 via-background to-background p-6">
         <div className="flex items-center gap-2 text-primary">
-          <Sparkles className="h-5 w-5" />
           <span className="text-xs font-bold uppercase tracking-wider">BEI / IDX Quantitative Decision Engine</span>
         </div>
         <h1 className="text-3xl font-bold tracking-tight">IDX Cross-Sectional Quant Leaderboard</h1>
