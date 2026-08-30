@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { StateMessage } from "@/components/common";
 import { StockChart } from "@/components/features/market/stock-chart";
+import { VolumeAnomalyBadge, VolatilityRegimeBadge } from "@/components/features/market/quant-badges";
 import {
   useIDXStockDetail,
   useStockAiSummary,
@@ -234,6 +235,57 @@ export function StockDetail({ symbol }: StockDetailProps) {
                   </dl>
                 ) : (
                   <p className="text-sm text-muted-foreground">No fundamental ratios available.</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Volume Analysis</h3>
+                {technical ? (
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Volume Z-Score</dt>
+                      <dd className="font-semibold">
+                        <VolumeAnomalyBadge zscore={technical.indicators.volume_zscore} />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Vol / SMA(20)</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.volume_sma_ratio != null
+                          ? `${technical.indicators.volume_sma_ratio.toFixed(2)}×`
+                          : "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No volume data available.</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Volatility Regime</h3>
+                {technical ? (
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Regime</dt>
+                      <dd className="font-semibold">
+                        <VolatilityRegimeBadge
+                          regime={technical.indicators.volatility_regime}
+                          atrPercent={technical.indicators.atr_percent}
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">ATR%</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.atr_percent != null
+                          ? `${technical.indicators.atr_percent.toFixed(2)}%`
+                          : "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No volatility data available.</p>
                 )}
               </div>
             </div>

@@ -13,6 +13,8 @@ SortByField = Literal[
     "pb_ratio",
     "roe",
     "rsi",
+    "volume_zscore",
+    "atr_percent",
     "value_score",
     "quality_score",
     "momentum_score",
@@ -44,7 +46,10 @@ class ScreenerRequest(BaseModel):
     min_roe: float | None = None
     min_rsi: float | None = Field(default=None, ge=0, le=100)
     max_rsi: float | None = Field(default=None, ge=0, le=100)
-    strategy_preset: Literal["none", "quality_momentum", "deep_value", "garp", "defensive_income"] = "none"
+    min_volume_zscore: float | None = None
+    max_volume_zscore: float | None = None
+    volatility_regime: Literal["LOW", "NORMAL", "HIGH", "EXTREME"] | None = None
+    strategy_preset: Literal["none", "quality_momentum", "deep_value", "garp", "defensive_income", "volume_momentum"] = "none"
     custom_weights: CustomWeightsInput | None = None
     sort_by: SortByField = "score"
     sort_order: SortOrder = "desc"
@@ -59,6 +64,7 @@ class ScreenerRequest(BaseModel):
             ("pe", self.min_pe, self.max_pe),
             ("pb", self.min_pb, self.max_pb),
             ("rsi", self.min_rsi, self.max_rsi),
+            ("volume_zscore", self.min_volume_zscore, self.max_volume_zscore),
         )
         for name, minimum, maximum in ranges:
             if minimum is not None and maximum is not None and minimum > maximum:
@@ -91,6 +97,10 @@ class ScreenerItem(BaseModel):
     risk_level: Literal["LOW", "MEDIUM", "HIGH"] = "MEDIUM"
     signal_confidence_pct: float | None = None
     signal_reasons: list[str] = Field(default_factory=list)
+    volume_zscore: float | None = None
+    volume_sma_ratio: float | None = None
+    atr_percent: float | None = None
+    volatility_regime: str | None = None
     value_score: float | None = None
     quality_score: float | None = None
     momentum_score: float | None = None

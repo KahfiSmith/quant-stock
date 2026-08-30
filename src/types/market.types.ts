@@ -326,6 +326,10 @@ export interface ScreenerItem {
   risk_level?: "LOW" | "MEDIUM" | "HIGH";
   signal_confidence_pct?: number | null;
   signal_reasons?: string[];
+  volume_zscore?: number | null;
+  volume_sma_ratio?: number | null;
+  atr_percent?: number | null;
+  volatility_regime?: VolatilityRegime | null;
   value_score?: number | null;
   quality_score?: number | null;
   momentum_score?: number | null;
@@ -358,9 +362,12 @@ export interface ScreenerFilterParams {
   min_roe?: number;
   min_rsi?: number;
   max_rsi?: number;
-  strategy_preset?: "none" | "quality_momentum" | "deep_value" | "garp" | "defensive_income";
+  min_volume_zscore?: number;
+  max_volume_zscore?: number;
+  volatility_regime?: VolatilityRegime;
+  strategy_preset?: "none" | "quality_momentum" | "deep_value" | "garp" | "defensive_income" | "volume_momentum";
   custom_weights?: CustomFactorWeights;
-  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
+  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "volume_zscore" | "atr_percent" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
   sort_order?: "asc" | "desc";
   page?: number;
   page_size?: number;
@@ -454,12 +461,18 @@ export interface MacdIndicator {
   histogram: number | null;
 }
 
+export type VolatilityRegime = "LOW" | "NORMAL" | "HIGH" | "EXTREME";
+
 export interface IndicatorsSummary {
   ma20: number | null;
   ma50: number | null;
   ma200: number | null;
   rsi14: number | null;
   atr14: number | null;
+  atr_percent: number | null;
+  volatility_regime: VolatilityRegime | null;
+  volume_zscore: number | null;
+  volume_sma_ratio: number | null;
   macd: MacdIndicator;
   bollinger: BollingerBand;
 }

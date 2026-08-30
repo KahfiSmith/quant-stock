@@ -52,6 +52,8 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
     elif req.strategy_preset == "defensive_income":
         max_pe = max_pe or 16.0
         custom_weights = {"quality": 0.35, "risk": 0.35, "value": 0.20, "growth": 0.05, "momentum": 0.05}
+    elif req.strategy_preset == "volume_momentum":
+        custom_weights = {"momentum": 0.45, "quality": 0.20, "value": 0.15, "risk": 0.10, "growth": 0.10}
 
 
     enriched: list[ScreenerItem] = []
@@ -115,6 +117,18 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         if max_rsi is not None and (rsi_val is None or rsi_val > max_rsi):
             continue
 
+        vol_z = tech.indicators.volume_zscore
+        vol_sma_r = tech.indicators.volume_sma_ratio
+        atr_pct = tech.indicators.atr_percent
+        vol_regime = tech.indicators.volatility_regime
+
+        if req.min_volume_zscore is not None and (vol_z is None or vol_z < req.min_volume_zscore):
+            continue
+        if req.max_volume_zscore is not None and (vol_z is None or vol_z > req.max_volume_zscore):
+            continue
+        if req.volatility_regime is not None and vol_regime != req.volatility_regime:
+            continue
+
 
         decision = generate_quant_signal(
             total_score=factors.total_score,
@@ -127,6 +141,8 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             pe_ratio=pe,
             roe=roe,
             debt_to_equity=de,
+            volume_zscore=tech.indicators.volume_zscore,
+            volatility_regime=tech.indicators.volatility_regime,
         )
 
         enriched.append(
@@ -152,6 +168,10 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
                 risk_level=decision.risk_level,
                 signal_confidence_pct=decision.confidence_pct,
                 signal_reasons=decision.reasons,
+                volume_zscore=vol_z,
+                volume_sma_ratio=vol_sma_r,
+                atr_percent=atr_pct,
+                volatility_regime=vol_regime,
                 value_score=factors.value,
                 quality_score=factors.quality,
                 momentum_score=factors.momentum,

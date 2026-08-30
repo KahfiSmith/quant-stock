@@ -35,6 +35,8 @@ def generate_quant_signal(
     pe_ratio: float | None = None,
     roe: float | None = None,
     debt_to_equity: float | None = None,
+    volume_zscore: float | None = None,
+    volatility_regime: str | None = None,
 ) -> QuantDecision:
     reasons: list[str] = []
 
@@ -63,6 +65,18 @@ def generate_quant_signal(
         reasons.append("Robust balance sheet with conservative leverage")
 
 
+    if volume_zscore is not None and volume_zscore >= 2.0:
+        reasons.append(f"Abnormal volume spike (Z={volume_zscore:.1f}) — elevated conviction")
+    elif volume_zscore is not None and volume_zscore <= -1.0:
+        reasons.append("Below-average volume — weak participation")
+
+
+    if volatility_regime == "EXTREME":
+        reasons.append("Extreme volatility regime — elevated position risk")
+    elif volatility_regime == "LOW":
+        reasons.append("Low-volatility regime — potential breakout setup")
+
+
     if risk_score >= 70:
         risk_level: RiskLevelType = "LOW"
     elif risk_score >= 45:
@@ -70,6 +84,9 @@ def generate_quant_signal(
     else:
         risk_level = "HIGH"
         reasons.append("Elevated historical price volatility")
+
+    if volatility_regime == "EXTREME" and risk_level != "HIGH":
+        risk_level = "HIGH"
 
 
     if total_score >= 82 and momentum_score >= 60 and quality_score >= 70:
@@ -87,6 +104,14 @@ def generate_quant_signal(
     else:
         signal = "HOLD"
         confidence = 60.0
+
+    if volume_zscore is not None:
+        if signal in ("STRONG_BUY", "BUY") and volume_zscore >= 1.5:
+            confidence = min(98.0, confidence + 4.0)
+        elif signal in ("STRONG_BUY", "BUY") and volume_zscore <= -1.0:
+            confidence = max(50.0, confidence - 5.0)
+        elif signal in ("STRONG_SELL", "SELL") and volume_zscore >= 1.5:
+            confidence = min(98.0, confidence + 3.0)
 
     if not reasons:
         reasons.append("Balanced quantitative profile without extreme outliers")

@@ -101,10 +101,10 @@ ingestion (off-request, manual / scheduled):
 |---|---|---|---|
 | `GET` | `/api/v1/stocks` | List/search the stock universe | Optional (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV candles | Required (Bearer) |
-| `GET` | `/api/v1/stocks/{symbol}/technical` | Calculated technical indicators (MA, RSI, MACD, BB, ATR) | Required (Bearer) |
+| `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, BB, ATR) plus volume analysis (Z-Score, SMA ratio) and volatility regime (ATR%, classification) | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios and financial metrics | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor composite score and factor breakdown | Required (Bearer) |
-| `POST` | `/api/v1/screener` | Multi-parameter stock screening and ranking | Required (Bearer) |
+| `POST` | `/api/v1/screener` | Multi-parameter stock screening and ranking; includes `volume_momentum` preset and volume/volatility filter dimensions | Required (Bearer) |
 | `GET` | `/api/v1/portfolios` | List user portfolios | Required (Bearer) |
 | `POST` | `/api/v1/portfolios` | Create a new portfolio | Required (Bearer) |
 | `GET` | `/api/v1/portfolios/{id}` | Portfolio detail and computed holdings PnL | Required (Bearer) |
@@ -128,7 +128,8 @@ evidence and data availability metadata.
 3. Unknown symbols return a `404 SYMBOL_NOT_FOUND` envelope.
 4. The prices endpoint rejects unauthenticated requests.
 5. The technical endpoint returns non-`None` MA20, MA50, MA200, RSI(14),
-   MACD, ATR, and Bollinger values for symbols with ≥ 200 bars.
+   MACD, ATR, Bollinger, volume Z-Score, volume SMA ratio, ATR%, and
+   volatility regime values for symbols with ≥ 200 bars.
 6. The backtest endpoint produces a non-trivial Sharpe/Sortino ratio for
    a 1-year window on real data.
 7. The AI Analyst tab cites real ROE / P/E / trend values for any symbol
@@ -162,6 +163,9 @@ evidence and data availability metadata.
 - 2026-08-27: Provider-neutral ingestion contract and persistence boundary added.
 - 2026-08-27: **ADR-005: yfinance chosen as production data source.** 2-year
   backfill of 20 IDX liquid stocks; CLI-driven ingestion; idempotent re-runs.
+- 2026-08-30: **Tier 1 Quant Engine**: Volume Anomaly Z-Score, Volatility Regime
+  Detection, and enhanced screener added to technical/screener endpoints. Computed
+  from existing OHLCV data — no new dependencies or migrations required.
 
 ## Verification
 

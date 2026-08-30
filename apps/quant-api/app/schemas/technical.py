@@ -21,6 +21,10 @@ class IndicatorsSummary(BaseModel):
     ma200: float | None = None
     rsi14: float | None = None
     atr14: float | None = None
+    atr_percent: float | None = None
+    volatility_regime: str | None = None
+    volume_zscore: float | None = None
+    volume_sma_ratio: float | None = None
     macd: MacdResponse
     bollinger: BollingerResponse
 

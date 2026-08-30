@@ -10,7 +10,17 @@ from app.schemas.technical import (
     MacdResponse,
     TechnicalAnalysisResponse,
 )
-from app.technical.indicators import atr, bollinger, macd, rsi, sma
+from app.technical.indicators import (
+    atr,
+    atr_percent,
+    bollinger,
+    macd,
+    rsi,
+    sma,
+    volatility_regime,
+    volume_sma_ratio,
+    volume_zscore,
+)
 
 
 def calculate_technical_analysis(
@@ -51,6 +61,7 @@ def calculate_technical_analysis(
     closes = [float(p.close) for p in prices]
     highs = [float(p.high) for p in prices]
     lows = [float(p.low) for p in prices]
+    volumes = [float(p.volume) for p in prices if p.volume is not None]
 
     ma20_series = sma(closes, 20)
     ma50_series = sma(closes, 50)
@@ -59,6 +70,11 @@ def calculate_technical_analysis(
     atr_series = atr(highs, lows, closes, 14)
     macd_line, macd_signal, macd_hist = macd(closes)
     bb_mid, bb_upper, bb_lower = bollinger(closes, 20, 2)
+
+    has_volume = len(volumes) == len(closes) and any(v > 0 for v in volumes)
+    vol_zscore_series = volume_zscore(volumes, 20) if has_volume else [None] * len(closes)
+    vol_sma_ratio_series = volume_sma_ratio(volumes, 20) if has_volume else [None] * len(closes)
+    atr_pct_series = atr_percent(highs, lows, closes, 14)
 
     latest_close = closes[-1]
     latest_ma20 = ma20_series[-1]
@@ -74,6 +90,11 @@ def calculate_technical_analysis(
     latest_bb_mid = bb_mid[-1]
     latest_bb_upper = bb_upper[-1]
     latest_bb_lower = bb_lower[-1]
+
+    latest_vol_zscore = vol_zscore_series[-1]
+    latest_vol_sma_ratio = vol_sma_ratio_series[-1]
+    latest_atr_pct = atr_pct_series[-1]
+    latest_vol_regime = volatility_regime(latest_atr_pct)
 
 
     if latest_ma50 is not None and latest_ma200 is not None:
@@ -105,6 +126,10 @@ def calculate_technical_analysis(
             ma200=round(latest_ma200, 2) if latest_ma200 is not None else None,
             rsi14=round(latest_rsi, 2) if latest_rsi is not None else None,
             atr14=round(latest_atr, 2) if latest_atr is not None else None,
+            atr_percent=round(latest_atr_pct, 2) if latest_atr_pct is not None else None,
+            volatility_regime=latest_vol_regime,
+            volume_zscore=round(latest_vol_zscore, 2) if latest_vol_zscore is not None else None,
+            volume_sma_ratio=round(latest_vol_sma_ratio, 2) if latest_vol_sma_ratio is not None else None,
             macd=MacdResponse(
                 line=round(latest_macd_line, 2) if latest_macd_line is not None else None,
                 signal=round(latest_macd_sig, 2) if latest_macd_sig is not None else None,

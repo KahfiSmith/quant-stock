@@ -143,3 +143,58 @@ def bollinger(
         upper[i] = mean + num_std * deviation
         lower[i] = mean - num_std * deviation
     return middle, upper, lower
+
+
+VolatilityRegimeType = str  # "LOW" | "NORMAL" | "HIGH" | "EXTREME"
+
+
+def volume_zscore(volumes: list[float], period: int = 20) -> list[Number]:
+    """Z-score of latest volume vs rolling mean/stddev over ``period`` bars."""
+    out: list[Number] = [None] * len(volumes)
+    if period <= 1 or len(volumes) < period:
+        return out
+    for i in range(period - 1, len(volumes)):
+        window = volumes[i - period + 1 : i + 1]
+        mean = sum(window) / period
+        variance = sum((x - mean) ** 2 for x in window) / period
+        std = variance**0.5
+        out[i] = (volumes[i] - mean) / std if std > 0 else 0.0
+    return out
+
+
+def volume_sma_ratio(volumes: list[float], period: int = 20) -> list[Number]:
+    """Ratio of current volume to its SMA — 1.0 means average, 2.0 means 2× average."""
+    sma_series = sma(volumes, period)
+    out: list[Number] = [None] * len(volumes)
+    for i in range(len(volumes)):
+        if sma_series[i] is not None and sma_series[i] > 0:
+            out[i] = volumes[i] / sma_series[i]
+    return out
+
+
+def atr_percent(
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    period: int = 14,
+) -> list[Number]:
+    """ATR as a percentage of the close price — normalised volatility measure."""
+    atr_series = atr(highs, lows, closes, period)
+    out: list[Number] = [None] * len(closes)
+    for i in range(len(closes)):
+        if atr_series[i] is not None and closes[i] > 0:
+            out[i] = (atr_series[i] / closes[i]) * 100.0
+    return out
+
+
+def volatility_regime(atr_pct_value: float | None) -> VolatilityRegimeType | None:
+    """Classify volatility into a regime based on ATR% thresholds for IDX equities."""
+    if atr_pct_value is None:
+        return None
+    if atr_pct_value < 1.5:
+        return "LOW"
+    if atr_pct_value < 3.0:
+        return "NORMAL"
+    if atr_pct_value < 5.0:
+        return "HIGH"
+    return "EXTREME"
