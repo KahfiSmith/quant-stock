@@ -36,7 +36,7 @@ def get_idx_universe(
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     """Retrieves full active IDX listed stock universe with IDX-IC classification & PIT ranking."""
-    stmt = select(Stock).where(Stock.is_active.is_(True))
+    stmt = select(Stock).where(Stock.is_active.is_(True), Stock.exchange == "IDX")
     if sector:
         stmt = stmt.where(Stock.sector.ilike(f"%{sector.strip()}%"))
     if liquidity:

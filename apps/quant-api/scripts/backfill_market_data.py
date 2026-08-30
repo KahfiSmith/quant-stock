@@ -85,7 +85,7 @@ def _ensure_stocks(db, collector: YFinanceCollector, symbols: list[str]) -> dict
         meta = collector.collect_metadata(symbol)
         name = meta.get("name") or symbol
         sector = meta.get("sector")
-        exchange = meta.get("exchange")
+        exchange = "IDX"
         market_cap = meta.get("market_cap")
         currency = str(meta.get("currency") or "IDR")
         timezone = str(meta.get("timezone") or "Asia/Jakarta")

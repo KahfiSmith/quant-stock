@@ -129,6 +129,16 @@ def test_idx_universe_endpoint(client: TestClient) -> None:
     db = client.app.state.database.session()
     try:
         _setup_idx_test_data(db)
+        db.add(
+            Stock(
+                symbol="NVDA",
+                name="NVIDIA Corporation",
+                is_active=True,
+                exchange="NASDAQ",
+                currency="USD",
+            )
+        )
+        db.commit()
     finally:
         db.close()
 
@@ -138,6 +148,8 @@ def test_idx_universe_endpoint(client: TestClient) -> None:
     assert data["success"] is True
     assert "items" in data["data"]
     assert len(data["data"]["items"]) >= 3
+    assert all(item["exchange"] == "IDX" for item in data["data"]["items"])
+    assert all(item["symbol"] != "NVDA" for item in data["data"]["items"])
     bbca = next(item for item in data["data"]["items"] if item["symbol"] == "BBCA")
     assert bbca["sector"] == "Financials"
     assert bbca["sub_sector"] == "Banks"

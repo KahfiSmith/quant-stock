@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from app.core.config import get_settings
 from app.db.session import Database
+from app.ingestion.idx_universe_data import IDX_FULL_TICKER_LIST
 from app.models.idx_models import (
     BenchmarkPrice,
     CorporateActionIDX,
@@ -272,22 +273,39 @@ def seed_idx_universe() -> None:
                 )
 
         # 2. Seed Stocks and Point-in-Time Data
-        for stock_spec in IDX_STOCK_UNIVERSE:
-            sym = stock_spec["symbol"]
+        # First ensure all comprehensive tickers exist in Stock universe master
+        existing_symbols = {s.symbol for s in db.query(Stock).all()}
+        detailed_specs = {s["symbol"]: s for s in IDX_STOCK_UNIVERSE}
+
+        for sym in IDX_FULL_TICKER_LIST:
+            stock_spec = detailed_specs.get(sym, {
+                "symbol": sym,
+                "name": f"PT {sym} Indonesia Tbk",
+                "sector": "Industrials",
+                "sub_sector": "General",
+                "board": "MAIN",
+                "listing_date": date(2015, 1, 1),
+                "market_cap": 5_000_000_000_000.0,
+                "liquidity_status": "liquid",
+                "avg_daily_turnover_20d": 15_000_000_000.0,
+                "avg_daily_frequency_20d": 2_500.0,
+                "base_price": 1250.0,
+            })
+
             stock = db.query(Stock).filter(Stock.symbol == sym).first()
             if not stock:
                 stock = Stock(
                     symbol=sym,
                     name=stock_spec["name"],
                     sector=stock_spec["sector"],
-                    sub_sector=stock_spec["sub_sector"],
-                    listing_date=stock_spec["listing_date"],
-                    market_cap=stock_spec["market_cap"],
-                    liquidity_status=stock_spec["liquidity_status"],
+                    sub_sector=stock_spec.get("sub_sector"),
+                    listing_date=stock_spec.get("listing_date"),
+                    market_cap=stock_spec.get("market_cap"),
+                    liquidity_status=stock_spec.get("liquidity_status", "liquid"),
                     is_active=True,
-                    board=stock_spec["board"],
-                    avg_daily_turnover_20d=stock_spec["avg_daily_turnover_20d"],
-                    avg_daily_frequency_20d=stock_spec["avg_daily_frequency_20d"],
+                    board=stock_spec.get("board", "MAIN"),
+                    avg_daily_turnover_20d=stock_spec.get("avg_daily_turnover_20d"),
+                    avg_daily_frequency_20d=stock_spec.get("avg_daily_frequency_20d"),
                     exchange="IDX",
                     currency="IDR",
                     timezone="Asia/Jakarta",
@@ -296,14 +314,10 @@ def seed_idx_universe() -> None:
                 db.flush()
             else:
                 stock.name = stock_spec["name"]
-                stock.sector = stock_spec["sector"]
-                stock.sub_sector = stock_spec["sub_sector"]
-                stock.listing_date = stock_spec["listing_date"]
-                stock.market_cap = stock_spec["market_cap"]
-                stock.liquidity_status = stock_spec["liquidity_status"]
-                stock.board = stock_spec["board"]
-                stock.avg_daily_turnover_20d = stock_spec["avg_daily_turnover_20d"]
-                stock.avg_daily_frequency_20d = stock_spec["avg_daily_frequency_20d"]
+                if stock_spec.get("sector"):
+                    stock.sector = stock_spec["sector"]
+                if stock_spec.get("sub_sector"):
+                    stock.sub_sector = stock_spec["sub_sector"]
                 db.flush()
 
             # Seed 90 Daily Price Candles
@@ -318,6 +332,7 @@ def seed_idx_universe() -> None:
                     Price.stock_id == stock.id, Price.time == t_dt, Price.interval == "1d"
                 ).first()
                 if not existing_p:
+                    turnover = stock_spec.get("avg_daily_turnover_20d") or 10_000_000_000.0
                     db.add(
                         Price(
                             stock_id=stock.id,
@@ -326,7 +341,7 @@ def seed_idx_universe() -> None:
                             high=c_val * 1.015,
                             low=c_val * 0.985,
                             close=c_val,
-                            volume=stock_spec["avg_daily_turnover_20d"] / max(1.0, c_val),
+                            volume=turnover / max(1.0, c_val),
                             interval="1d",
                             source="idx_feed",
                             validation_state="valid",
@@ -338,8 +353,9 @@ def seed_idx_universe() -> None:
                     MarketFlowIDX.stock_id == stock.id, MarketFlowIDX.date == day
                 ).first()
                 if not existing_flow:
-                    buy_v = (stock_spec["avg_daily_turnover_20d"] * 0.35) * (1.0 + ((offset % 3) - 1) * 0.2)
-                    sell_v = (stock_spec["avg_daily_turnover_20d"] * 0.30) * (1.0 + ((offset % 4) - 1.5) * 0.2)
+                    turnover = stock_spec.get("avg_daily_turnover_20d") or 10_000_000_000.0
+                    buy_v = (turnover * 0.35) * (1.0 + ((offset % 3) - 1) * 0.2)
+                    sell_v = (turnover * 0.30) * (1.0 + ((offset % 4) - 1.5) * 0.2)
                     db.add(
                         MarketFlowIDX(
                             stock_id=stock.id,
@@ -355,7 +371,6 @@ def seed_idx_universe() -> None:
                     )
 
             # Seed Point-in-Time Financial Statements (4 Quarters)
-            # Q1 2025, Q2 2025, Q3 2025, FY 2024
             pit_quarters = [
                 {"year": 2024, "q": "FY", "period_end": date(2024, 12, 31), "filing": date(2025, 3, 28), "roe": 0.185, "roa": 0.038, "eps": base_p * 0.08, "bvps": base_p * 0.42},
                 {"year": 2025, "q": "Q1", "period_end": date(2025, 3, 31), "filing": date(2025, 4, 30), "roe": 0.192, "roa": 0.039, "eps": base_p * 0.022, "bvps": base_p * 0.44},
@@ -382,7 +397,7 @@ def seed_idx_universe() -> None:
                             bvps=q_data["bvps"],
                             roe=q_data["roe"],
                             roa=q_data["roa"],
-                            debt_to_equity=0.45 if stock_spec["sector"] != "Financials" else 4.8,
+                            debt_to_equity=0.45 if stock_spec.get("sector") != "Financials" else 4.8,
                             net_profit_margin=0.28,
                             dividend_per_share=q_data["eps"] * 0.5 if q_data["q"] == "FY" else 0.0,
                             is_audited=q_data["q"] == "FY",
@@ -407,6 +422,8 @@ def seed_idx_universe() -> None:
                         cash_amount=base_p * 0.035,
                     )
                 )
+
+        db.commit()
 
         db.commit()
         print("Seeded comprehensive IDX stock universe, PIT fundamentals, market flows, and IHSG benchmark successfully.")

@@ -29,11 +29,18 @@ def utc_now() -> datetime:
 @router.get("", include_in_schema=True)
 def get_stocks(
     search: str | None = Query(default=None, max_length=64),
+    exchange: str = Query(default="IDX", max_length=64),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
-    rows, _total, meta = list_stocks(db, search=search, page=page, page_size=page_size)
+    rows, _total, meta = list_stocks(
+        db,
+        search=search,
+        exchange=exchange,
+        page=page,
+        page_size=page_size,
+    )
     return success(
         StocksResponse(
             items=[StockResponse.model_validate(stock) for stock in rows],

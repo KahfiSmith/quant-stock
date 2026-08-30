@@ -114,6 +114,35 @@ def test_screener_filters_and_sorts(client: TestClient) -> None:
     assert data2["items"][0]["as_of"]
 
 
+def test_screener_defaults_to_idx_exchange(client: TestClient) -> None:
+    db = client.app.state.database.session()
+    try:
+        idx_stock = _make_stock(db, "BBCA", "Bank Central Asia", "Financials")
+        us_stock = Stock(
+            symbol="MSFT",
+            name="Microsoft Corporation",
+            sector="Technology",
+            exchange="NASDAQ",
+            currency="USD",
+        )
+        db.add(us_stock)
+        db.flush()
+        _make_candles(db, idx_stock, datetime(2026, 1, 1, tzinfo=UTC), count=30)
+        _make_candles(db, us_stock, datetime(2026, 1, 1, tzinfo=UTC), count=30)
+        db.commit()
+    finally:
+        db.close()
+
+    response = client.post(
+        "/api/v1/screener",
+        json={},
+        headers=_auth_headers(client),
+    )
+
+    assert response.status_code == 200
+    assert [item["symbol"] for item in response.json()["data"]["items"]] == ["BBCA"]
+
+
 def test_screener_rejects_reversed_ranges(client: TestClient) -> None:
     headers = _auth_headers(client)
     res = client.post(

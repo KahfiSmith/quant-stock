@@ -158,6 +158,7 @@ def test_run_end_to_end_ingests_prices_and_fundamentals(client, fake_ticker_fact
         # Stock metadata was updated to real yfinance values
         bbca = db.scalar(select(Stock).where(Stock.symbol == "BBCA"))
         assert bbca.sector == "Financial Services"
+        assert bbca.exchange == "IDX"
         assert bbca.name == "Bank Central Asia Tbk"
     finally:
         db.close()

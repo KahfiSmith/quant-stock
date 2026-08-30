@@ -31,6 +31,7 @@ class CustomWeightsInput(BaseModel):
 
 class ScreenerRequest(BaseModel):
     search: str | None = Field(default=None, max_length=64)
+    exchange: str = Field(default="IDX", max_length=64)
     sector: str | None = Field(default=None, max_length=64)
     min_market_cap: float | None = None
     max_market_cap: float | None = None

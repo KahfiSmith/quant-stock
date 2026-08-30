@@ -18,6 +18,8 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
     if req.search:
         pattern = f"%{req.search.strip()}%"
         stmt = stmt.where(Stock.symbol.ilike(pattern) | Stock.name.ilike(pattern))
+    if req.exchange:
+        stmt = stmt.where(Stock.exchange == req.exchange.strip().upper())
     if req.sector:
         stmt = stmt.where(Stock.sector.ilike(f"%{req.sector.strip()}%"))
     if req.min_market_cap is not None:

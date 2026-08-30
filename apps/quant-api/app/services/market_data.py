@@ -19,11 +19,17 @@ def list_stocks(
     db: Session,
     *,
     search: str | None = None,
+    exchange: str | None = "IDX",
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Stock], int, dict[str, int]]:
     statement = select(Stock)
     count_statement = select(func.count(Stock.id))
+
+    if exchange:
+        normalized_exchange = exchange.strip().upper()
+        statement = statement.where(Stock.exchange == normalized_exchange)
+        count_statement = count_statement.where(Stock.exchange == normalized_exchange)
 
     if search:
         pattern = f"%{search.strip()}%"

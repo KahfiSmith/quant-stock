@@ -51,6 +51,15 @@ def _seed(client: TestClient) -> None:
         _make_candles(db, stock, datetime(2026, 1, 5, tzinfo=UTC))
         other = _make_stock(db, "TLKM", "Telkom Indonesia")
         _make_candles(db, other, datetime(2026, 1, 5, tzinfo=UTC))
+        db.add(
+            Stock(
+                symbol="AAPL",
+                name="Apple Inc.",
+                sector="Technology",
+                exchange="NASDAQ",
+                currency="USD",
+            )
+        )
         db.commit()
     finally:
         db.close()
