@@ -32,6 +32,7 @@ const PRESET_OPTIONS = [
   { id: "garp", label: "IDX GARP Rotation", weights: { growth: 0.35, quality: 0.25, value: 0.25, momentum: 0.10, risk: 0.05 } },
   { id: "defensive_income", label: "IDX High Dividend & Defensive", weights: { momentum: 0.05, quality: 0.35, value: 0.20, risk: 0.35, growth: 0.05 } },
   { id: "volume_momentum", label: "IDX Volume Momentum", weights: { momentum: 0.45, quality: 0.20, value: 0.15, risk: 0.10, growth: 0.10 } },
+  { id: "mean_reversion", label: "IDX Mean Reversion", weights: { value: 0.40, risk: 0.25, quality: 0.20, momentum: 0.10, growth: 0.05 } },
 ];
 
 export default function QuantRankingPage() {
@@ -274,6 +275,8 @@ export default function QuantRankingPage() {
                   <th className="py-3 px-4 text-right">Momentum</th>
                   <th className="py-3 px-4 text-center">Volume</th>
                   <th className="py-3 px-4 text-center">Volatility</th>
+                  <th className="py-3 px-4 text-right">1M Mom</th>
+                  <th className="py-3 px-4 text-right">Sharpe</th>
                   <th className="py-3 px-4 text-center">Risk Level</th>
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
@@ -317,6 +320,12 @@ export default function QuantRankingPage() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <VolatilityRegimeBadge regime={item.volatility_regime} atrPercent={item.atr_percent} />
+                    </td>
+                    <td className={`py-3 px-4 text-right font-mono ${item.momentum_1m != null ? (item.momentum_1m >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400") : ""}`}>
+                      {item.momentum_1m != null ? `${item.momentum_1m >= 0 ? "+" : ""}${item.momentum_1m.toFixed(1)}%` : "—"}
+                    </td>
+                    <td className="py-3 px-4 text-right font-mono">
+                      {item.sharpe_ratio != null ? item.sharpe_ratio.toFixed(2) : "—"}
                     </td>
                     <td className="py-3 px-4 text-center">{getRiskBadge(item.risk_level)}</td>
                     <td className="py-3 px-4 text-right">

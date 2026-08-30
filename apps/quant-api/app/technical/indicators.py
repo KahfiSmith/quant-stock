@@ -198,3 +198,114 @@ def volatility_regime(atr_pct_value: float | None) -> VolatilityRegimeType | Non
     if atr_pct_value < 5.0:
         return "HIGH"
     return "EXTREME"
+
+
+def price_momentum(closes: list[float], period: int) -> Number:
+    """Simple price return over ``period`` bars as a percentage."""
+    if len(closes) < period + 1:
+        return None
+    old = closes[-(period + 1)]
+    if old <= 0:
+        return None
+    return ((closes[-1] - old) / old) * 100.0
+
+
+def multi_timeframe_momentum(
+    closes: list[float],
+) -> dict[str, Number]:
+    """Returns 1M/3M/6M/12M price momentum (approx trading days)."""
+    return {
+        "mom_1m": price_momentum(closes, 21),
+        "mom_3m": price_momentum(closes, 63),
+        "mom_6m": price_momentum(closes, 126),
+        "mom_12m": price_momentum(closes, 252),
+    }
+
+
+def bollinger_zscore(closes: list[float], period: int = 20) -> Number:
+    """Z-score of latest close vs Bollinger mid — positive = above band center."""
+    if len(closes) < period:
+        return None
+    window = closes[-period:]
+    mean = sum(window) / period
+    variance = sum((x - mean) ** 2 for x in window) / period
+    std = variance**0.5
+    if std == 0:
+        return 0.0
+    return (closes[-1] - mean) / std
+
+
+def max_drawdown(closes: list[float]) -> tuple[Number, Number]:
+    """Returns (max_drawdown_pct, current_drawdown_pct) from the full series.
+
+    Drawdown values are negative percentages (e.g. -15.3 means a 15.3% decline
+    from peak). Returns (None, None) when the series is empty.
+    """
+    if not closes:
+        return None, None
+    peak = closes[0]
+    worst = 0.0
+    for price in closes:
+        if price > peak:
+            peak = price
+        dd = ((price - peak) / peak) * 100.0 if peak > 0 else 0.0
+        if dd < worst:
+            worst = dd
+
+    current_peak = max(closes)
+    current_dd = ((closes[-1] - current_peak) / current_peak) * 100.0 if current_peak > 0 else 0.0
+    return round(worst, 2), round(current_dd, 2)
+
+
+def _daily_returns(closes: list[float]) -> list[float]:
+    return [
+        (closes[i] - closes[i - 1]) / closes[i - 1]
+        for i in range(1, len(closes))
+        if closes[i - 1] > 0
+    ]
+
+
+def sharpe_ratio(closes: list[float], risk_free_annual: float = 0.06) -> Number:
+    """Annualised Sharpe ratio. ``risk_free_annual`` defaults to 6% (Indonesian SBI rate)."""
+    rets = _daily_returns(closes)
+    if len(rets) < 20:
+        return None
+    daily_rf = risk_free_annual / 252.0
+    excess = [r - daily_rf for r in rets]
+    mean_excess = sum(excess) / len(excess)
+    variance = sum((r - mean_excess) ** 2 for r in excess) / len(excess)
+    std = variance**0.5
+    if std == 0:
+        return None
+    return (mean_excess / std) * (252**0.5)
+
+
+def sortino_ratio(closes: list[float], risk_free_annual: float = 0.06) -> Number:
+    """Annualised Sortino ratio — penalises downside volatility only."""
+    rets = _daily_returns(closes)
+    if len(rets) < 20:
+        return None
+    daily_rf = risk_free_annual / 252.0
+    excess = [r - daily_rf for r in rets]
+    mean_excess = sum(excess) / len(excess)
+    downside = [r for r in excess if r < 0]
+    if not downside:
+        return None
+    down_var = sum(r**2 for r in downside) / len(downside)
+    down_std = down_var**0.5
+    if down_std == 0:
+        return None
+    return (mean_excess / down_std) * (252**0.5)
+
+
+def calmar_ratio(closes: list[float]) -> Number:
+    """Calmar ratio: annualised return / abs(max drawdown)."""
+    if len(closes) < 63:
+        return None
+    total_return = (closes[-1] - closes[0]) / closes[0] if closes[0] > 0 else 0.0
+    years = len(closes) / 252.0
+    annual_return = (1 + total_return) ** (1 / years) - 1 if years > 0 else 0.0
+    mdd, _ = max_drawdown(closes)
+    if mdd is None or mdd >= 0:
+        return None
+    return annual_return / (abs(mdd) / 100.0)

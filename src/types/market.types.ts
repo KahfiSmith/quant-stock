@@ -330,6 +330,9 @@ export interface ScreenerItem {
   volume_sma_ratio?: number | null;
   atr_percent?: number | null;
   volatility_regime?: VolatilityRegime | null;
+  momentum_1m?: number | null;
+  max_drawdown_pct?: number | null;
+  sharpe_ratio?: number | null;
   value_score?: number | null;
   quality_score?: number | null;
   momentum_score?: number | null;
@@ -365,9 +368,9 @@ export interface ScreenerFilterParams {
   min_volume_zscore?: number;
   max_volume_zscore?: number;
   volatility_regime?: VolatilityRegime;
-  strategy_preset?: "none" | "quality_momentum" | "deep_value" | "garp" | "defensive_income" | "volume_momentum";
+  strategy_preset?: "none" | "quality_momentum" | "deep_value" | "garp" | "defensive_income" | "volume_momentum" | "mean_reversion";
   custom_weights?: CustomFactorWeights;
-  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "volume_zscore" | "atr_percent" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
+  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "volume_zscore" | "atr_percent" | "momentum_1m" | "sharpe_ratio" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
   sort_order?: "asc" | "desc";
   page?: number;
   page_size?: number;
@@ -463,6 +466,24 @@ export interface MacdIndicator {
 
 export type VolatilityRegime = "LOW" | "NORMAL" | "HIGH" | "EXTREME";
 
+export interface MomentumProfile {
+  mom_1m: number | null;
+  mom_3m: number | null;
+  mom_6m: number | null;
+  mom_12m: number | null;
+}
+
+export interface DrawdownProfile {
+  max_drawdown_pct: number | null;
+  current_drawdown_pct: number | null;
+}
+
+export interface RiskMetrics {
+  sharpe_ratio: number | null;
+  sortino_ratio: number | null;
+  calmar_ratio: number | null;
+}
+
 export interface IndicatorsSummary {
   ma20: number | null;
   ma50: number | null;
@@ -473,8 +494,12 @@ export interface IndicatorsSummary {
   volatility_regime: VolatilityRegime | null;
   volume_zscore: number | null;
   volume_sma_ratio: number | null;
+  bollinger_zscore: number | null;
   macd: MacdIndicator;
   bollinger: BollingerBand;
+  momentum: MomentumProfile;
+  drawdown: DrawdownProfile;
+  risk_metrics: RiskMetrics;
 }
 
 export interface TechnicalAnalysisResponse {

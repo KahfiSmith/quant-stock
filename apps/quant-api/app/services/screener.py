@@ -54,6 +54,8 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         custom_weights = {"quality": 0.35, "risk": 0.35, "value": 0.20, "growth": 0.05, "momentum": 0.05}
     elif req.strategy_preset == "volume_momentum":
         custom_weights = {"momentum": 0.45, "quality": 0.20, "value": 0.15, "risk": 0.10, "growth": 0.10}
+    elif req.strategy_preset == "mean_reversion":
+        custom_weights = {"value": 0.40, "risk": 0.25, "quality": 0.20, "momentum": 0.10, "growth": 0.05}
 
 
     enriched: list[ScreenerItem] = []
@@ -143,6 +145,8 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             debt_to_equity=de,
             volume_zscore=tech.indicators.volume_zscore,
             volatility_regime=tech.indicators.volatility_regime,
+            momentum_1m=tech.indicators.momentum.mom_1m,
+            max_drawdown_pct=tech.indicators.drawdown.max_drawdown_pct,
         )
 
         enriched.append(
@@ -172,6 +176,9 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
                 volume_sma_ratio=vol_sma_r,
                 atr_percent=atr_pct,
                 volatility_regime=vol_regime,
+                momentum_1m=tech.indicators.momentum.mom_1m,
+                max_drawdown_pct=tech.indicators.drawdown.max_drawdown_pct,
+                sharpe_ratio=tech.indicators.risk_metrics.sharpe_ratio,
                 value_score=factors.value,
                 quality_score=factors.quality,
                 momentum_score=factors.momentum,

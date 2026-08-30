@@ -6,17 +6,26 @@ from sqlalchemy.orm import Session
 from app.models.market_data import Price, Stock
 from app.schemas.technical import (
     BollingerResponse,
+    DrawdownProfile,
     IndicatorsSummary,
     MacdResponse,
+    MomentumProfile,
+    RiskMetrics,
     TechnicalAnalysisResponse,
 )
 from app.technical.indicators import (
     atr,
     atr_percent,
     bollinger,
+    bollinger_zscore,
+    calmar_ratio,
     macd,
+    max_drawdown,
+    multi_timeframe_momentum,
     rsi,
+    sharpe_ratio,
     sma,
+    sortino_ratio,
     volatility_regime,
     volume_sma_ratio,
     volume_zscore,
@@ -96,6 +105,13 @@ def calculate_technical_analysis(
     latest_atr_pct = atr_pct_series[-1]
     latest_vol_regime = volatility_regime(latest_atr_pct)
 
+    mom = multi_timeframe_momentum(closes)
+    bb_z = bollinger_zscore(closes, 20)
+    mdd, current_dd = max_drawdown(closes)
+    sr = sharpe_ratio(closes)
+    so = sortino_ratio(closes)
+    cr = calmar_ratio(closes)
+
 
     if latest_ma50 is not None and latest_ma200 is not None:
         trend = "bullish" if latest_ma50 > latest_ma200 else "bearish"
@@ -130,6 +146,7 @@ def calculate_technical_analysis(
             volatility_regime=latest_vol_regime,
             volume_zscore=round(latest_vol_zscore, 2) if latest_vol_zscore is not None else None,
             volume_sma_ratio=round(latest_vol_sma_ratio, 2) if latest_vol_sma_ratio is not None else None,
+            bollinger_zscore=round(bb_z, 2) if bb_z is not None else None,
             macd=MacdResponse(
                 line=round(latest_macd_line, 2) if latest_macd_line is not None else None,
                 signal=round(latest_macd_sig, 2) if latest_macd_sig is not None else None,
@@ -139,6 +156,21 @@ def calculate_technical_analysis(
                 middle=round(latest_bb_mid, 2) if latest_bb_mid is not None else None,
                 upper=round(latest_bb_upper, 2) if latest_bb_upper is not None else None,
                 lower=round(latest_bb_lower, 2) if latest_bb_lower is not None else None,
+            ),
+            momentum=MomentumProfile(
+                mom_1m=round(mom["mom_1m"], 2) if mom["mom_1m"] is not None else None,
+                mom_3m=round(mom["mom_3m"], 2) if mom["mom_3m"] is not None else None,
+                mom_6m=round(mom["mom_6m"], 2) if mom["mom_6m"] is not None else None,
+                mom_12m=round(mom["mom_12m"], 2) if mom["mom_12m"] is not None else None,
+            ),
+            drawdown=DrawdownProfile(
+                max_drawdown_pct=mdd,
+                current_drawdown_pct=current_dd,
+            ),
+            risk_metrics=RiskMetrics(
+                sharpe_ratio=round(sr, 2) if sr is not None else None,
+                sortino_ratio=round(so, 2) if so is not None else None,
+                calmar_ratio=round(cr, 2) if cr is not None else None,
             ),
         ),
     )

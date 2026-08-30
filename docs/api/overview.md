@@ -31,8 +31,8 @@ API integration documentation for communication between the Next.js frontend and
 | **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
 | **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |
-| **Screener** | `POST` | `/api/v1/screener` | Filter & rank IDX stocks by multi-criteria; `exchange` defaults to `IDX`. Supports `volume_momentum` preset, `min/max_volume_zscore` and `volatility_regime` filter params. |
-| **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger) plus volume analysis (Z-Score, SMA ratio) and volatility regime (ATR%, LOW/NORMAL/HIGH/EXTREME) |
+| **Screener** | `POST` | `/api/v1/screener` | Filter & rank IDX stocks by multi-criteria; `exchange` defaults to `IDX`. Supports `volume_momentum` and `mean_reversion` presets, volume/volatility/momentum filter and sort dimensions. |
+| **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger), volume analysis (Z-Score, SMA ratio), volatility regime, multi-timeframe momentum (1M/3M/6M/12M), drawdown analysis, and risk-adjusted returns (Sharpe/Sortino/Calmar) |
 
 ## API scope status
 

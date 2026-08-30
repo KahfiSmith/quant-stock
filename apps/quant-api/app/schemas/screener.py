@@ -15,6 +15,8 @@ SortByField = Literal[
     "rsi",
     "volume_zscore",
     "atr_percent",
+    "momentum_1m",
+    "sharpe_ratio",
     "value_score",
     "quality_score",
     "momentum_score",
@@ -49,7 +51,7 @@ class ScreenerRequest(BaseModel):
     min_volume_zscore: float | None = None
     max_volume_zscore: float | None = None
     volatility_regime: Literal["LOW", "NORMAL", "HIGH", "EXTREME"] | None = None
-    strategy_preset: Literal["none", "quality_momentum", "deep_value", "garp", "defensive_income", "volume_momentum"] = "none"
+    strategy_preset: Literal["none", "quality_momentum", "deep_value", "garp", "defensive_income", "volume_momentum", "mean_reversion"] = "none"
     custom_weights: CustomWeightsInput | None = None
     sort_by: SortByField = "score"
     sort_order: SortOrder = "desc"
@@ -101,6 +103,9 @@ class ScreenerItem(BaseModel):
     volume_sma_ratio: float | None = None
     atr_percent: float | None = None
     volatility_regime: str | None = None
+    momentum_1m: float | None = None
+    max_drawdown_pct: float | None = None
+    sharpe_ratio: float | None = None
     value_score: float | None = None
     quality_score: float | None = None
     momentum_score: float | None = None

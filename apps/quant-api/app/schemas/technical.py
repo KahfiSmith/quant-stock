@@ -15,6 +15,24 @@ class MacdResponse(BaseModel):
     histogram: float | None = None
 
 
+class MomentumProfile(BaseModel):
+    mom_1m: float | None = None
+    mom_3m: float | None = None
+    mom_6m: float | None = None
+    mom_12m: float | None = None
+
+
+class DrawdownProfile(BaseModel):
+    max_drawdown_pct: float | None = None
+    current_drawdown_pct: float | None = None
+
+
+class RiskMetrics(BaseModel):
+    sharpe_ratio: float | None = None
+    sortino_ratio: float | None = None
+    calmar_ratio: float | None = None
+
+
 class IndicatorsSummary(BaseModel):
     ma20: float | None = None
     ma50: float | None = None
@@ -25,8 +43,12 @@ class IndicatorsSummary(BaseModel):
     volatility_regime: str | None = None
     volume_zscore: float | None = None
     volume_sma_ratio: float | None = None
+    bollinger_zscore: float | None = None
     macd: MacdResponse
     bollinger: BollingerResponse
+    momentum: MomentumProfile = MomentumProfile()
+    drawdown: DrawdownProfile = DrawdownProfile()
+    risk_metrics: RiskMetrics = RiskMetrics()
 
 
 class TechnicalAnalysisResponse(BaseModel):

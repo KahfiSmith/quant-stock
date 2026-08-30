@@ -37,6 +37,8 @@ def generate_quant_signal(
     debt_to_equity: float | None = None,
     volume_zscore: float | None = None,
     volatility_regime: str | None = None,
+    momentum_1m: float | None = None,
+    max_drawdown_pct: float | None = None,
 ) -> QuantDecision:
     reasons: list[str] = []
 
@@ -76,6 +78,14 @@ def generate_quant_signal(
     elif volatility_regime == "LOW":
         reasons.append("Low-volatility regime — potential breakout setup")
 
+    if momentum_1m is not None and momentum_1m > 10.0:
+        reasons.append(f"Strong 1M price momentum (+{momentum_1m:.1f}%)")
+    elif momentum_1m is not None and momentum_1m < -10.0:
+        reasons.append(f"Severe 1M price decline ({momentum_1m:.1f}%)")
+
+    if max_drawdown_pct is not None and max_drawdown_pct < -30.0:
+        reasons.append(f"Deep historical drawdown ({max_drawdown_pct:.1f}%) — recovery risk")
+
 
     if risk_score >= 70:
         risk_level: RiskLevelType = "LOW"
@@ -112,6 +122,12 @@ def generate_quant_signal(
             confidence = max(50.0, confidence - 5.0)
         elif signal in ("STRONG_SELL", "SELL") and volume_zscore >= 1.5:
             confidence = min(98.0, confidence + 3.0)
+
+    if momentum_1m is not None:
+        if signal in ("STRONG_BUY", "BUY") and momentum_1m > 5.0:
+            confidence = min(98.0, confidence + 3.0)
+        elif signal in ("STRONG_BUY", "BUY") and momentum_1m < -5.0:
+            confidence = max(50.0, confidence - 4.0)
 
     if not reasons:
         reasons.append("Balanced quantitative profile without extreme outliers")

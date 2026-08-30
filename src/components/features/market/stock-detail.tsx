@@ -288,6 +288,96 @@ export function StockDetail({ symbol }: StockDetailProps) {
                   <p className="text-sm text-muted-foreground">No volatility data available.</p>
                 )}
               </div>
+
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Price Momentum</h3>
+                {technical ? (
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    {(["1m", "3m", "6m", "12m"] as const).map((tf) => {
+                      const key = `mom_${tf}` as keyof typeof technical.indicators.momentum;
+                      const val = technical.indicators.momentum[key];
+                      return (
+                        <div key={tf}>
+                          <dt className="text-xs text-muted-foreground">{tf.toUpperCase()} Return</dt>
+                          <dd className={`font-semibold ${val != null ? (val >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400") : ""}`}>
+                            {val != null ? `${val >= 0 ? "+" : ""}${val.toFixed(1)}%` : "—"}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No momentum data available.</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Drawdown Analysis</h3>
+                {technical ? (
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Max Drawdown</dt>
+                      <dd className="font-semibold text-rose-600 dark:text-rose-400">
+                        {technical.indicators.drawdown.max_drawdown_pct != null
+                          ? `${technical.indicators.drawdown.max_drawdown_pct.toFixed(1)}%`
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Current Drawdown</dt>
+                      <dd className={`font-semibold ${technical.indicators.drawdown.current_drawdown_pct != null && technical.indicators.drawdown.current_drawdown_pct < -5 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                        {technical.indicators.drawdown.current_drawdown_pct != null
+                          ? `${technical.indicators.drawdown.current_drawdown_pct.toFixed(1)}%`
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-xs text-muted-foreground">Bollinger Z-Score</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.bollinger_zscore != null
+                          ? technical.indicators.bollinger_zscore.toFixed(2)
+                          : "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No drawdown data available.</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+                <h3 className="text-base font-semibold">Risk-Adjusted Returns</h3>
+                {technical ? (
+                  <dl className="grid grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Sharpe</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.risk_metrics.sharpe_ratio != null
+                          ? technical.indicators.risk_metrics.sharpe_ratio.toFixed(2)
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Sortino</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.risk_metrics.sortino_ratio != null
+                          ? technical.indicators.risk_metrics.sortino_ratio.toFixed(2)
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Calmar</dt>
+                      <dd className="font-semibold">
+                        {technical.indicators.risk_metrics.calmar_ratio != null
+                          ? technical.indicators.risk_metrics.calmar_ratio.toFixed(2)
+                          : "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No risk metrics available.</p>
+                )}
+              </div>
             </div>
           )}
 
