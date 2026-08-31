@@ -58,6 +58,10 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         custom_weights = {"momentum": 0.45, "quality": 0.20, "value": 0.15, "risk": 0.10, "growth": 0.10}
     elif req.strategy_preset == "mean_reversion":
         custom_weights = {"value": 0.40, "risk": 0.25, "quality": 0.20, "momentum": 0.10, "growth": 0.05}
+    elif req.strategy_preset == "swing_breakout":
+        custom_weights = {"momentum": 0.50, "risk": 0.15, "quality": 0.15, "value": 0.10, "growth": 0.10}
+    elif req.strategy_preset == "scalping_goreng":
+        custom_weights = {"momentum": 0.55, "risk": 0.10, "value": 0.15, "quality": 0.10, "growth": 0.10}
 
     enriched: list[ScreenerItem] = []
     for stock in stocks:

@@ -19,8 +19,8 @@ Every route group under `src/app/` must be documented here. The
 - `(auth)` - covered by [authentication.md](./authentication.md).
 - `(dashboard)` - the protected profile and settings surfaces are part of
   [authentication.md](./authentication.md); the stock pages (`/stocks`,
-  `/stocks/[symbol]`) are covered by
-  [market-data.md](./market-data.md).
+  `/stocks/[symbol]`), `/quant-ranking`, `/scanner`, `/portfolio`, and
+  `/backtest` are covered by [market-data.md](./market-data.md).
 - `(public)` - the landing page is a thin shell over the auth surface; see
   [product overview](../product/overview.md).
 

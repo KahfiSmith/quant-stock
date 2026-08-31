@@ -104,11 +104,17 @@ ingestion (off-request, manual / scheduled):
 | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, BB, ATR) plus volume analysis (Z-Score, SMA ratio), volatility regime, multi-timeframe momentum (1M/3M/6M/12M), drawdown analysis, and risk-adjusted returns (Sharpe/Sortino/Calmar) | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios and financial metrics | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor composite score and factor breakdown | Required (Bearer) |
-| `POST` | `/api/v1/screener` | Multi-parameter stock screening and ranking; includes `volume_momentum` and `mean_reversion` presets, volume/volatility/momentum filter and sort dimensions | Required (Bearer) |
+| `POST` | `/api/v1/screener` | Multi-parameter stock screening and ranking; includes `volume_momentum`, `mean_reversion`, `swing_breakout`, and `scalping_goreng` presets, volume/volatility/momentum filter and sort dimensions | Required (Bearer) |
+| `GET` | `/api/v1/scanner/swing` | Swing breakout scanner (volume Z ≥ 1.5, momentum-weighted) | Public |
+| `GET` | `/api/v1/scanner/scalping` | Scalping/gorengan scanner (volume Z ≥ 2.0, aggressive momentum) | Public |
+| `GET` | `/api/v1/scanner/accumulation` | Foreign accumulation scanner (smart money buying filter) | Public |
+| `GET` | `/api/v1/scanner/oversold-bounce` | Oversold bounce scanner (RSI ≤ 35, mean reversion) | Public |
 | `GET` | `/api/v1/portfolios` | List user portfolios | Required (Bearer) |
 | `POST` | `/api/v1/portfolios` | Create a new portfolio | Required (Bearer) |
 | `GET` | `/api/v1/portfolios/{id}` | Portfolio detail and computed holdings PnL | Required (Bearer) |
 | `POST` | `/api/v1/portfolios/{id}/transactions` | Add BUY/SELL transaction | Required (Bearer) |
+| `DELETE` | `/api/v1/portfolios/{id}` | Delete portfolio (cascades transactions) | Required (Bearer) |
+| `DELETE` | `/api/v1/portfolios/{id}/transactions/{txn_id}` | Delete a transaction | Required (Bearer) |
 | `POST` | `/api/v1/backtest` | Run historical quantitative strategy backtest | Required (Bearer) |
 | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | Automated structured AI analyst synthesis (real data, deterministic rule-based) | Required (Bearer) |
 
@@ -191,6 +197,11 @@ evidence and data availability metadata.
   calls foreign flow analysis per stock, passes momentum_12m and all risk metrics
   to scoring. 6) ScreenerItem has 45+ fields. Default sort by conviction_score.
   7) Ranking page shows Conviction, Recommendation, and Flow Signal columns.
+- 2026-08-31: **Swing/Scalping Scanner**: Dedicated `/scanner` page with 4 modes
+  (Swing Breakout, Scalping/Gorengan, Foreign Accumulation, Oversold Bounce).
+  Each mode pre-configures screener filters (volume Z-score, RSI, flow signal).
+  Backend: `GET /api/v1/scanner/{swing,scalping,accumulation,oversold-bounce}`.
+  Added `swing_breakout` and `scalping_goreng` screener presets.
 
 ## Verification
 

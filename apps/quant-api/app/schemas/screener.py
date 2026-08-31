@@ -52,7 +52,10 @@ class ScreenerRequest(BaseModel):
     min_volume_zscore: float | None = None
     max_volume_zscore: float | None = None
     volatility_regime: Literal["LOW", "NORMAL", "HIGH", "EXTREME"] | None = None
-    strategy_preset: Literal["none", "quality_momentum", "deep_value", "garp", "defensive_income", "volume_momentum", "mean_reversion"] = "none"
+    strategy_preset: Literal[
+        "none", "quality_momentum", "deep_value", "garp", "defensive_income",
+        "volume_momentum", "mean_reversion", "swing_breakout", "scalping_goreng",
+    ] = "none"
     custom_weights: CustomWeightsInput | None = None
     sort_by: SortByField = "score"
     sort_order: SortOrder = "desc"

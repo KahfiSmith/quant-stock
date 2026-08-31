@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store";
 const NAV_LINKS = [
   { href: ROUTES.HOME, label: "Home" },
   { href: ROUTES.QUANT_RANKING, label: "Quant Ranking" },
+  { href: ROUTES.SCANNER, label: "Scanner" },
   { href: ROUTES.STOCKS, label: "Stocks" },
   { href: ROUTES.PORTFOLIO, label: "Portfolio" },
   { href: ROUTES.BACKTEST, label: "IDX Factor Rotation" },

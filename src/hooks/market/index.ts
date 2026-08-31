@@ -1,4 +1,5 @@
 export { useRunBacktest } from "@/hooks/market/use-backtest";
+export { useScanner } from "@/hooks/market/use-scanner";
 export {
   useFlowAnalysis,
   useIDXBrokerSummary,

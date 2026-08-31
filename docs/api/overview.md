@@ -47,6 +47,10 @@ API integration documentation for communication between the Next.js frontend and
 | **IDX Data** | `GET` | `/api/v1/idx/stocks/{symbol}/flow-analysis` | Foreign flow analysis: accumulation/distribution signal, divergence, momentum, streak |
 | **IDX Data** | `GET` | `/api/v1/idx/broker-summary` | Broker-level daily trading activity from idx.co.id |
 | **IDX Data** | `POST` | `/api/v1/idx/factor-rotation/backtest` | Run IDX multi-asset factor rotation backtest vs IHSG |
+| **Scanner** | `GET` | `/api/v1/scanner/swing` | Swing breakout scanner (volume Z ≥ 1.5 + momentum) |
+| **Scanner** | `GET` | `/api/v1/scanner/scalping` | Scalping/gorengan scanner (volume Z ≥ 2.0 + aggressive momentum) |
+| **Scanner** | `GET` | `/api/v1/scanner/accumulation` | Foreign accumulation scanner (smart money buying) |
+| **Scanner** | `GET` | `/api/v1/scanner/oversold-bounce` | Oversold bounce scanner (RSI ≤ 35 + mean reversion) |
 
 ## API scope status
 

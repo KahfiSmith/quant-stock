@@ -6,6 +6,7 @@ export const ROUTES = {
   SETTINGS: "/settings",
   STOCKS: "/stocks",
   QUANT_RANKING: "/quant-ranking",
+  SCANNER: "/scanner",
   PORTFOLIO: "/portfolio",
   BACKTEST: "/backtest",
 } as const;

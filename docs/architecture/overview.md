@@ -124,6 +124,7 @@ User action
 | `/profile` | `(dashboard)` | Profile page and logout action | Client guard for UX; FastAPI authorizes protected API calls |
 | `/settings` | `(dashboard)` | Profile preferences (name, theme, timezone) | Client guard for UX; FastAPI authorizes protected API calls |
 | `/quant-ranking` | `(dashboard)` | Cross-sectional multi-factor ranking leaderboard across IDX | Public/Protected |
+| `/scanner` | `(dashboard)` | Swing/scalping stock scanner with 4 modes (breakout, gorengan, accumulation, oversold bounce) | Public/Protected |
 | `/stocks` | `(dashboard)` | IDX stock universe listing and search | Client guard for UX; protected market data |
 | `/stocks/[symbol]` | `(dashboard)` | IDX stock detail with chart, PIT fundamentals, quant score, Foreign Flow/Broker summary, and AI analyst | Client guard for UX; protected market data |
 | `/portfolio` | `(dashboard)` | Portfolio holdings, transactions, and PnL | Client guard for UX; protected portfolio API |

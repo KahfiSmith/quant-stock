@@ -28,6 +28,12 @@ export const API_ENDPOINTS = {
     DELETE_TRANSACTION: (portfolioId: number | string, txnId: number | string) =>
       `/api/v1/portfolios/${portfolioId}/transactions/${txnId}`,
   },
+  SCANNER: {
+    SWING: "/api/v1/scanner/swing",
+    SCALPING: "/api/v1/scanner/scalping",
+    ACCUMULATION: "/api/v1/scanner/accumulation",
+    OVERSOLD_BOUNCE: "/api/v1/scanner/oversold-bounce",
+  },
   MARKET: {
     STOCKS: "/api/v1/stocks",
     PRICES: (symbol: string) => `/api/v1/stocks/${symbol}/prices`,
