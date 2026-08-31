@@ -10,12 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_optional, get_db
 from app.api.errors import ApiError, success
-from app.models.idx_models import CorporateActionIDX, MarketFlowIDX
+from app.models.idx_models import BrokerSummaryIDX, CorporateActionIDX, MarketFlowIDX
 from app.models.market_data import Price, Stock
 from app.models.user import User
 from app.quant.idx_backtest import filter_idx_universe, get_pit_fundamentals_for_stock, run_idx_factor_rotation_backtest
 from app.quant.scoring import calculate_quant_score
 from app.schemas.idx_quant import (
+    ForeignFlowAnalysis,
     IDXCorporateActionItem,
     IDXFactorRotationRequest,
     IDXFactorRotationResponse,
@@ -23,6 +24,7 @@ from app.schemas.idx_quant import (
     IDXStockDetailResponse,
     IDXStockUniverseItem,
 )
+from app.services.foreign_flow import compute_foreign_flow_analysis
 
 router = APIRouter(prefix="/api/v1/idx", tags=["idx"])
 
@@ -209,6 +211,61 @@ def get_idx_stock_detail(
         as_of=datetime.now(UTC),
     )
     return success(detail.model_dump(mode="json"), "IDX stock detail retrieved successfully")
+
+
+@router.get("/stocks/{symbol}/flow-analysis", response_model=None)
+def get_foreign_flow_analysis(
+    symbol: str,
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    """Computes foreign flow accumulation/distribution signals for a symbol."""
+    stock = db.scalar(select(Stock).where(Stock.symbol == symbol.upper()))
+    if not stock:
+        raise ApiError(404, "STOCK_NOT_FOUND", f"IDX Stock not found: {symbol.upper()}")
+
+    analysis: ForeignFlowAnalysis = compute_foreign_flow_analysis(db, stock)
+    return success(analysis.model_dump(mode="json"), "Foreign flow analysis computed successfully")
+
+
+@router.get("/broker-summary", response_model=None)
+def get_broker_summary_by_date(
+    date: str = Query(..., description="Trading date YYYYMMDD or YYYY-MM-DD"),
+    limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    """Returns top brokers by trading value for a given date."""
+    from datetime import date as date_type
+
+    clean = date.replace("-", "")
+    try:
+        trade_date = date_type(int(clean[:4]), int(clean[4:6]), int(clean[6:8]))
+    except (ValueError, IndexError):
+        raise ApiError(400, "INVALID_DATE", f"Invalid date format: {date}")
+
+    rows = list(
+        db.scalars(
+            select(BrokerSummaryIDX)
+            .where(BrokerSummaryIDX.date == trade_date)
+            .order_by(BrokerSummaryIDX.total_value.desc())
+            .limit(limit)
+        )
+    )
+
+    items = [
+        {
+            "broker_code": r.broker_code,
+            "broker_name": r.broker_name,
+            "date": r.date.isoformat(),
+            "total_value": float(r.total_value),
+            "volume": float(r.volume),
+            "frequency": r.frequency,
+        }
+        for r in rows
+    ]
+    return success(
+        {"items": items, "total": len(items), "date": trade_date.isoformat()},
+        "Broker summary retrieved successfully",
+    )
 
 
 @router.post("/factor-rotation/backtest", response_model=None)

@@ -124,6 +124,27 @@ class CorporateActionIDX(Base):
     stock: Mapped[Stock] = relationship(back_populates="corporate_actions")
 
 
+class BrokerSummaryIDX(Base):
+    """Per-broker daily trading activity from idx.co.id public data."""
+
+    __tablename__ = "broker_summary_idx"
+    __table_args__ = (
+        UniqueConstraint("broker_code", "date", name="uq_broker_date_summary"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    broker_code: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    broker_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    total_value: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0.0)
+    volume: Mapped[float] = mapped_column(Numeric(18, 0), nullable=False, default=0.0)
+    frequency: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, default="idx_web")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class BenchmarkPrice(Base):
     """IHSG (^JKSE) composite index price history for Alpha/Beta benchmarking."""
 

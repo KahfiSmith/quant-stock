@@ -14,18 +14,24 @@ from app.schemas.technical import (
     TechnicalAnalysisResponse,
 )
 from app.technical.indicators import (
+    adx,
     atr,
     atr_percent,
     bollinger,
     bollinger_zscore,
     calmar_ratio,
+    earnings_yield,
     macd,
     max_drawdown,
+    mfi,
     multi_timeframe_momentum,
+    obv_trend,
     rsi,
     sharpe_ratio,
     sma,
     sortino_ratio,
+    stochastic_rsi,
+    support_resistance_proximity,
     volatility_regime,
     volume_sma_ratio,
     volume_zscore,
@@ -112,6 +118,15 @@ def calculate_technical_analysis(
     so = sortino_ratio(closes)
     cr = calmar_ratio(closes)
 
+    adx_series = adx(highs, lows, closes, 14)
+    latest_adx = adx_series[-1]
+    mfi_series = mfi(highs, lows, closes, volumes, 14) if has_volume else [None] * len(closes)
+    latest_mfi = mfi_series[-1]
+    stoch_rsi_series = stochastic_rsi(closes, 14, 14)
+    latest_stoch_rsi = stoch_rsi_series[-1]
+    obv_t = obv_trend(closes, volumes, 20) if has_volume else None
+    sup_dist, res_dist = support_resistance_proximity(closes, lows, highs, 20)
+
 
     if latest_ma50 is not None and latest_ma200 is not None:
         trend = "bullish" if latest_ma50 > latest_ma200 else "bearish"
@@ -147,6 +162,12 @@ def calculate_technical_analysis(
             volume_zscore=round(latest_vol_zscore, 2) if latest_vol_zscore is not None else None,
             volume_sma_ratio=round(latest_vol_sma_ratio, 2) if latest_vol_sma_ratio is not None else None,
             bollinger_zscore=round(bb_z, 2) if bb_z is not None else None,
+            adx=round(latest_adx, 2) if latest_adx is not None else None,
+            mfi=round(latest_mfi, 2) if latest_mfi is not None else None,
+            stochastic_rsi=round(latest_stoch_rsi, 2) if latest_stoch_rsi is not None else None,
+            obv_trend_pct=round(obv_t, 2) if obv_t is not None else None,
+            support_distance_pct=sup_dist,
+            resistance_distance_pct=res_dist,
             macd=MacdResponse(
                 line=round(latest_macd_line, 2) if latest_macd_line is not None else None,
                 signal=round(latest_macd_sig, 2) if latest_macd_sig is not None else None,

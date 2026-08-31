@@ -39,6 +39,15 @@ def generate_quant_signal(
     volatility_regime: str | None = None,
     momentum_1m: float | None = None,
     max_drawdown_pct: float | None = None,
+    bollinger_zscore: float | None = None,
+    flow_signal: str | None = None,
+    flow_divergence: str | None = None,
+    momentum_12m: float | None = None,
+    adx_val: float | None = None,
+    mfi_val: float | None = None,
+    stochastic_rsi_val: float | None = None,
+    support_distance_pct: float | None = None,
+    obv_trend_pct: float | None = None,
 ) -> QuantDecision:
     reasons: list[str] = []
 
@@ -86,6 +95,54 @@ def generate_quant_signal(
     if max_drawdown_pct is not None and max_drawdown_pct < -30.0:
         reasons.append(f"Deep historical drawdown ({max_drawdown_pct:.1f}%) — recovery risk")
 
+    if bollinger_zscore is not None:
+        if bollinger_zscore < -2.0:
+            reasons.append(f"Price near lower Bollinger band (Z={bollinger_zscore:.1f}) — oversold / mean reversion candidate")
+        elif bollinger_zscore > 2.0:
+            reasons.append(f"Price near upper Bollinger band (Z={bollinger_zscore:.1f}) — overbought / potential pullback")
+
+    if flow_signal in ("STRONG_ACCUMULATION", "ACCUMULATION"):
+        reasons.append(f"Foreign institutional accumulation ({flow_signal.replace('_', ' ').lower()})")
+    elif flow_signal in ("STRONG_DISTRIBUTION", "DISTRIBUTION"):
+        reasons.append(f"Foreign institutional distribution ({flow_signal.replace('_', ' ').lower()})")
+
+    if flow_divergence == "BULLISH_DIVERGENCE":
+        reasons.append("Bullish divergence: price declining but foreign buying — institutional accumulation under weakness")
+    elif flow_divergence == "BEARISH_DIVERGENCE":
+        reasons.append("Bearish divergence: price rising but foreign selling — distribution into strength")
+
+    if momentum_12m is not None and momentum_12m > 0.20:
+        reasons.append(f"Strong 12M return (+{momentum_12m * 100:.0f}%) — long-term trend intact")
+    elif momentum_12m is not None and momentum_12m < -0.20:
+        reasons.append(f"Weak 12M return ({momentum_12m * 100:.0f}%) — structural decline")
+
+    if adx_val is not None:
+        if adx_val >= 40:
+            reasons.append(f"Strong trend (ADX {adx_val:.0f}) — high-probability trend follow")
+        elif adx_val < 20:
+            reasons.append(f"No clear trend (ADX {adx_val:.0f}) — range-bound, avoid momentum entries")
+
+    if mfi_val is not None:
+        if mfi_val < 20:
+            reasons.append(f"MFI oversold ({mfi_val:.0f}) — volume-confirmed buying opportunity")
+        elif mfi_val > 80:
+            reasons.append(f"MFI overbought ({mfi_val:.0f}) — volume-confirmed distribution zone")
+
+    if stochastic_rsi_val is not None:
+        if stochastic_rsi_val < 20:
+            reasons.append("Stochastic RSI deeply oversold — timing entry zone")
+        elif stochastic_rsi_val > 80:
+            reasons.append("Stochastic RSI overbought — caution on new entries")
+
+    if support_distance_pct is not None and support_distance_pct < 3.0:
+        reasons.append(f"Price near support ({support_distance_pct:.1f}% above) — favorable risk/reward entry")
+
+    if obv_trend_pct is not None:
+        if obv_trend_pct > 10.0:
+            reasons.append("OBV rising — smart money accumulation in progress")
+        elif obv_trend_pct < -10.0:
+            reasons.append("OBV declining — smart money distribution in progress")
+
 
     if risk_score >= 70:
         risk_level: RiskLevelType = "LOW"
@@ -128,6 +185,35 @@ def generate_quant_signal(
             confidence = min(98.0, confidence + 3.0)
         elif signal in ("STRONG_BUY", "BUY") and momentum_1m < -5.0:
             confidence = max(50.0, confidence - 4.0)
+
+    if flow_signal in ("STRONG_ACCUMULATION", "ACCUMULATION") and signal in ("STRONG_BUY", "BUY"):
+        confidence = min(98.0, confidence + 5.0)
+    elif flow_signal in ("STRONG_DISTRIBUTION", "DISTRIBUTION") and signal in ("STRONG_BUY", "BUY"):
+        confidence = max(50.0, confidence - 4.0)
+
+    if flow_divergence == "BULLISH_DIVERGENCE" and signal in ("STRONG_BUY", "BUY", "HOLD"):
+        confidence = min(98.0, confidence + 4.0)
+    elif flow_divergence == "BEARISH_DIVERGENCE" and signal in ("STRONG_BUY", "BUY"):
+        confidence = max(50.0, confidence - 3.0)
+
+    if bollinger_zscore is not None:
+        if bollinger_zscore < -2.0 and signal in ("BUY", "HOLD"):
+            confidence = min(98.0, confidence + 3.0)
+        elif bollinger_zscore > 2.0 and signal in ("STRONG_BUY", "BUY"):
+            confidence = max(50.0, confidence - 3.0)
+
+    if mfi_val is not None and mfi_val < 20 and signal in ("BUY", "HOLD"):
+        confidence = min(98.0, confidence + 4.0)
+    elif mfi_val is not None and mfi_val > 80 and signal in ("STRONG_BUY", "BUY"):
+        confidence = max(50.0, confidence - 3.0)
+
+    if support_distance_pct is not None and support_distance_pct < 3.0 and signal in ("STRONG_BUY", "BUY"):
+        confidence = min(98.0, confidence + 3.0)
+
+    if obv_trend_pct is not None and obv_trend_pct > 10.0 and signal in ("STRONG_BUY", "BUY"):
+        confidence = min(98.0, confidence + 3.0)
+    elif obv_trend_pct is not None and obv_trend_pct < -10.0 and signal in ("STRONG_BUY", "BUY"):
+        confidence = max(50.0, confidence - 3.0)
 
     if not reasons:
         reasons.append("Balanced quantitative profile without extreme outliers")

@@ -3,6 +3,7 @@ from app.models.backtest import BacktestJob
 from app.models.fundamental import Fundamental
 from app.models.idx_models import (
     BenchmarkPrice,
+    BrokerSummaryIDX,
     CorporateActionIDX,
     FinancialStatementPIT,
     IDXFactorRotationBacktest,
@@ -17,6 +18,7 @@ __all__ = [
     "AuthSession",
     "BacktestJob",
     "BenchmarkPrice",
+    "BrokerSummaryIDX",
     "CorporateActionIDX",
     "FinancialStatementPIT",
     "Fundamental",

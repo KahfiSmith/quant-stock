@@ -17,6 +17,7 @@ SortByField = Literal[
     "atr_percent",
     "momentum_1m",
     "sharpe_ratio",
+    "conviction_score",
     "value_score",
     "quality_score",
     "momentum_score",
@@ -104,8 +105,24 @@ class ScreenerItem(BaseModel):
     atr_percent: float | None = None
     volatility_regime: str | None = None
     momentum_1m: float | None = None
+    momentum_3m: float | None = None
+    momentum_6m: float | None = None
+    momentum_12m: float | None = None
     max_drawdown_pct: float | None = None
+    current_drawdown_pct: float | None = None
     sharpe_ratio: float | None = None
+    sortino_ratio: float | None = None
+    calmar_ratio: float | None = None
+    bollinger_zscore: float | None = None
+    flow_signal: str | None = None
+    flow_divergence: str | None = None
+    flow_streak_days: int | None = None
+    flow_net_5d: float | None = None
+    flow_net_20d: float | None = None
+    conviction_score: float | None = None
+    recommendation: str | None = None
+    recommendation_reasons: list[str] = Field(default_factory=list)
+    earnings_yield: float | None = None
     value_score: float | None = None
     quality_score: float | None = None
     momentum_score: float | None = None

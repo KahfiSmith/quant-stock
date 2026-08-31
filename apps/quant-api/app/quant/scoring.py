@@ -20,7 +20,12 @@ class FactorScores(NamedTuple):
     data_quality: str
 
 
-def calculate_momentum_score(rsi_val: float | None, trend: str, momentum_12m: float | None = None) -> float:
+def calculate_momentum_score(
+    rsi_val: float | None,
+    trend: str,
+    momentum_12m: float | None = None,
+    adx_val: float | None = None,
+) -> float:
     if rsi_val is None:
         base = 50.0
     else:
@@ -31,11 +36,17 @@ def calculate_momentum_score(rsi_val: float | None, trend: str, momentum_12m: fl
     elif trend == "bearish":
         base = max(0.0, base - 10.0)
 
-
     if momentum_12m is not None:
-
         m12_score = min(100.0, max(0.0, 50.0 + (momentum_12m * 100.0)))
         base = 0.6 * base + 0.4 * m12_score
+
+    if adx_val is not None:
+        if adx_val >= 40 and trend == "bullish":
+            base = min(100.0, base + 8.0)
+        elif adx_val >= 25 and trend == "bullish":
+            base = min(100.0, base + 4.0)
+        elif adx_val < 20:
+            base = base * 0.9
 
     return round(base, 2)
 
@@ -81,13 +92,70 @@ def calculate_value_score(pe_ratio: float | None, pb_ratio: float | None) -> flo
     return round(sum(scores) / len(scores), 2) if scores else 50.0
 
 
-def calculate_risk_score(atr_ratio: float | None) -> float:
+def calculate_risk_score(
+    atr_ratio: float | None,
+    sharpe: float | None = None,
+    sortino: float | None = None,
+    max_drawdown_pct: float | None = None,
+    current_drawdown_pct: float | None = None,
+    volatility_regime: str | None = None,
+) -> float:
+    components: list[float] = []
 
-    if atr_ratio is None:
+    if atr_ratio is not None:
+        components.append(min(100.0, max(0.0, 100.0 - atr_ratio * 2000.0)))
+
+    if sharpe is not None:
+        if sharpe >= 1.5:
+            components.append(95.0)
+        elif sharpe >= 0.5:
+            components.append(60.0 + (sharpe - 0.5) * 35.0)
+        elif sharpe >= 0:
+            components.append(40.0 + sharpe * 40.0)
+        else:
+            components.append(max(0.0, 40.0 + sharpe * 20.0))
+
+    if sortino is not None:
+        if sortino >= 2.0:
+            components.append(95.0)
+        elif sortino >= 1.0:
+            components.append(65.0 + (sortino - 1.0) * 30.0)
+        elif sortino >= 0:
+            components.append(40.0 + sortino * 25.0)
+        else:
+            components.append(max(0.0, 40.0 + sortino * 15.0))
+
+    if max_drawdown_pct is not None:
+        dd = abs(max_drawdown_pct)
+        if dd < 10:
+            components.append(90.0)
+        elif dd < 20:
+            components.append(70.0)
+        elif dd < 30:
+            components.append(50.0)
+        elif dd < 50:
+            components.append(30.0)
+        else:
+            components.append(10.0)
+
+    if current_drawdown_pct is not None:
+        cdd = abs(current_drawdown_pct)
+        if cdd < 5:
+            components.append(90.0)
+        elif cdd < 15:
+            components.append(65.0)
+        elif cdd < 25:
+            components.append(40.0)
+        else:
+            components.append(15.0)
+
+    if volatility_regime is not None:
+        regime_map = {"LOW": 90.0, "NORMAL": 65.0, "HIGH": 35.0, "EXTREME": 10.0}
+        components.append(regime_map.get(volatility_regime, 50.0))
+
+    if not components:
         return 50.0
-
-    score = max(0.0, 100.0 - (atr_ratio * 2000.0))
-    return round(min(100.0, score), 2)
+    return round(sum(components) / len(components), 2)
 
 
 def calculate_growth_score(revenue_growth: float | None, eps_growth: float | None) -> float:
@@ -113,12 +181,25 @@ def calculate_quant_score(
     eps_growth: float | None,
     momentum_12m: float | None = None,
     piotroski_estimate: int | None = None,
+    adx_val: float | None = None,
+    sharpe: float | None = None,
+    sortino: float | None = None,
+    max_drawdown_pct: float | None = None,
+    current_drawdown_pct: float | None = None,
+    volatility_regime: str | None = None,
     custom_weights: dict[str, float] | None = None,
 ) -> FactorScores:
-    m_score = calculate_momentum_score(rsi_val, trend, momentum_12m)
+    m_score = calculate_momentum_score(rsi_val, trend, momentum_12m, adx_val)
     q_score = calculate_quality_score(roe, roa, debt_to_equity, piotroski_estimate)
     v_score = calculate_value_score(pe_ratio, pb_ratio)
-    r_score = calculate_risk_score(atr_ratio)
+    r_score = calculate_risk_score(
+        atr_ratio,
+        sharpe=sharpe,
+        sortino=sortino,
+        max_drawdown_pct=max_drawdown_pct,
+        current_drawdown_pct=current_drawdown_pct,
+        volatility_regime=volatility_regime,
+    )
     g_score = calculate_growth_score(revenue_growth, eps_growth)
 
 

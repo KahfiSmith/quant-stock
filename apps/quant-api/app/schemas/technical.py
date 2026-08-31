@@ -44,6 +44,13 @@ class IndicatorsSummary(BaseModel):
     volume_zscore: float | None = None
     volume_sma_ratio: float | None = None
     bollinger_zscore: float | None = None
+    adx: float | None = None
+    mfi: float | None = None
+    stochastic_rsi: float | None = None
+    obv_trend_pct: float | None = None
+    support_distance_pct: float | None = None
+    resistance_distance_pct: float | None = None
+    earnings_yield: float | None = None
     macd: MacdResponse
     bollinger: BollingerResponse
     momentum: MomentumProfile = MomentumProfile()

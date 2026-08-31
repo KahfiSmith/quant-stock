@@ -63,6 +63,23 @@ class IDXStockDetailResponse(BaseModel):
     as_of: datetime
 
 
+class ForeignFlowAnalysis(BaseModel):
+    symbol: str
+    signal: str
+    net_flow_5d: float | None = None
+    net_flow_10d: float | None = None
+    net_flow_20d: float | None = None
+    streak_days: int = 0
+    flow_momentum: float | None = None
+    flow_intensity_pct: float | None = None
+    divergence: str | None = None
+    latest_net_foreign: float | None = None
+    latest_foreign_buy: float | None = None
+    latest_foreign_sell: float | None = None
+    data_days: int = 0
+    as_of: datetime
+
+
 class IDXFactorRotationRequest(BaseModel):
     strategy_name: str = Field(default="IDX Top 10 Multi-Factor Rotation", min_length=2, max_length=128)
     initial_capital: float = Field(default=500_000_000.0, gt=1_000_000.0)

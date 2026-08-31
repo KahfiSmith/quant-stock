@@ -4,12 +4,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.market_data import Price, Stock
+from app.quant.conviction import calculate_conviction
 from app.quant.scoring import calculate_quant_score
 from app.quant.signals import generate_quant_signal
 from app.schemas.screener import ScreenerItem, ScreenerRequest, ScreenerResponse
+from app.services.foreign_flow import compute_foreign_flow_analysis
 from app.services.fundamental import get_latest_fundamental
 from app.services.market_data import pagination_meta
 from app.services.technical import calculate_technical_analysis
+from app.technical.indicators import earnings_yield
 
 
 def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
@@ -28,7 +31,6 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         stmt = stmt.where(Stock.market_cap <= req.max_market_cap)
 
     stocks = list(db.scalars(stmt))
-
 
     min_roe = req.min_roe
     min_score = req.min_score
@@ -57,12 +59,10 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
     elif req.strategy_preset == "mean_reversion":
         custom_weights = {"value": 0.40, "risk": 0.25, "quality": 0.20, "momentum": 0.10, "growth": 0.05}
 
-
     enriched: list[ScreenerItem] = []
     for stock in stocks:
         tech = calculate_technical_analysis(db, stock, interval="1d")
         fund = get_latest_fundamental(db, stock)
-
 
         latest_price = db.scalar(
             select(Price)
@@ -83,6 +83,8 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         rev_g = fund.ratios.revenue_growth if fund else None
         eps_g = fund.ratios.eps_growth if fund else None
 
+        ind = tech.indicators
+
         factors = calculate_quant_score(
             rsi_val=tech.rsi,
             trend=tech.trend,
@@ -94,9 +96,15 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             atr_ratio=atr_ratio,
             revenue_growth=rev_g,
             eps_growth=eps_g,
+            momentum_12m=(ind.momentum.mom_12m / 100.0) if ind.momentum.mom_12m is not None else None,
+            adx_val=ind.adx,
+            sharpe=ind.risk_metrics.sharpe_ratio,
+            sortino=ind.risk_metrics.sortino_ratio,
+            max_drawdown_pct=ind.drawdown.max_drawdown_pct,
+            current_drawdown_pct=ind.drawdown.current_drawdown_pct,
+            volatility_regime=ind.volatility_regime,
             custom_weights=custom_weights,
         )
-
 
         if min_score is not None and factors.total_score < min_score:
             continue
@@ -119,10 +127,10 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         if max_rsi is not None and (rsi_val is None or rsi_val > max_rsi):
             continue
 
-        vol_z = tech.indicators.volume_zscore
-        vol_sma_r = tech.indicators.volume_sma_ratio
-        atr_pct = tech.indicators.atr_percent
-        vol_regime = tech.indicators.volatility_regime
+        vol_z = ind.volume_zscore
+        vol_sma_r = ind.volume_sma_ratio
+        atr_pct = ind.atr_percent
+        vol_regime = ind.volatility_regime
 
         if req.min_volume_zscore is not None and (vol_z is None or vol_z < req.min_volume_zscore):
             continue
@@ -131,6 +139,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
         if req.volatility_regime is not None and vol_regime != req.volatility_regime:
             continue
 
+        flow = compute_foreign_flow_analysis(db, stock, limit=30)
 
         decision = generate_quant_signal(
             total_score=factors.total_score,
@@ -143,10 +152,31 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             pe_ratio=pe,
             roe=roe,
             debt_to_equity=de,
-            volume_zscore=tech.indicators.volume_zscore,
-            volatility_regime=tech.indicators.volatility_regime,
-            momentum_1m=tech.indicators.momentum.mom_1m,
-            max_drawdown_pct=tech.indicators.drawdown.max_drawdown_pct,
+            volume_zscore=ind.volume_zscore,
+            volatility_regime=ind.volatility_regime,
+            momentum_1m=ind.momentum.mom_1m,
+            max_drawdown_pct=ind.drawdown.max_drawdown_pct,
+            bollinger_zscore=ind.bollinger_zscore,
+            flow_signal=flow.signal if flow.data_days > 0 else None,
+            flow_divergence=flow.divergence if flow.data_days > 0 else None,
+            momentum_12m=(ind.momentum.mom_12m / 100.0) if ind.momentum.mom_12m is not None else None,
+            adx_val=ind.adx,
+            mfi_val=ind.mfi,
+            stochastic_rsi_val=ind.stochastic_rsi,
+            support_distance_pct=ind.support_distance_pct,
+            obv_trend_pct=ind.obv_trend_pct,
+        )
+
+        conv = calculate_conviction(
+            quant_signal=decision.signal,
+            quant_confidence=decision.confidence_pct,
+            flow_signal=flow.signal if flow.data_days > 0 else None,
+            flow_divergence=flow.divergence if flow.data_days > 0 else None,
+            sharpe=ind.risk_metrics.sharpe_ratio,
+            sortino=ind.risk_metrics.sortino_ratio,
+            bollinger_zscore=ind.bollinger_zscore,
+            streak_days=flow.streak_days,
+            momentum_1m=ind.momentum.mom_1m,
         )
 
         enriched.append(
@@ -159,7 +189,7 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
                 currency=stock.currency,
                 close_price=float(latest_price.close) if latest_price is not None else None,
                 quant_score=factors.total_score,
-                score_version="v1",
+                score_version="v2",
                 data_source=latest_price.source if latest_price is not None else None,
                 price_as_of=latest_price.time if latest_price is not None else None,
                 as_of=latest_price.time if latest_price is not None else datetime.now(UTC),
@@ -176,9 +206,25 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
                 volume_sma_ratio=vol_sma_r,
                 atr_percent=atr_pct,
                 volatility_regime=vol_regime,
-                momentum_1m=tech.indicators.momentum.mom_1m,
-                max_drawdown_pct=tech.indicators.drawdown.max_drawdown_pct,
-                sharpe_ratio=tech.indicators.risk_metrics.sharpe_ratio,
+                momentum_1m=ind.momentum.mom_1m,
+                momentum_3m=ind.momentum.mom_3m,
+                momentum_6m=ind.momentum.mom_6m,
+                momentum_12m=ind.momentum.mom_12m,
+                max_drawdown_pct=ind.drawdown.max_drawdown_pct,
+                current_drawdown_pct=ind.drawdown.current_drawdown_pct,
+                sharpe_ratio=ind.risk_metrics.sharpe_ratio,
+                sortino_ratio=ind.risk_metrics.sortino_ratio,
+                calmar_ratio=ind.risk_metrics.calmar_ratio,
+                bollinger_zscore=ind.bollinger_zscore,
+                flow_signal=flow.signal if flow.data_days > 0 else None,
+                flow_divergence=flow.divergence if flow.data_days > 0 else None,
+                flow_streak_days=flow.streak_days if flow.data_days > 0 else None,
+                flow_net_5d=flow.net_flow_5d,
+                flow_net_20d=flow.net_flow_20d,
+                conviction_score=conv.conviction_score,
+                recommendation=conv.recommendation,
+                recommendation_reasons=conv.recommendation_reasons,
+                earnings_yield=earnings_yield(pe),
                 value_score=factors.value,
                 quality_score=factors.quality,
                 momentum_score=factors.momentum,
@@ -187,15 +233,13 @@ def screen_stocks(db: Session, req: ScreenerRequest) -> ScreenerResponse:
             )
         )
 
-
-    enriched.sort(key=lambda x: x.quant_score or 0.0, reverse=True)
+    enriched.sort(key=lambda x: x.conviction_score or 0.0, reverse=True)
     total_universe = len(enriched)
     for rank_idx, item in enumerate(enriched, start=1):
         item.composite_rank = rank_idx
         item.percentile = (
             round(((total_universe - rank_idx + 1) / total_universe) * 100.0, 1) if total_universe > 0 else 100.0
         )
-
 
     reverse = req.sort_order == "desc"
 

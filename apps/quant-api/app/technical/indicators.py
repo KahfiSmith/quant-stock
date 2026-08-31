@@ -309,3 +309,179 @@ def calmar_ratio(closes: list[float]) -> Number:
     if mdd is None or mdd >= 0:
         return None
     return annual_return / (abs(mdd) / 100.0)
+
+
+def adx(
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    period: int = 14,
+) -> list[Number]:
+    """Average Directional Index — measures trend strength regardless of direction.
+
+    ADX > 25 = trending, > 50 = strong trend, < 20 = sideways/no trend.
+    """
+    n = len(closes)
+    out: list[Number] = [None] * n
+    if n < period * 2:
+        return out
+
+    plus_dm: list[float] = [0.0]
+    minus_dm: list[float] = [0.0]
+    for i in range(1, n):
+        up = highs[i] - highs[i - 1]
+        down = lows[i - 1] - lows[i]
+        plus_dm.append(up if up > down and up > 0 else 0.0)
+        minus_dm.append(down if down > up and down > 0 else 0.0)
+
+    trs = true_range(highs, lows, closes)
+
+    atr_s = sum(trs[:period]) / period
+    plus_s = sum(plus_dm[:period]) / period
+    minus_s = sum(minus_dm[:period]) / period
+
+    dx_values: list[float] = []
+    for i in range(period, n):
+        atr_s = (atr_s * (period - 1) + trs[i]) / period
+        plus_s = (plus_s * (period - 1) + plus_dm[i]) / period
+        minus_s = (minus_s * (period - 1) + minus_dm[i]) / period
+
+        plus_di = (plus_s / atr_s * 100.0) if atr_s > 0 else 0.0
+        minus_di = (minus_s / atr_s * 100.0) if atr_s > 0 else 0.0
+        di_sum = plus_di + minus_di
+        dx = (abs(plus_di - minus_di) / di_sum * 100.0) if di_sum > 0 else 0.0
+        dx_values.append(dx)
+
+    if len(dx_values) < period:
+        return out
+    adx_val = sum(dx_values[:period]) / period
+    out[period * 2 - 1] = adx_val
+    for i in range(period, len(dx_values)):
+        adx_val = (adx_val * (period - 1) + dx_values[i]) / period
+        out[period + i] = adx_val
+    return out
+
+
+def obv(closes: list[float], volumes: list[float]) -> list[float]:
+    """On-Balance Volume — cumulative volume weighted by price direction.
+
+    Rising OBV with flat price = accumulation (smart money buying).
+    Falling OBV with flat price = distribution (smart money selling).
+    """
+    if not closes or len(closes) != len(volumes):
+        return []
+    result = [volumes[0]]
+    for i in range(1, len(closes)):
+        if closes[i] > closes[i - 1]:
+            result.append(result[-1] + volumes[i])
+        elif closes[i] < closes[i - 1]:
+            result.append(result[-1] - volumes[i])
+        else:
+            result.append(result[-1])
+    return result
+
+
+def obv_trend(closes: list[float], volumes: list[float], period: int = 20) -> Number:
+    """OBV slope normalized: positive = accumulation, negative = distribution."""
+    obv_series = obv(closes, volumes)
+    if len(obv_series) < period:
+        return None
+    obv_now = obv_series[-1]
+    obv_prev = obv_series[-period]
+    if obv_prev == 0:
+        return None
+    return ((obv_now - obv_prev) / abs(obv_prev)) * 100.0
+
+
+def mfi(
+    highs: list[float],
+    lows: list[float],
+    closes: list[float],
+    volumes: list[float],
+    period: int = 14,
+) -> list[Number]:
+    """Money Flow Index — volume-weighted RSI. Overbought > 80, oversold < 20."""
+    n = len(closes)
+    out: list[Number] = [None] * n
+    if n < period + 1 or len(volumes) != n:
+        return out
+
+    typical = [(h + l + c) / 3.0 for h, l, c in zip(highs, lows, closes)]
+    raw_flow = [t * v for t, v in zip(typical, volumes)]
+
+    for i in range(period, n):
+        pos_flow = 0.0
+        neg_flow = 0.0
+        for j in range(i - period + 1, i + 1):
+            if typical[j] > typical[j - 1]:
+                pos_flow += raw_flow[j]
+            elif typical[j] < typical[j - 1]:
+                neg_flow += raw_flow[j]
+        if neg_flow == 0:
+            out[i] = 100.0
+        else:
+            ratio = pos_flow / neg_flow
+            out[i] = 100.0 - (100.0 / (1.0 + ratio))
+    return out
+
+
+def stochastic_rsi(
+    closes: list[float],
+    rsi_period: int = 14,
+    stoch_period: int = 14,
+) -> list[Number]:
+    """Stochastic RSI — RSI of RSI, normalized 0-100.
+
+    < 20 = deeply oversold (buy zone), > 80 = deeply overbought (sell zone).
+    More sensitive than regular RSI for timing entries.
+    """
+    rsi_values = rsi(closes, rsi_period)
+    out: list[Number] = [None] * len(closes)
+
+    valid_rsi = [(i, v) for i, v in enumerate(rsi_values) if v is not None]
+    if len(valid_rsi) < stoch_period:
+        return out
+
+    for idx in range(stoch_period - 1, len(valid_rsi)):
+        window = [valid_rsi[j][1] for j in range(idx - stoch_period + 1, idx + 1)]
+        rsi_min = min(window)
+        rsi_max = max(window)
+        original_idx = valid_rsi[idx][0]
+        if rsi_max == rsi_min:
+            out[original_idx] = 50.0
+        else:
+            out[original_idx] = ((valid_rsi[idx][1] - rsi_min) / (rsi_max - rsi_min)) * 100.0
+    return out
+
+
+def support_resistance_proximity(
+    closes: list[float],
+    lows: list[float],
+    highs: list[float],
+    period: int = 20,
+) -> tuple[Number, Number]:
+    """Returns (support_distance_pct, resistance_distance_pct).
+
+    Support = lowest low over period. Resistance = highest high over period.
+    Distance as percentage from current close. Negative support_distance = below support.
+    Small positive support_distance (0-3%) = near support = good entry point.
+    """
+    if len(closes) < period:
+        return None, None
+    recent_lows = lows[-period:]
+    recent_highs = highs[-period:]
+    support = min(recent_lows)
+    resistance = max(recent_highs)
+    current = closes[-1]
+    if current <= 0:
+        return None, None
+    support_dist = ((current - support) / current) * 100.0
+    resistance_dist = ((resistance - current) / current) * 100.0
+    return round(support_dist, 2), round(resistance_dist, 2)
+
+
+def earnings_yield(pe_ratio: float | None) -> Number:
+    """Earnings yield = 1/PE × 100%. Higher = cheaper. Compare with bond yields."""
+    if pe_ratio is None or pe_ratio <= 0:
+        return None
+    return round((1.0 / pe_ratio) * 100.0, 2)
