@@ -15,7 +15,7 @@ Related issue/PR: N/A
 Provide a read-only view of a stock universe and per-symbol price history, so an
 authenticated user can browse stocks and inspect a candlestick chart. The
 ingestion pipeline is wired to **yfinance** (see ADR-005), which provides
-real 2-year daily OHLCV history and TTM fundamentals for 20 IDX liquid stocks.
+real 2-year daily OHLCV history and TTM fundamentals for 78 IDX liquid stocks.
 
 ## Overview
 
@@ -121,7 +121,7 @@ evidence and data availability metadata.
 
 ## Acceptance Criteria
 
-1. An authenticated user can list the real IDX universe (20 stocks) and
+1. An authenticated user can list the real IDX universe (78 stocks) and
    open a symbol detail page.
 2. Prices render as a candlestick chart with ~500 daily bars (2 years),
    loading/error/empty states.
@@ -147,7 +147,7 @@ evidence and data availability metadata.
 - [x] `/stocks` and `/stocks/[symbol]` pages
 - [x] `MarketDataCollector` Protocol extended with `collect_fundamentals`
 - [x] `YFinanceCollector` implementing the Protocol
-- [x] `scripts/backfill_market_data.py` CLI for 2y backfill of 20 IDX stocks
+- [x] `scripts/backfill_market_data.py` CLI for 2y backfill of 78 IDX stocks
 - [x] `YFINANCE_*` env config in `app/core/config.py`
 - [x] `yfinance==0.2.40` pinned in `apps/quant-api/requirements.txt`
 - [x] Unit + integration tests for the collector and backfill script
@@ -164,7 +164,7 @@ evidence and data availability metadata.
   unmaintained pandas-ta dependency, returns `None` when lookback history is insufficient.
 - 2026-08-27: Provider-neutral ingestion contract and persistence boundary added.
 - 2026-08-27: **ADR-005: yfinance chosen as production data source.** 2-year
-  backfill of 20 IDX liquid stocks; CLI-driven ingestion; idempotent re-runs.
+  backfill of 78 IDX liquid stocks; CLI-driven ingestion; idempotent re-runs.
 - 2026-08-30: **Tier 1 Quant Engine**: Volume Anomaly Z-Score, Volatility Regime
   Detection, and enhanced screener added to technical/screener endpoints. Computed
   from existing OHLCV data — no new dependencies or migrations required.
@@ -197,7 +197,7 @@ evidence and data availability metadata.
 ```bash
 cd apps/quant-api && .venv/bin/pytest -q   # 68 tests incl. ingestion, technical, yfinance collector
 cd apps/quant-api && .venv/bin/ruff check .
-# Backfill (real network; ~2 minutes for 20 stocks):
+# Backfill (real network; ~5 minutes for 78 stocks):
 cd apps/quant-api && python -m scripts.backfill_market_data
 # Sanity check rows in the DB:
 psql -h localhost -U quantlens -d quantlens -c \

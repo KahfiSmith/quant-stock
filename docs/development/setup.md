@@ -56,7 +56,7 @@ cd apps/quant-api
 ### Step 2 — Backfill OHLCV + Fundamentals (yfinance)
 
 Mengambil 2 tahun data harga harian dan rasio fundamental dari Yahoo Finance
-untuk ~90 saham IDX liquid. Dibutuhkan untuk chart, technical indicators,
+untuk ~78 saham IDX liquid. Dibutuhkan untuk chart, technical indicators,
 quant score, dan backtest.
 
 ```bash

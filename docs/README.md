@@ -42,9 +42,6 @@ The following are intentionally not described as implemented:
   and domain hooks; focused FastAPI route and quant tests exist under
   `apps/quant-api/tests`.
 - Observability tooling - not configured.
-- Market-data schema and read endpoints - the `stocks`/`prices` tables and
-  `GET /api/v1/stocks*` endpoints exist, but real market-data ingestion is
-  deferred pending a data-provider decision.
 
 When a planned capability is shipped, promote only its durable decisions into
 the current sources of truth.

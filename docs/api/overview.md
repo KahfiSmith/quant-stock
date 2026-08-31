@@ -22,33 +22,47 @@ API integration documentation for communication between the Next.js frontend and
 | **Auth** | `POST` | `/api/v1/auth/register` | User registration |
 | **Auth** | `POST` | `/api/v1/auth/refresh` | Single-flight token refresh |
 | **Auth** | `POST` | `/api/v1/auth/logout` | Session invalidation |
-| **Market Data** | `GET` | `/api/v1/stocks` | List and search IDX stocks with summary metrics (optional `exchange` query parameter) |
+| **Auth** | `GET` | `/api/v1/auth/me` | Get current user profile |
+| **Auth** | `PATCH` | `/api/v1/auth/me` | Update name, theme preference, timezone |
+| **Auth** | `DELETE` | `/api/v1/auth/account` | Delete user account |
+| **Market Data** | `GET` | `/api/v1/stocks` | List and search IDX stocks (optional Bearer auth) |
 | **Market Data** | `GET` | `/api/v1/stocks/{symbol}/prices` | Historical OHLCV prices for charts |
 | **AI Analyst** | `GET` | `/api/v1/stocks/{symbol}/ai-summary` | AI-generated strengths, risks, conclusion |
 | **Backtest** | `POST` | `/api/v1/backtest` | Run historical strategy backtest |
 | **Backtest** | `GET` | `/api/v1/backtest/jobs` | List user's persistent backtest jobs |
 | **Backtest** | `GET` | `/api/v1/backtest/jobs/{id}` | Get detail of a specific persistent backtest job |
 | **Fundamental**| `GET` | `/api/v1/stocks/{symbol}/fundamental` | Fundamental ratios & growth metrics |
-| **Portfolio** | `GET`/`POST` | `/api/v1/portfolios` | User portfolio & transaction management |
+| **Portfolio** | `GET` | `/api/v1/portfolios` | List user portfolios |
+| **Portfolio** | `POST` | `/api/v1/portfolios` | Create portfolio |
+| **Portfolio** | `GET` | `/api/v1/portfolios/{id}` | Portfolio detail with holdings and PnL |
+| **Portfolio** | `PATCH` | `/api/v1/portfolios/{id}` | Update portfolio name/currency |
+| **Portfolio** | `DELETE` | `/api/v1/portfolios/{id}` | Delete portfolio (cascades transactions) |
+| **Portfolio** | `POST` | `/api/v1/portfolios/{id}/transactions` | Add BUY/SELL transaction |
+| **Portfolio** | `DELETE` | `/api/v1/portfolios/{id}/transactions/{txn_id}` | Delete a transaction |
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |
-| **Screener** | `POST` | `/api/v1/screener` | Filter & rank IDX stocks by multi-criteria; `exchange` defaults to `IDX`. Supports `volume_momentum` and `mean_reversion` presets, volume/volatility/momentum filter and sort dimensions. |
-| **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger), volume analysis (Z-Score, SMA ratio), volatility regime, multi-timeframe momentum (1M/3M/6M/12M), drawdown analysis, and risk-adjusted returns (Sharpe/Sortino/Calmar) |
-| **IDX Data** | `GET` | `/api/v1/idx/broker-summary` | Broker-level daily trading activity from idx.co.id (value, volume, frequency per broker) |
+| **Screener** | `POST` | `/api/v1/screener` | Filter & rank IDX stocks with conviction score, 7 strategy presets, volume/volatility/momentum filters |
+| **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | 34+ indicators: MA, RSI, MACD, ADX, MFI, Stochastic RSI, OBV, Bollinger, volume analysis, volatility regime, multi-TF momentum, drawdown, risk-adjusted returns (Sharpe/Sortino/Calmar), support/resistance |
+| **IDX Data** | `GET` | `/api/v1/idx/universe` | Full active IDX stock universe with IDX-IC classification |
 | **IDX Data** | `GET` | `/api/v1/idx/stocks/{symbol}` | IDX stock profile with foreign flow and corporate actions |
-| **IDX Data** | `GET` | `/api/v1/idx/stocks/{symbol}/flow-analysis` | Foreign flow analysis: accumulation/distribution signal, rolling sums, divergence, momentum, streak |
+| **IDX Data** | `GET` | `/api/v1/idx/stocks/{symbol}/flow-analysis` | Foreign flow analysis: accumulation/distribution signal, divergence, momentum, streak |
+| **IDX Data** | `GET` | `/api/v1/idx/broker-summary` | Broker-level daily trading activity from idx.co.id |
+| **IDX Data** | `POST` | `/api/v1/idx/factor-rotation/backtest` | Run IDX multi-asset factor rotation backtest vs IHSG |
 
 ## API scope status
 
 The active endpoints implement the current synchronous analytical contracts. Portfolio
-editing is available through `PATCH /api/v1/portfolios/{id}`; portfolio detail includes
-realized/unrealized PnL and deterministic risk metrics. Backtest responses include
-Sortino and reproducibility metadata. AI responses include evidence and data-quality
-metadata.
+management includes full CRUD (create, read, update, delete) with cascade transaction
+deletion; portfolio detail includes realized/unrealized PnL and deterministic risk
+metrics. Backtest responses include Sortino and reproducibility metadata. AI responses
+include evidence and data-quality metadata. The screener v2 engine computes a composite
+conviction score (0-100) blending quant factors, foreign flow signals, and risk-adjusted
+returns into actionable buy recommendations.
 
-Market data is sourced via [yfinance](../../apps/quant-api/app/ingestion/yfinance_collector.py)
-(see [ADR-005](../architecture/adr/ADR-005-yfinance-provider.md)): 20 IDX liquid
-stocks, 2-year daily OHLCV + TTM fundamentals, ingested via
-`python -m scripts.backfill_market_data` from `apps/quant-api/`.
+Market data is sourced from two providers:
+- **yfinance** (Yahoo Finance): 78 IDX liquid stocks, 2-year daily OHLCV + TTM
+  fundamentals, ingested via `python -m scripts.backfill_market_data`.
+- **idx.co.id** (BEI): Daily foreign flow per stock + broker trading summary,
+  ingested via `python -m scripts.backfill_idx_data`.
 
 Provider-neutral ingestion contracts are internal service modules, not public API
 endpoints.
