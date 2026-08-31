@@ -10,6 +10,8 @@ export {
 export {
   useAddTransaction,
   useCreatePortfolio,
+  useDeletePortfolio,
+  useDeleteTransaction,
   usePortfolioDetail,
   usePortfolios,
   useUpdatePortfolio,

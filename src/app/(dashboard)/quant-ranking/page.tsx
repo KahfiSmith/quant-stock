@@ -44,8 +44,10 @@ export default function QuantRankingPage() {
     growth: 0.10,
   });
   const [sectorFilter, setSectorFilter] = useState<string>("");
-  const [sortBy] = useState<ScreenerFilterParams["sort_by"]>("score");
-  const [sortOrder] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<ScreenerFilterParams["sort_by"]>("conviction_score");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   const filterParams: ScreenerFilterParams = useMemo(() => ({
     exchange: "IDX",
@@ -54,15 +56,32 @@ export default function QuantRankingPage() {
     sort_order: sortOrder,
     custom_weights: weights,
     strategy_preset: preset as ScreenerFilterParams["strategy_preset"],
-    page: 1,
-    page_size: 50,
-  }), [sectorFilter, sortBy, sortOrder, weights, preset]);
+    page,
+    page_size: pageSize,
+  }), [sectorFilter, sortBy, sortOrder, weights, preset, page]);
 
   const { data, isPending, isError, refetch } = useStockScreener(filterParams);
   const rankingItems = useMemo(
     () => (data?.items ?? []).filter((item) => item.currency === "IDR"),
     [data?.items]
   );
+  const pagination = data?.pagination;
+  const totalPages = pagination?.total_pages ?? 1;
+
+  const toggleSort = (field: ScreenerFilterParams["sort_by"]) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
+
+  const sortIcon = (field: ScreenerFilterParams["sort_by"]) => {
+    if (sortBy !== field) return "";
+    return sortOrder === "desc" ? " ↓" : " ↑";
+  };
 
   const handlePresetChange = (presetId: string) => {
     setPreset(presetId);
@@ -265,15 +284,15 @@ export default function QuantRankingPage() {
               <thead className="border-b bg-muted/40 font-semibold text-muted-foreground">
                 <tr>
                   <th className="py-3 px-4">Rank</th>
-                  <th className="py-3 px-4">Ticker</th>
+                  <th className="py-3 px-4 cursor-pointer hover:text-foreground" onClick={() => toggleSort("symbol")}>Ticker{sortIcon("symbol")}</th>
                   <th className="py-3 px-4">Company</th>
-                  <th className="py-3 px-4 text-center">Conviction</th>
+                  <th className="py-3 px-4 text-center cursor-pointer hover:text-foreground" onClick={() => toggleSort("conviction_score")}>Conviction{sortIcon("conviction_score")}</th>
                   <th className="py-3 px-4 text-center">Recommendation</th>
-                  <th className="py-3 px-4 text-center">Quant Score</th>
+                  <th className="py-3 px-4 text-center cursor-pointer hover:text-foreground" onClick={() => toggleSort("score")}>Quant Score{sortIcon("score")}</th>
                   <th className="py-3 px-4 text-center">Flow Signal</th>
                   <th className="py-3 px-4 text-center">Decision Signal</th>
-                  <th className="py-3 px-4 text-right">1M Mom</th>
-                  <th className="py-3 px-4 text-right">Sharpe</th>
+                  <th className="py-3 px-4 text-right cursor-pointer hover:text-foreground" onClick={() => toggleSort("momentum_1m")}>1M Mom{sortIcon("momentum_1m")}</th>
+                  <th className="py-3 px-4 text-right cursor-pointer hover:text-foreground" onClick={() => toggleSort("sharpe_ratio")}>Sharpe{sortIcon("sharpe_ratio")}</th>
                   <th className="py-3 px-4 text-center">Risk Level</th>
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
@@ -361,6 +380,52 @@ export default function QuantRankingPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t px-4 py-3 text-xs">
+            <span className="text-muted-foreground">
+              Page {page} of {totalPages} ({pagination?.total ?? 0} stocks)
+            </span>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={page <= 1}
+                onClick={() => setPage(1)}
+              >
+                First
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={page >= totalPages}
+                onClick={() => setPage(totalPages)}
+              >
+                Last
+              </Button>
+            </div>
           </div>
         )}
       </div>

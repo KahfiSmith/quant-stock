@@ -23,7 +23,10 @@ export const API_ENDPOINTS = {
     CREATE: "/api/v1/portfolios",
     DETAIL: (id: number | string) => `/api/v1/portfolios/${id}`,
     UPDATE: (id: number | string) => `/api/v1/portfolios/${id}`,
+    DELETE: (id: number | string) => `/api/v1/portfolios/${id}`,
     ADD_TRANSACTION: (id: number | string) => `/api/v1/portfolios/${id}/transactions`,
+    DELETE_TRANSACTION: (portfolioId: number | string, txnId: number | string) =>
+      `/api/v1/portfolios/${portfolioId}/transactions/${txnId}`,
   },
   MARKET: {
     STOCKS: "/api/v1/stocks",

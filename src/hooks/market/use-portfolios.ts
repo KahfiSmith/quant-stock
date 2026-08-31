@@ -80,3 +80,29 @@ export const useAddTransaction = (portfolioId: number | string) => {
     },
   });
 };
+
+export const useDeletePortfolio = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (portfolioId: number | string) => {
+      await apiClient.delete(API_ENDPOINTS.PORTFOLIO.DELETE(portfolioId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PORTFOLIO.LIST });
+    },
+  });
+};
+
+export const useDeleteTransaction = (portfolioId: number | string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionId: number | string) => {
+      await apiClient.delete(
+        API_ENDPOINTS.PORTFOLIO.DELETE_TRANSACTION(portfolioId, transactionId)
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PORTFOLIO.DETAIL(portfolioId) });
+    },
+  });
+};

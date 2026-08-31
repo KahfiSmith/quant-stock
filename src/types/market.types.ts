@@ -303,6 +303,18 @@ export interface PortfolioRisk {
   observations: number;
 }
 
+export interface PortfolioTransaction {
+  id: number;
+  portfolio_id: number;
+  stock_id: number;
+  symbol: string;
+  transaction_type: "BUY" | "SELL";
+  quantity: number;
+  price: number;
+  fee: number;
+  transacted_at: string;
+}
+
 export interface PortfolioDetail {
   id: number;
   name: string;
@@ -314,6 +326,7 @@ export interface PortfolioDetail {
   total_unrealized_pnl: number;
   total_unrealized_pnl_percent: number;
   holdings: PortfolioHolding[];
+  transactions: PortfolioTransaction[];
   risk: PortfolioRisk;
   created_at: string;
   updated_at: string;
