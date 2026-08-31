@@ -36,6 +36,41 @@ export interface IDXMarketFlow {
   top3_seller_broker_val?: number | null;
 }
 
+export interface BrokerSummaryItem {
+  broker_code: string;
+  broker_name: string;
+  date: string;
+  total_value: number;
+  volume: number;
+  frequency: number;
+}
+
+export interface BrokerSummaryResponse {
+  items: BrokerSummaryItem[];
+  total: number;
+  date: string;
+}
+
+export type FlowSignal = "STRONG_ACCUMULATION" | "ACCUMULATION" | "NEUTRAL" | "DISTRIBUTION" | "STRONG_DISTRIBUTION";
+export type FlowDivergence = "BULLISH_DIVERGENCE" | "BEARISH_DIVERGENCE" | "CONFIRMING" | "NEUTRAL";
+
+export interface ForeignFlowAnalysis {
+  symbol: string;
+  signal: FlowSignal;
+  net_flow_5d: number | null;
+  net_flow_10d: number | null;
+  net_flow_20d: number | null;
+  streak_days: number;
+  flow_momentum: number | null;
+  flow_intensity_pct: number | null;
+  divergence: FlowDivergence | null;
+  latest_net_foreign: number | null;
+  latest_foreign_buy: number | null;
+  latest_foreign_sell: number | null;
+  data_days: number;
+  as_of: string;
+}
+
 export interface IDXCorporateAction {
   action_type: "DIVIDEND" | "STOCK_SPLIT" | "RIGHT_ISSUE" | string;
   cum_date?: string | null;
@@ -331,8 +366,24 @@ export interface ScreenerItem {
   atr_percent?: number | null;
   volatility_regime?: VolatilityRegime | null;
   momentum_1m?: number | null;
+  momentum_3m?: number | null;
+  momentum_6m?: number | null;
+  momentum_12m?: number | null;
   max_drawdown_pct?: number | null;
+  current_drawdown_pct?: number | null;
   sharpe_ratio?: number | null;
+  sortino_ratio?: number | null;
+  calmar_ratio?: number | null;
+  bollinger_zscore?: number | null;
+  flow_signal?: FlowSignal | null;
+  flow_divergence?: FlowDivergence | null;
+  flow_streak_days?: number | null;
+  flow_net_5d?: number | null;
+  flow_net_20d?: number | null;
+  conviction_score?: number | null;
+  recommendation?: string | null;
+  recommendation_reasons?: string[];
+  earnings_yield?: number | null;
   value_score?: number | null;
   quality_score?: number | null;
   momentum_score?: number | null;
@@ -370,7 +421,7 @@ export interface ScreenerFilterParams {
   volatility_regime?: VolatilityRegime;
   strategy_preset?: "none" | "quality_momentum" | "deep_value" | "garp" | "defensive_income" | "volume_momentum" | "mean_reversion";
   custom_weights?: CustomFactorWeights;
-  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "volume_zscore" | "atr_percent" | "momentum_1m" | "sharpe_ratio" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
+  sort_by?: "score" | "symbol" | "market_cap" | "pe_ratio" | "pb_ratio" | "roe" | "rsi" | "volume_zscore" | "atr_percent" | "momentum_1m" | "sharpe_ratio" | "conviction_score" | "value_score" | "quality_score" | "momentum_score" | "composite_rank";
   sort_order?: "asc" | "desc";
   page?: number;
   page_size?: number;
@@ -495,6 +546,13 @@ export interface IndicatorsSummary {
   volume_zscore: number | null;
   volume_sma_ratio: number | null;
   bollinger_zscore: number | null;
+  adx: number | null;
+  mfi: number | null;
+  stochastic_rsi: number | null;
+  obv_trend_pct: number | null;
+  support_distance_pct: number | null;
+  resistance_distance_pct: number | null;
+  earnings_yield: number | null;
   macd: MacdIndicator;
   bollinger: BollingerBand;
   momentum: MomentumProfile;

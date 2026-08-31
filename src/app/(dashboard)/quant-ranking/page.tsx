@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { StateMessage } from "@/components/common";
-import { VolumeAnomalyBadge, VolatilityRegimeBadge } from "@/components/features/market/quant-badges";
 import { Button } from "@/components/ui/button";
 import { useStockScreener } from "@/hooks/market";
 import type { CustomFactorWeights, ScreenerFilterParams, ScreenerItem } from "@/types";
@@ -268,13 +267,11 @@ export default function QuantRankingPage() {
                   <th className="py-3 px-4">Rank</th>
                   <th className="py-3 px-4">Ticker</th>
                   <th className="py-3 px-4">Company</th>
+                  <th className="py-3 px-4 text-center">Conviction</th>
+                  <th className="py-3 px-4 text-center">Recommendation</th>
                   <th className="py-3 px-4 text-center">Quant Score</th>
+                  <th className="py-3 px-4 text-center">Flow Signal</th>
                   <th className="py-3 px-4 text-center">Decision Signal</th>
-                  <th className="py-3 px-4 text-right">Value</th>
-                  <th className="py-3 px-4 text-right">Quality</th>
-                  <th className="py-3 px-4 text-right">Momentum</th>
-                  <th className="py-3 px-4 text-center">Volume</th>
-                  <th className="py-3 px-4 text-center">Volatility</th>
                   <th className="py-3 px-4 text-right">1M Mom</th>
                   <th className="py-3 px-4 text-right">Sharpe</th>
                   <th className="py-3 px-4 text-center">Risk Level</th>
@@ -300,9 +297,45 @@ export default function QuantRankingPage() {
                       <div className="text-[10px] text-muted-foreground">{item.sector ?? "General"}</div>
                     </td>
                     <td className="py-3 px-4 text-center">
+                      <span className={`font-mono text-sm font-bold ${
+                        (item.conviction_score ?? 0) >= 70 ? "text-emerald-600 dark:text-emerald-400"
+                          : (item.conviction_score ?? 0) >= 50 ? "text-primary"
+                          : "text-rose-600 dark:text-rose-400"
+                      }`}>
+                        {item.conviction_score != null ? item.conviction_score.toFixed(0) : "—"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {item.recommendation ? (
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                          item.recommendation === "STRONG_BUY_HIGH_CONVICTION" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : item.recommendation === "BUY_ACCUMULATE" ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                            : item.recommendation === "BUY_WATCHLIST" ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                            : item.recommendation === "REDUCE_POSITION" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                            : item.recommendation === "SELL_EXIT" ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {item.recommendation.replace(/_/g, " ")}
+                        </span>
+                      ) : "—"}
+                    </td>
+                    <td className="py-3 px-4 text-center">
                       <span className="font-mono text-sm font-bold text-primary">
                         {item.quant_score !== null ? item.quant_score.toFixed(1) : "—"}
                       </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {item.flow_signal ? (
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold ${
+                          item.flow_signal === "STRONG_ACCUMULATION" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : item.flow_signal === "ACCUMULATION" ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                            : item.flow_signal === "DISTRIBUTION" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                            : item.flow_signal === "STRONG_DISTRIBUTION" ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {item.flow_signal.replace(/_/g, " ")}
+                        </span>
+                      ) : <span className="text-xs text-muted-foreground">—</span>}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex flex-col items-center gap-1">
@@ -311,15 +344,6 @@ export default function QuantRankingPage() {
                           <span className="text-[9px] text-muted-foreground">{item.signal_confidence_pct}% conf.</span>
                         )}
                       </div>
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono">{item.value_score ?? "—"}</td>
-                    <td className="py-3 px-4 text-right font-mono">{item.quality_score ?? "—"}</td>
-                    <td className="py-3 px-4 text-right font-mono">{item.momentum_score ?? "—"}</td>
-                    <td className="py-3 px-4 text-center">
-                      <VolumeAnomalyBadge zscore={item.volume_zscore} />
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <VolatilityRegimeBadge regime={item.volatility_regime} atrPercent={item.atr_percent} />
                     </td>
                     <td className={`py-3 px-4 text-right font-mono ${item.momentum_1m != null ? (item.momentum_1m >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400") : ""}`}>
                       {item.momentum_1m != null ? `${item.momentum_1m >= 0 ? "+" : ""}${item.momentum_1m.toFixed(1)}%` : "—"}

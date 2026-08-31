@@ -14,6 +14,8 @@ export const API_ENDPOINTS = {
   IDX: {
     UNIVERSE: "/api/v1/idx/universe",
     STOCK_DETAIL: (symbol: string) => `/api/v1/idx/stocks/${symbol}`,
+    FLOW_ANALYSIS: (symbol: string) => `/api/v1/idx/stocks/${symbol}/flow-analysis`,
+    BROKER_SUMMARY: "/api/v1/idx/broker-summary",
     FACTOR_ROTATION: "/api/v1/idx/factor-rotation/backtest",
   },
   PORTFOLIO: {

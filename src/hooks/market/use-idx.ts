@@ -3,6 +3,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import type {
+  BrokerSummaryResponse,
+  ForeignFlowAnalysis,
   IDXFactorRotationParams,
   IDXFactorRotationResponse,
   IDXStockDetailResponse,
@@ -42,6 +44,33 @@ export const useIDXStockDetail = (symbol: string) => {
       return response as unknown as IDXStockDetailResponse;
     },
     enabled: Boolean(symbol),
+  });
+};
+
+export const useFlowAnalysis = (symbol: string) => {
+  return useQuery<ForeignFlowAnalysis>({
+    queryKey: ["flow-analysis", symbol],
+    queryFn: async () => {
+      const response = await apiClient.get<ForeignFlowAnalysis>(
+        API_ENDPOINTS.IDX.FLOW_ANALYSIS(symbol)
+      );
+      return response as unknown as ForeignFlowAnalysis;
+    },
+    enabled: Boolean(symbol),
+  });
+};
+
+export const useIDXBrokerSummary = (date: string | null) => {
+  return useQuery<BrokerSummaryResponse>({
+    queryKey: ["idx-broker-summary", date],
+    queryFn: async () => {
+      const response = await apiClient.get<BrokerSummaryResponse>(
+        API_ENDPOINTS.IDX.BROKER_SUMMARY,
+        { params: { date, limit: 50 } }
+      );
+      return response as unknown as BrokerSummaryResponse;
+    },
+    enabled: Boolean(date),
   });
 };
 

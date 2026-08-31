@@ -7,6 +7,7 @@ import { StateMessage } from "@/components/common";
 import { StockChart } from "@/components/features/market/stock-chart";
 import { VolumeAnomalyBadge, VolatilityRegimeBadge } from "@/components/features/market/quant-badges";
 import {
+  useFlowAnalysis,
   useIDXStockDetail,
   useStockAiSummary,
   useStockFundamental,
@@ -55,6 +56,7 @@ export function StockDetail({ symbol }: StockDetailProps) {
   const { data: fundamental } = useStockFundamental(symbol);
   const { data: scoreData } = useStockScore(symbol);
   const { data: aiData, isPending: isAiPending } = useStockAiSummary(symbol);
+  const { data: flowAnalysis } = useFlowAnalysis(symbol);
 
   const latestCandle = data?.items && data.items.length > 0 ? data.items[data.items.length - 1] : null;
 
@@ -189,18 +191,34 @@ export function StockDetail({ symbol }: StockDetailProps) {
                       <dd className="font-semibold">{technical.rsi ?? "n/a"}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-muted-foreground">MA Signal</dt>
-                      <dd className="font-semibold">{technical.ma_signal}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs text-muted-foreground">MA20 / MA50</dt>
-                      <dd className="font-semibold">
-                        {technical.indicators.ma20 ?? "—"} / {technical.indicators.ma50 ?? "—"}
+                      <dt className="text-xs text-muted-foreground">ADX (Trend Strength)</dt>
+                      <dd className={`font-semibold ${technical.indicators.adx != null && technical.indicators.adx >= 25 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                        {technical.indicators.adx != null ? `${technical.indicators.adx.toFixed(0)} ${technical.indicators.adx >= 40 ? "Strong" : technical.indicators.adx >= 25 ? "Trending" : "Sideways"}` : "—"}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-muted-foreground">ATR (14)</dt>
-                      <dd className="font-semibold">{technical.indicators.atr14 ?? "—"}</dd>
+                      <dt className="text-xs text-muted-foreground">MFI (Money Flow)</dt>
+                      <dd className={`font-semibold ${technical.indicators.mfi != null ? (technical.indicators.mfi < 20 ? "text-emerald-600 dark:text-emerald-400" : technical.indicators.mfi > 80 ? "text-rose-600 dark:text-rose-400" : "") : ""}`}>
+                        {technical.indicators.mfi != null ? technical.indicators.mfi.toFixed(0) : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Stochastic RSI</dt>
+                      <dd className={`font-semibold ${technical.indicators.stochastic_rsi != null ? (technical.indicators.stochastic_rsi < 20 ? "text-emerald-600 dark:text-emerald-400" : technical.indicators.stochastic_rsi > 80 ? "text-rose-600 dark:text-rose-400" : "") : ""}`}>
+                        {technical.indicators.stochastic_rsi != null ? technical.indicators.stochastic_rsi.toFixed(0) : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">OBV Trend (20D)</dt>
+                      <dd className={`font-semibold ${technical.indicators.obv_trend_pct != null ? (technical.indicators.obv_trend_pct > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400") : ""}`}>
+                        {technical.indicators.obv_trend_pct != null ? `${technical.indicators.obv_trend_pct > 0 ? "+" : ""}${technical.indicators.obv_trend_pct.toFixed(1)}%` : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Support Distance</dt>
+                      <dd className={`font-semibold ${technical.indicators.support_distance_pct != null && technical.indicators.support_distance_pct < 3 ? "text-emerald-600 dark:text-emerald-400" : ""}`}>
+                        {technical.indicators.support_distance_pct != null ? `${technical.indicators.support_distance_pct.toFixed(1)}%` : "—"}
+                      </dd>
                     </div>
                   </dl>
                 ) : (
@@ -562,6 +580,61 @@ export function StockDetail({ symbol }: StockDetailProps) {
           {/* Tab 4.5: IDX Foreign Flow & Corporate Actions */}
           {tab === "flows" && (
             <div className="flex flex-col gap-6">
+              {flowAnalysis && flowAnalysis.data_days > 0 && (
+                <div className="rounded-xl border bg-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-semibold">Foreign Flow Analysis</h3>
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                      flowAnalysis.signal === "STRONG_ACCUMULATION" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : flowAnalysis.signal === "ACCUMULATION" ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                        : flowAnalysis.signal === "DISTRIBUTION" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                        : flowAnalysis.signal === "STRONG_DISTRIBUTION" ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {flowAnalysis.signal.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 text-sm">
+                    <div className="rounded-lg border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Net Flow 5D</p>
+                      <p className={`mt-1 font-bold ${flowAnalysis.net_flow_5d != null && flowAnalysis.net_flow_5d >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {flowAnalysis.net_flow_5d != null ? `Rp ${(flowAnalysis.net_flow_5d / 1e9).toFixed(1)}B` : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Net Flow 20D</p>
+                      <p className={`mt-1 font-bold ${flowAnalysis.net_flow_20d != null && flowAnalysis.net_flow_20d >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {flowAnalysis.net_flow_20d != null ? `Rp ${(flowAnalysis.net_flow_20d / 1e9).toFixed(1)}B` : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Streak</p>
+                      <p className={`mt-1 font-bold ${flowAnalysis.streak_days >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {flowAnalysis.streak_days > 0 ? `+${flowAnalysis.streak_days} days buy` : flowAnalysis.streak_days < 0 ? `${flowAnalysis.streak_days} days sell` : "No streak"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Divergence</p>
+                      <p className={`mt-1 font-bold text-xs ${
+                        flowAnalysis.divergence === "BULLISH_DIVERGENCE" ? "text-emerald-600 dark:text-emerald-400"
+                          : flowAnalysis.divergence === "BEARISH_DIVERGENCE" ? "text-rose-600 dark:text-rose-400"
+                          : "text-muted-foreground"
+                      }`}>
+                        {flowAnalysis.divergence?.replace(/_/g, " ") ?? "—"}
+                      </p>
+                    </div>
+                  </div>
+                  {flowAnalysis.flow_momentum != null && (
+                    <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                      <span>Momentum: <span className="font-semibold text-foreground">{flowAnalysis.flow_momentum.toFixed(2)}×</span></span>
+                      {flowAnalysis.flow_intensity_pct != null && (
+                        <span>Intensity: <span className="font-semibold text-foreground">{flowAnalysis.flow_intensity_pct.toFixed(1)}%</span></span>
+                      )}
+                      <span>Data: <span className="font-semibold text-foreground">{flowAnalysis.data_days} days</span></span>
+                    </div>
+                  )}
+                </div>
+              )}
               {/* Foreign Flow History */}
               <div className="rounded-xl border bg-card overflow-hidden">
                 <div className="border-b bg-muted/20 px-4 py-3">
