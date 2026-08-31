@@ -70,6 +70,10 @@ Migration `0011_idx_platform_architecture` adds specialized data structures for 
 - `strategy_definitions`: Quantitative factor strategy catalog & preset weighting definitions.
 - `idx_factor_rotation_backtests`: Historical simulation results for multi-asset monthly/periodic factor rotation across BEI universe.
 
+Migration `0012_broker_summary_idx` adds per-broker daily trading activity data collected from the idx.co.id public API:
+
+- `broker_summary_idx`: Per-broker daily trading summary (`broker_code`, `broker_name`, `total_value`, `volume`, `frequency`). Unique on `(broker_code, date)`. Ingested via `scripts/backfill_idx_data.py` from `idx.co.id/primary/TradingSummary/GetBrokerSummary`.
+
 1. Change SQLAlchemy models in `apps/quant-api/app/models`.
 2. Create and review an Alembic migration.
 3. Update Pydantic schemas and frontend types when the API contract changes.

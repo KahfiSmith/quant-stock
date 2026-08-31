@@ -172,6 +172,25 @@ evidence and data availability metadata.
   Bollinger Z-Score mean reversion, drawdown analysis (max + current), and
   risk-adjusted returns (Sharpe/Sortino/Calmar at 6% SBI risk-free). Added
   `mean_reversion` screener preset. All computed from existing OHLCV.
+- 2026-08-30: **Phase 3 IDX Collector**: HTTP client for idx.co.id public API
+  (session bootstrap, retry, rate limit). Collects stock summary (foreign
+  buy/sell per stock) and broker-level trading summary. New `broker_summary_idx`
+  table (migration 0012). CLI backfill via `scripts/backfill_idx_data.py`.
+  API endpoint `GET /api/v1/idx/broker-summary`. No new Python dependencies.
+- 2026-08-31: **Foreign Flow Analysis Engine**: Rolling accumulation/distribution
+  signals (5D/10D/20D), consecutive streak detection, flow momentum, flow
+  intensity (% of avg volume), price-flow divergence (bullish/bearish). Composite
+  signal classification: STRONG_ACCUMULATION → STRONG_DISTRIBUTION. New endpoint
+  `GET /api/v1/idx/stocks/{symbol}/flow-analysis` and frontend card in flows tab.
+- 2026-08-31: **Comprehensive Quant Engine Upgrade v2**: 1) Risk scoring now uses
+  6 components (ATR+Sharpe+Sortino+max DD+current DD+vol regime) instead of ATR-only.
+  2) Signal generation uses 11 inputs including Bollinger Z, flow signal/divergence,
+  12M momentum. 3) New conviction score (0-100) blends quant signal (50%) + flow
+  signal (30%) + risk-adjusted returns (20%) with divergence multiplier. 4) Buy
+  recommendation system: STRONG_BUY_HIGH_CONVICTION → SELL_EXIT. 5) Screener now
+  calls foreign flow analysis per stock, passes momentum_12m and all risk metrics
+  to scoring. 6) ScreenerItem has 45+ fields. Default sort by conviction_score.
+  7) Ranking page shows Conviction, Recommendation, and Flow Signal columns.
 
 ## Verification
 

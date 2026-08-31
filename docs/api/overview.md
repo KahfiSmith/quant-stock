@@ -33,6 +33,9 @@ API integration documentation for communication between the Next.js frontend and
 | **Quant Score** | `GET` | `/api/v1/stocks/{symbol}/score` | Multi-factor quant score breakdown |
 | **Screener** | `POST` | `/api/v1/screener` | Filter & rank IDX stocks by multi-criteria; `exchange` defaults to `IDX`. Supports `volume_momentum` and `mean_reversion` presets, volume/volatility/momentum filter and sort dimensions. |
 | **Technical** | `GET` | `/api/v1/stocks/{symbol}/technical` | Technical indicators (MA, RSI, MACD, ATR, Bollinger), volume analysis (Z-Score, SMA ratio), volatility regime, multi-timeframe momentum (1M/3M/6M/12M), drawdown analysis, and risk-adjusted returns (Sharpe/Sortino/Calmar) |
+| **IDX Data** | `GET` | `/api/v1/idx/broker-summary` | Broker-level daily trading activity from idx.co.id (value, volume, frequency per broker) |
+| **IDX Data** | `GET` | `/api/v1/idx/stocks/{symbol}` | IDX stock profile with foreign flow and corporate actions |
+| **IDX Data** | `GET` | `/api/v1/idx/stocks/{symbol}/flow-analysis` | Foreign flow analysis: accumulation/distribution signal, rolling sums, divergence, momentum, streak |
 
 ## API scope status
 

@@ -13,6 +13,36 @@ Next.js App Router client with a FastAPI authentication service and a TimescaleD
 ## Quick Start
 
 ```bash
+# 1. Start all services (frontend + backend + database)
+docker compose up -d
+
+# 2. Apply database migrations
+docker compose exec quant-api alembic upgrade head
+
+# 3. Backfill foreign flow + broker summary dari idx.co.id (~5-10 menit)
+docker compose exec quant-api python -m scripts.backfill_idx_data --range 30
+
+# 4. Backfill OHLCV + fundamentals dari Yahoo Finance (~2-5 menit)
+docker compose exec quant-api python -m scripts.backfill_market_data
+```
+
+Frontend: `http://localhost:3000` | Backend API: `http://localhost:8000`
+
+> **Tip**: Kalau step 4 kena `429 Too Many Requests`, tunggu 30 menit lalu retry
+> dengan batch kecil: `--symbols BBCA,BMRI,BBRI,TLKM,ASII --rate-limit-seconds 8.0`.
+> Step 3 (idx.co.id) tidak terpengaruh. Lihat [setup docs](docs/development/setup.md)
+> untuk detail troubleshooting.
+
+### Daily Update (setelah market tutup)
+
+```bash
+docker compose exec quant-api python -m scripts.backfill_market_data
+docker compose exec quant-api python -m scripts.backfill_idx_data
+```
+
+### Frontend-Only Development
+
+```bash
 pnpm install
 cp .env.example .env.local
 pnpm dev
