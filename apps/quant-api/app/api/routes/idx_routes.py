@@ -59,6 +59,11 @@ def get_idx_universe(
             .order_by(Price.time.desc())
             .limit(1)
         )
+
+        has_real_data = latest_price is not None and latest_price.source != "idx_feed"
+        if not has_real_data:
+            continue
+
         c_price = float(latest_price.close) if latest_price else None
 
         fund_pit = get_pit_fundamentals_for_stock(db, s.id, today)

@@ -32,8 +32,14 @@ If any conflict appears, follow the current runtime behavior and active routes i
 - Styling: Tailwind CSS `v4` with CSS variables in `src/app/globals.css`
 - UI system: shadcn/ui style (`components.json`, `src/components/ui`)
 - Utility libraries: `clsx`, `tailwind-merge`, `class-variance-authority`, `lucide-react`, `framer-motion`
+- Data fetching: Axios (`apiClient`/`authClient`), TanStack React Query `v5`
+- State: Zustand `v5` (auth store, theme store with persist)
+- Validation: Zod schemas, `react-hook-form` with `@hookform/resolvers`
+- Charts: TradingView Lightweight Charts
+- Notifications: Sonner (toast)
 - Linting: ESLint (`eslint.config.mjs`, `next/core-web-vitals`, `next/typescript`)
-- Testing: no test script is currently configured; add focused tests when behavior requires them.
+- Testing: Vitest with `pnpm test`; focused tests cover auth, API clients, route guards, and domain hooks.
+  Backend tests under `apps/quant-api/tests`. Add focused tests when behavior requires them.
 - Auth and API scaffolding available in `src/lib/api`, `src/providers`, `src/hooks/auth`, and `src/store`; `src/app/api` and `src/lib/repositories` are reserved only until a concrete feature needs them.
 
 ## Non-Negotiables (Hard Rules)

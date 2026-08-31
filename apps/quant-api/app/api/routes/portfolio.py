@@ -15,6 +15,8 @@ from app.schemas.portfolio import (
 from app.services.portfolio import (
     add_portfolio_transaction,
     create_user_portfolio,
+    delete_portfolio_transaction,
+    delete_user_portfolio,
     get_portfolio_detail,
     list_user_portfolios,
     update_user_portfolio,
@@ -72,3 +74,24 @@ def post_transaction(
 ) -> dict[str, object]:
     result: TransactionResponse = add_portfolio_transaction(db, user.id, portfolio_id, body)
     return success(result.model_dump(mode="json"), "Transaction added")
+
+
+@router.delete("/{portfolio_id}", response_model=None)
+def remove_portfolio(
+    portfolio_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    delete_user_portfolio(db, user.id, portfolio_id)
+    return success(None, "Portfolio deleted")
+
+
+@router.delete("/{portfolio_id}/transactions/{transaction_id}", response_model=None)
+def remove_transaction(
+    portfolio_id: int,
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, object]:
+    delete_portfolio_transaction(db, user.id, portfolio_id, transaction_id)
+    return success(None, "Transaction deleted")

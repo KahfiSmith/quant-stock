@@ -72,6 +72,7 @@ class PortfolioDetailResponse(BaseModel):
     total_unrealized_pnl: float
     total_unrealized_pnl_percent: float
     holdings: list[HoldingResponse]
+    transactions: list[TransactionResponse] = Field(default_factory=list)
     risk: PortfolioRiskResponse
 
     as_of: datetime = Field(

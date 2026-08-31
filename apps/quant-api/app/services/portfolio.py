@@ -276,6 +276,20 @@ def get_portfolio_detail(db: Session, user_id: int, portfolio_id: int) -> Portfo
         total_unrealized_pnl=float(total_pnl.quantize(cents)),
         total_unrealized_pnl_percent=float(total_pnl_pct.quantize(cents)),
         holdings=holdings,
+        transactions=[
+            TransactionResponse(
+                id=t.id,
+                portfolio_id=t.portfolio_id,
+                stock_id=t.stock_id,
+                symbol=db.scalar(select(Stock.symbol).where(Stock.id == t.stock_id)) or "?",
+                transaction_type=t.transaction_type,
+                quantity=float(t.quantity),
+                price=float(t.price),
+                fee=float(t.fee),
+                transacted_at=t.transacted_at,
+            )
+            for t in reversed(transactions)
+        ],
         risk=PortfolioRiskResponse(
             annualized_volatility_percent=float(volatility.quantize(cents)),
             max_holding_concentration_percent=float(concentration.quantize(cents)),
@@ -346,3 +360,32 @@ def add_portfolio_transaction(
         fee=float(tx.fee),
         transacted_at=tx.transacted_at,
     )
+
+
+def delete_user_portfolio(db: Session, user_id: int, portfolio_id: int) -> None:
+    portfolio = db.scalar(
+        select(Portfolio).where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
+    )
+    if not portfolio:
+        raise ApiError(404, "PORTFOLIO_NOT_FOUND", "Portfolio not found")
+    db.delete(portfolio)
+    db.commit()
+
+
+def delete_portfolio_transaction(
+    db: Session, user_id: int, portfolio_id: int, transaction_id: int
+) -> None:
+    portfolio = db.scalar(
+        select(Portfolio).where(Portfolio.id == portfolio_id, Portfolio.user_id == user_id)
+    )
+    if not portfolio:
+        raise ApiError(404, "PORTFOLIO_NOT_FOUND", "Portfolio not found")
+    txn = db.scalar(
+        select(Transaction).where(
+            Transaction.id == transaction_id, Transaction.portfolio_id == portfolio_id
+        )
+    )
+    if not txn:
+        raise ApiError(404, "TRANSACTION_NOT_FOUND", "Transaction not found")
+    db.delete(txn)
+    db.commit()
